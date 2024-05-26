@@ -7,17 +7,16 @@ settings:
 importers:
 
   .:
-    dependencies:
+    devDependencies:
+      '@sqlite.org/sqlite-wasm':
+        specifier: 3.45.3-build3
+        version: 3.45.3-build3
       '@sveltejs/adapter-auto':
         specifier: ^3.2.1
         version: 3.2.1(@sveltejs/kit@2.5.10(@sveltejs/vite-plugin-svelte@3.1.0(svelte@5.0.0-next.141)(vite@5.2.11))(svelte@5.0.0-next.141)(vite@5.2.11))
       '@sveltejs/adapter-static':
         specifier: ^3.0.1
         version: 3.0.1(@sveltejs/kit@2.5.10(@sveltejs/vite-plugin-svelte@3.1.0(svelte@5.0.0-next.141)(vite@5.2.11))(svelte@5.0.0-next.141)(vite@5.2.11))
-      sqlite-wasm-esm:
-        specifier: ^0.0.30
-        version: 0.0.30
-    devDependencies:
       '@sveltejs/kit':
         specifier: ^2.5.10
         version: 2.5.10(@sveltejs/vite-plugin-svelte@3.1.0(svelte@5.0.0-next.141)(vite@5.2.11))(svelte@5.0.0-next.141)(vite@5.2.11)
@@ -305,6 +304,10 @@ packages:
     resolution: {integrity: sha512-UOo5FdvOL0+eIVTgS4tIdbW+TtnBLWg1YBCcU2KWM7nuNwRz9bksDX1bekJJCpu25N1DVWaCwnT39dVQxzqS8g==}
     cpu: [x64]
     os: [win32]
+
+  '@sqlite.org/sqlite-wasm@3.45.3-build3':
+    resolution: {integrity: sha512-LZowRxDr6hipruNLmkLKyW+mnfWlRyynPbs+tDWJhBp305dE5wBIGtA31Gp1ZjlgLqusw7ePrdgLf6zaK1Dfzw==}
+    hasBin: true
 
   '@sveltejs/adapter-auto@3.2.1':
     resolution: {integrity: sha512-/3xx8ZFCD5UBc/7AbyXkFF3HNCzWAp2xncH8HA4doGjoGQEN7PmwiRx4Y9nOzi4mqDqYYUic0gaIAE2khWWU4Q==}
@@ -636,9 +639,6 @@ packages:
     resolution: {integrity: sha512-itJW8lvSA0TXEphiRoawsCksnlf8SyvmFzIhltqAHluXd88pkCd+cXJVHTDwdCr0IzwptSm035IHQktUu1QUMg==}
     engines: {node: '>=0.10.0'}
 
-  sqlite-wasm-esm@0.0.30:
-    resolution: {integrity: sha512-rLl+STKLfGXyBcpQlH6uEMMh76YXixY3s+qDEMzIiMMsyN7iXLmo4Mk1Su/6GoJFprSWP+cgOCWQsAbLELCEPg==}
-
   strip-indent@3.0.0:
     resolution: {integrity: sha512-laJTa3Jb+VQpaC6DseHhF7dXVqHTfJPCRDaEbid/drOhgitgYku/letMUqOXFoWV0zIIUbjpdH2t+tYj4bQMRQ==}
     engines: {node: '>=8'}
@@ -911,6 +911,8 @@ snapshots:
 
   '@rollup/rollup-win32-x64-msvc@4.18.0':
     optional: true
+
+  '@sqlite.org/sqlite-wasm@3.45.3-build3': {}
 
   '@sveltejs/adapter-auto@3.2.1(@sveltejs/kit@2.5.10(@sveltejs/vite-plugin-svelte@3.1.0(svelte@5.0.0-next.141)(vite@5.2.11))(svelte@5.0.0-next.141)(vite@5.2.11))':
     dependencies:
@@ -1265,8 +1267,6 @@ snapshots:
       sander: 0.5.1
 
   source-map-js@1.2.0: {}
-
-  sqlite-wasm-esm@0.0.30: {}
 
   strip-indent@3.0.0:
     dependencies:
