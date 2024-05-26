@@ -1,7 +1,7 @@
 <script lang="ts">
   import {page} from '$app/stores'
-  import GridView from "$lib/GridView.svelte";
-  import { getContents } from '$lib/stores/arena-apiv2.svelte.js'
+  import GridView from "$lib/components/GridView.svelte";
+  import { getContents } from '$lib/store/arena-apiv2.svelte.js'
 
   const channel = $page.params.channel
   const contents = getContents(channel)
