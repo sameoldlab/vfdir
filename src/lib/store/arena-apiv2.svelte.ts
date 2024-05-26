@@ -1,6 +1,7 @@
 // import { ArenaClient } from "arena-ts";
 // const client = new ArenaClient({
 //   //   fetch: ("https://api.are.na/v2/",)
+//   token: "A86xyp6p1qm_ADrW40doxkitwLwDJ4T7HWmQSmZAhyc",
 // });
 // let Channels = [];
 // client.channels().then((val)=>{
@@ -13,6 +14,7 @@ export function getChannels() {
   fetch("https://api.are.na/v2/users/408713/channels?per=50", {
     headers: {
       "Content-Type": "application/json",
+      Authorization: "Bearer A86xyp6p1qm_ADrW40doxkitwLwDJ4T7HWmQSmZAhyc",
     },
     method: "GET",
   }).then(async (res) => {
