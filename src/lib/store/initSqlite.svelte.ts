@@ -1,4 +1,4 @@
-export async function initSqlite() {
+export async function getPromiser() {
 	const { sqlite3Worker1Promiser } = await import(`@sqlite.org/sqlite-wasm`)
 
 	const log = console.log
