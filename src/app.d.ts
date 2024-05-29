@@ -207,7 +207,7 @@ declare module '@sqlite.org/sqlite-wasm' {
 		| PromiserResponseError
 
 
-	type Promiser = {
+	export type Promiser = {
 		<T extends keyof PromiserMethods>(
 			/** The type of the message */
 			messageType: T,
@@ -224,7 +224,7 @@ declare module '@sqlite.org/sqlite-wasm' {
 	}
 
 	/** Factory for creating promiser instances. */
-	const sqlite3Worker1Promiser: {
+	export const sqlite3Worker1Promiser: {
 		/**
 		 * Promiser v1
 		 * @example
