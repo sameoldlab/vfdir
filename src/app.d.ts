@@ -15,8 +15,9 @@ declare module '@sqlite.org/sqlite-wasm' {
 
 	/**
 	 * A function to be called when the SQLite3 module and worker APIs
-	 * are done loading asynchronously. This is the only way of knowing
-	 * that the loading has completed.
+	 * are done loading asynchronously. With Promiser v1 this is the
+	 * only way of knowing that the loading has completed.
+	 *
 	 * @since v3.46:
 	 * Is passed the function which gets returned by `sqlite3Worker1Promiser()`,
 	 * as accessing it from this callback is more convenient for certain usage
@@ -34,7 +35,7 @@ declare module '@sqlite.org/sqlite-wasm' {
 		 */
 		worker?: Worker | (() => Worker)
 		/** Function to generate unique message IDs  */
-		generateMessageId?: (messageObject: TODO) => string
+		generateMessageId?: (messageObject: { [key: string]: TODO }) => string
 		/** A `console.debug()` style function for logging
 		 * information about Worker messages.
 		 * */
@@ -76,7 +77,7 @@ declare module '@sqlite.org/sqlite-wasm' {
 					 * [=":memory:" or "" (unspecified)]:
 					 * TODO: See the sqlite3.oo1.DB constructor
 					 * for peculiarities and transformations
-					*/
+					 */
 					filename?: string
 				} & {
 					/**
@@ -85,14 +86,14 @@ declare module '@sqlite.org/sqlite-wasm' {
 					 * optionally be provided via a URL-style filename argument:
 					 * filename: "file:foo.db?vfs=...". By default it uses a transient
 					 * database, created anew on each request.
-					*
-					* If both this argument and a URI-style argument are provided,
-					* which one has precedence is unspecified.
-					*/
+					 *
+					 * If both this argument and a URI-style argument are provided,
+					 * which one has precedence is unspecified.
+					 */
 					vfs?: string
 				}
-				>
-				result: {
+			>
+			result: {
 				dbId: DbId
 				/** db filename, possibly differing from the input */
 				filename: string
@@ -110,8 +111,8 @@ declare module '@sqlite.org/sqlite-wasm' {
 				/** Filename of closed db, or undefined if no db was closed */
 				filename: string | undefined
 			}
-		/**@link https://sqlite.org/wasm/doc/trunk/api-worker1.md#method-config-get */
 		}
+		/**@link https://sqlite.org/wasm/doc/trunk/api-worker1.md#method-config-get */
 		'config-get': {
 			args: {}
 			result: {
@@ -127,37 +128,42 @@ declare module '@sqlite.org/sqlite-wasm' {
 		}
 		/**
 		 * Interface for running arbitrary SQL. Wraps`oo1.DB.exec()` methods.
-		 * And supports most of its features as defined in 
-		 * https://sqlite.org/wasm/doc/trunk/api-oo1.md#db-exec. 
+		 * And supports most of its features as defined in
+		 * https://sqlite.org/wasm/doc/trunk/api-oo1.md#db-exec.
 		 * There are a few limitations imposed by the state having
 		 * to cross thread boundaries.
 		 * @link https://sqlite.org/wasm/doc/trunk/api-worker1.md#method-exec
-		*/
+		 */
 		'exec': {
 			args: {
 				sql: string
 				dbId?: DbId
-				/** At the end of the result set, the same event is fired with 
-				 * (row=undefined, rowNumber=null) to indicate that the end of 
-				 * the result set has been reached. Note that the rows arrive 
-				 * via worker-posted messages, with all the implications of that. 
+				/**
+				 * Note that the rows arrive via worker-posted messages,
+				 * with all the implications of that.
 				 */
 				callback?: (result: {
-					/** 
-					 * Internally-synthesized message type string used 
-					 * temporarily for worker message dispatching. 
-					*/
+					/**
+					 * Internally-synthesized message type string used
+					 * temporarily for worker message dispatching.
+					 */
 					type: string
-					/** sqlilte3 VALUE */
-					row: TODO
-					/** 1-based index */
+					/**
+					 * sqlilte3 VALUE
+					 * returns`undefined` at the end of result set
+					 */
+					row: any
+					/**
+					 * 1-based row index
+					 * returns`null` at the end of result set
+					 */
 					rowNumber: number
 					columnNames: string[]
 				}) => void
 				/**
 				 * a single value valid as an argument for Stmt.bind(). This is only applied to the first non-empty statement in the SQL which has any bindable parameters. (Empty statements are skipped entirely.)
 				 */
-				bind?: Exclude<TODO, null>
+				bind?: Exclude<TODO, undefined>
 				[key: string]: TODO //
 			}
 			result: { [key: string]: TODO }
@@ -196,16 +202,16 @@ declare module '@sqlite.org/sqlite-wasm' {
 			/** the message object which triggered the error */
 			input: object
 			/** *if available* a stack trace array */
-			stack: TODO[]
+			stack: string[]
 		}
 		/**same value, if any, provided by the inbound message */
 		messageId: string
 		dbId: DbId
 	}
+	//TODO: Better type definition to specify `PromiserResponseError` gets returned as an error
 	type PromiserResponse<T extends keyof PromiserMethods> =
 		| PromiserResponseSuccess<T>
 		| PromiserResponseError
-
 
 	export type Promiser = {
 		<T extends keyof PromiserMethods>(
