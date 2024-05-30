@@ -3,12 +3,12 @@
 </script>
 
 <div class="grid">
-  {#each content as channels}
-    <div class="item {channels.status}">
-      <a href={channels.slug}>
+  {#each content as {status, slug, title}}
+    <div class="item {status}">
+      <a href={slug}>
         <div>
           <p>
-            {channels.title} | {channels.length}
+            {title}
           </p>
         </div>
       </a>
@@ -45,7 +45,7 @@
       border: 1px solid green;
   }
   .private {
-      border: 1px solid #444;
+      border: 1px solid #666;
   }
   .closed {
     border: 1px solid red;
