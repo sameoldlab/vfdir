@@ -12,7 +12,7 @@
 	
 	onMount(async () => {
 		$res = await Promise.resolve($res)
-		initSqlite($res)
+		await initSqlite($res)
 		resolved = true
 	})
 </script>
