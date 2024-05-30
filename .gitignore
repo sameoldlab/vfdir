@@ -10,6 +10,8 @@ lerna-debug.log*
 node_modules
 dist
 build
+notes
+certs
 .svelte-kit
 dist-ssr
 *.local
