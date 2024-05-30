@@ -11,6 +11,8 @@
   },
   "devDependencies": {
     "@sqlite.org/sqlite-wasm": "3.46.0-build1",
+    "@sveltejs/adapter-auto": "^3.2.1",
+    "@sveltejs/adapter-static": "^3.0.1",
     "@sveltejs/kit": "^2.5.10",
     "@sveltejs/vite-plugin-svelte": "^3.1.0",
     "@tsconfig/svelte": "^5.0.4",
@@ -20,8 +22,7 @@
     "svelte-preprocess": "^5.1.4",
     "tslib": "^2.6.2",
     "typescript": "^5.4.5",
-    "@sveltejs/adapter-auto": "^3.2.1",
-    "@sveltejs/adapter-static": "^3.0.1",
-    "vite": "^5.2.11"
+    "vite": "^5.2.11",
+    "vite-plugin-mkcert": "^1.17.5"
   }
 }
