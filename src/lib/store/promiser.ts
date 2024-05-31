@@ -4,12 +4,11 @@ import type { Promiser } from '@sqlite.org/sqlite-wasm'
 import { sqlite3Worker1Promiser } from '@sqlite.org/sqlite-wasm'
 
 export async function createPromiser() {
-	let promiser = await sqlite3Worker1Promiser
-		.v2({
-			debug(...args) {
-				// console.log(args)
-			},
-		})
+	let promiser = await sqlite3Worker1Promiser.v2({
+		debug(...args) {
+			console.debug(args)
+		},
+	})
 	return promiser
 }
 
