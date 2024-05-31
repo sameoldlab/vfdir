@@ -1,0 +1,30 @@
+ID,Filename,Title,Description,Created At,Updated At,Source,
+1815334,1_hyperpads.webloc,hyperpads,"""home"" / identity url
+web 0.5",2022-10-20 11:49:23 UTC,2024-02-15 12:24:39 UTC,
+22737183,2_github-blogger-peer-review-quotebacks-quote-the....webloc,GitHub - Blogger-Peer-Review/quotebacks: Quote the web,Quote the web. Contribute to Blogger-Peer-Review/quotebacks development by creating an account on GitHub.,2023-07-20 07:27:17 UTC,2023-07-20 07:27:28 UTC,https://github.com/Blogger-Peer-Review/quotebacks
+22737194,3_basic-bookmarks.webloc,(Basic) Bookmarks,A home for your internet discoveries.,2023-07-20 07:28:22 UTC,2023-07-20 07:28:30 UTC,https://bmrks.com/
+22737205,4_file-over-app.webloc,File over app,"File over app is a philosophy: if you want to create digital artifacts that last, they must be files you can control, in formats that are easy to retrieve an…",2023-07-20 07:32:28 UTC,2023-07-20 07:32:35 UTC,https://stephanango.com/file-over-app
+22737212,5_raindrop-io.webloc,Raindrop.io,Raindrop.io has 10 repositories available. Follow their code on GitHub.,2023-07-20 07:34:41 UTC,2023-07-20 07:34:53 UTC,https://github.com/raindropio
+22741374,6_untitled.txt,,,2023-07-20 14:22:24 UTC,2023-07-23 11:07:15 UTC,
+19369090,7_untitled.txt,,"Vannevar Bush, As We May Think
+
+https://wiki.xxiivv.com/site/about.html",2022-12-11 12:20:32 UTC,2023-07-20 14:34:00 UTC,
+20078369,8_the-local-only-web.webloc,The local-only web,Paul is a Developer Advocate for Chrome and the Open Web at Google and loves to help make web development easier.,2023-01-28 00:13:17 UTC,2023-07-20 14:35:59 UTC,https://paul.kinlan.me/the-local-only-web/
+24224586,9_author-link.png,author-link,,2023-10-18 10:53:15 UTC,2023-10-18 10:53:57 UTC,https://d2w9rnfcy7mm78.cloudfront.net/24224586/original_753368dfa3b9a166b2cf8410a33e4d8f.png?1697626396?bc=0
+22774701,10_untitled.txt,,,2023-07-23 11:01:42 UTC,2023-07-23 11:06:01 UTC,
+20852244,11_porter-packaging-customise-your-packaging.webloc,Porter Packaging | Customise your packaging,"Create custom premium packaging with Porter’s interactive quote builder that allows you to customise the size, material, printing and additions.",2023-03-13 21:44:32 UTC,2023-09-26 17:01:21 UTC,https://porterpackaging.com/packaging
+22834772,12_archiving-urls.webloc,Archiving URLs,"Archiving the Web, because nothing lasts forever: statistics, online archive services, extracting URLs automatically from browsers, and creating a daemon to regularly back up URLs to multiple sources.",2023-07-27 08:41:07 UTC,2023-07-27 08:41:33 UTC,https://gwern.net/archiving
+22834792,13_github-webmemex-freeze-dry-snapshots-a-web-page....webloc,"GitHub - WebMemex/freeze-dry: Snapshots a web page to get it as a static, self-contained HTML document.","Snapshots a web page to get it as a static, self-contained HTML document. - GitHub - WebMemex/freeze-dry: Snapshots a web page to get it as a static, self-contained HTML document.",2023-07-27 08:43:52 UTC,2023-08-09 14:04:46 UTC,https://github.com/WebMemex/freeze-dry
+22836056,14_devarena.webloc,DevAreNa,Developer,2023-07-27 10:49:57 UTC,2023-07-27 10:51:16 UTC,https://dev.are.na/documentation/channels
+22836088,15_untitled.txt,,,2023-07-27 10:53:11 UTC,2023-07-27 10:55:13 UTC,
+22836347,16_welcome-to-omnivore-omnivore-docs.webloc,Welcome to Omnivore | Omnivore Docs,Documentation for the Omnivore reading service.,2023-07-27 11:25:11 UTC,2023-07-27 11:25:18 UTC,https://docs.omnivore.app/
+22837330,17_ref-stack.txt,ref stack,,2023-07-27 13:03:08 UTC,2023-07-27 13:06:37 UTC,
+2030348,18_the-art-of-footnotes.webloc,+ the art of footnotes,,2023-02-23 16:58:56 UTC,2024-05-27 21:42:09 UTC,
+25333838,19_untitled.txt,,,2023-12-21 16:15:13 UTC,2023-12-21 16:15:13 UTC,
+28274940,20_are-na-api-playground.webloc,Are.na API Playground,"Sorry, This window size is currently not supported. If you still wanna see how messed up a site designed for Desktop looks at smaller screen sizes click here.",2024-05-24 16:09:44 UTC,2024-05-24 16:09:49 UTC,https://playground.a-p.space/
+28274942,21_arenaclient-arena-ts.webloc,ArenaClient | arena-ts,Documentation for arena-ts,2024-05-24 16:09:57 UTC,2024-05-24 16:10:03 UTC,https://e-e-e.github.io/arena-ts/classes/ArenaClient.html#channels
+28274949,22_herdi-ng.png,herdi.ng,,2024-05-24 16:10:31 UTC,2024-05-24 16:13:30 UTC,https://d2w9rnfcy7mm78.cloudfront.net/28274949/original_604bb91026199e3c425f511e10edcf78.png?1716567033?bc=0
+28274993,23_image-png.png,image.png,,2024-05-24 16:12:53 UTC,2024-05-24 16:13:04 UTC,https://d2w9rnfcy7mm78.cloudfront.net/28274993/original_e477f60a79ecfd17e1e407c9f782bfb6.png?1716567174?bc=0
+28275599,24_use-file-system-api-issue-71-jlongster-absurd-sql.webloc,Use File System API · Issue #71 · jlongster/absurd-sql,"The File System API allows to read and write native files on disk of the host system, and make in-place writes. There’s a dedicated file system (called Origin private file system / OPFS) that websi…",2024-05-24 16:40:42 UTC,2024-05-24 16:40:51 UTC,https://github.com/jlongster/absurd-sql/issues/71
+28276832,25_github-overtone-app-sqlite-wasm-esm.webloc,GitHub - overtone-app/sqlite-wasm-esm,Contribute to overtone-app/sqlite-wasm-esm development by creating an account on GitHub.,2024-05-24 18:14:47 UTC,2024-05-24 18:14:56 UTC,https://github.com/overtone-app/sqlite-wasm-esm
+28289057,26_untitled.txt,,,2024-05-25 20:30:12 UTC,2024-05-25 20:30:12 UTC,
