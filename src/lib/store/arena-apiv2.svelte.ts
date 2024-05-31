@@ -1,31 +1,24 @@
-// import { ArenaClient } from "arena-ts";
+import { type GetChannelsApiResponse } from 'arena-ts'
 // const client = new ArenaClient({
-//   //   fetch: ("https://api.are.na/v2/",)
-//   token: "A86xyp6p1qm_ADrW40doxkitwLwDJ4T7HWmQSmZAhyc",
-// });
-// let Channels = [];
-// client.channels().then((val)=>{
-//     // Channels = val
-//     console.log(val)
-//   })
+// 	fetch: 'https://api.are.na/v2/',
+// 	token: 'A86xyp6p1qm_ADrW40doxkitwLwDJ4T7HWmQSmZAhyc',
+// })
+// let Channels = client.channels()
+// .then((val)=>{
+//  Channels = val
+// console.log(val)
+// })
 
-export function getChannels() {
-  let list = $state([]);
-  fetch("https://api.are.na/v2/users/408713/channels?per=50", {
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: "Bearer A86xyp6p1qm_ADrW40doxkitwLwDJ4T7HWmQSmZAhyc",
-    },
-    method: "GET",
-  }).then(async (res) => {
-    const r = await res.json();
-    console.log(r);
-    list = r.channels;
-  });
+export async function getChannels() {
+	let res = await fetch('https://api.are.na/v2/users/408713/channels?per=50', {
+		headers: {
+			'Content-Type': 'application/json',
+			'Authorization': 'Bearer A86xyp6p1qm_ADrW40doxkitwLwDJ4T7HWmQSmZAhyc',
+		},
+		method: 'GET',
+	})
 
-    return {
-      get list() { return list }
-    }
+	return (await res).json()
 }
 
 export function getContents(channel: string) {
