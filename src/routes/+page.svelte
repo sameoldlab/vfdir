@@ -2,14 +2,11 @@
 	import GridView from '$lib/components/GridView.svelte'
 	import { getChannels } from '$lib/store/data.svelte.js'
 	import { getChannels as getArenaChannels } from '$lib/store/arena-apiv2.svelte'
-	import { getPromiser } from '$lib/store/promiser'
-
-	let promiser = getPromiser()
-
+	import { db } from '$lib/store/initSqlite.svelte'
+	
+	let channels = getChannels(db.promiser)
+	
 	console.log('fetching "channels"')
-
-	let channels = getChannels($promiser)
-
 	getArenaChannels().then(async res => {
 		console.log(res)
 		await channels.push(res.channels)

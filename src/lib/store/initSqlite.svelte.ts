@@ -1,7 +1,34 @@
 import { sqlite3Worker1Promiser, type Promiser } from '@sqlite.org/sqlite-wasm'
 
+class Db {
+	promiser= $state<Promiser>()
+	instances = $state(0)
+	fulfilled = $state(false)
+}
 export const filename = 'file:vfdir.sqlite3?vfs=opfs'
-export async function initSqlite(promiser: Promiser) {
+export const db = createPromiser()
+
+function createPromiser() {
+	let db = new Db()
+	
+	async function initialize() {
+		db.fulfilled = false
+		db.instances++
+		console.log(`${db.instances} instances`)
+		db.promiser = await sqlite3Worker1Promiser.v2({
+			debug(...args) {
+				console.debug(args)
+			},
+		})
+		await initSqlite(db.promiser)
+		
+		db.fulfilled = true
+	}
+	initialize()
+	return db
+}
+
+async function initSqlite(promiser: Promiser) {
 	try {
 		console.debug('Loading and initializing SQLite3 module...')
 
