@@ -3,7 +3,7 @@ import { sqlite3Worker1Promiser, type Promiser } from '@sqlite.org/sqlite-wasm'
 export const filename = 'file:vfdir.sqlite3?vfs=opfs'
 export async function initSqlite(promiser: Promiser) {
 	try {
-		console.log('Loading and initializing SQLite3 module...')
+		console.debug('Loading and initializing SQLite3 module...')
 
 		await promiser('config-get', {}).then(configResponse => {
 			console.info(
@@ -17,7 +17,7 @@ export async function initSqlite(promiser: Promiser) {
 		})
 		const { dbId } = openResponse
 		if (openResponse.type !== 'error') {
-			console.info(
+			console.debug(
 				'OPFS is available, created persisted database at',
 				openResponse.result.filename.replace(/^file:(.*?)\?vfs=opfs$/, '$1')
 			)
@@ -26,13 +26,13 @@ export async function initSqlite(promiser: Promiser) {
 		await promiser('exec', {
 			sql: /*sql*/ `SELECT count(*) FROM Users limit 1`,
 		})
-			.catch(async (error) => {
+			.catch(async error => {
 				if (
 					(error.result.message as string).includes(
 						'SQLITE_ERROR: sqlite3 result code 1: no such table: Users'
 					)
 				) {
-					console.info('Initializing database...')
+					console.debug('Initializing database...')
 					await createTables(promiser)
 				}
 			})
@@ -57,11 +57,18 @@ async function createTables(promiser: Promiser) {
 			id INTEGER PRIMARY KEY,
 			slug TEXT,
 			avatar TEXT
-		)`,
-	})
+		);
+		
+		CREATE TABLE IF NOT EXISTS Channels(
+			slug TEXT PRIMARY KEY, 
+			title TEXT NOT NULL,
+			created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+			status TEXT DEFAULT 'offline',
+			flags TEXT default '[]'
+		) WITHOUT ROWID;
 
-	await promiser('exec', {
-		sql: /*sql*/ `INSERT INTO Users(id) VALUES (0)`,
+		INSERT INTO Users(id) VALUES (0);
+		`,
 	})
 
 	// user_id INT NOT NULL default 0,
@@ -69,17 +76,4 @@ async function createTables(promiser: Promiser) {
 	// FOREIGN KEY (user_id) REFERENCES Users(rowid)
 	// kind = 'default | 'profile'
 	// Tags: published, open, collaboration, (kind == 'default' ? null : 'profile')
-	await promiser('exec', {
-		sql: /*sql*/ `
-		CREATE TABLE IF NOT EXISTS Channels(
-			slug TEXT PRIMARY KEY, 
-			title TEXT NOT NULL,
-			created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-			status TEXT DEFAULT 'offline'
-			flags TEXT default '[]'
-		) WITHOUT ROWID`,
-
-		
-	})
-
 }
