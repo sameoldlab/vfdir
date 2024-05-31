@@ -103,8 +103,8 @@ declare module '@sqlite.org/sqlite-wasm' {
 				/** name of the underlying VFS */
 				vfs: 'string'
 			}
-		/**@link https://sqlite.org/wasm/doc/trunk/api-worker1.md#method-close */
 		}
+		/**@link https://sqlite.org/wasm/doc/trunk/api-worker1.md#method-close */
 		'close': {
 			args: { dbId?: DbId }
 			result: {
@@ -139,13 +139,16 @@ declare module '@sqlite.org/sqlite-wasm' {
 				sql: string
 				dbId?: DbId
 				/**
-				 * Note that the rows arrive via worker-posted messages,
-				 * with all the implications of that.
+				 * Function which gets called for each row of the result set if that
+				 *  statement has any result rows
+				 *
+				 * Note that the rows arrive via worker-posted messages, with 
+				 * all the implications of that.
 				 */
 				callback?: (result: {
 					/**
-					 * Internally-synthesized message type string used
-					 * temporarily for worker message dispatching.
+					 * Internally-synthesized message type string used temporarily
+					 * for worker message dispatching.
 					 */
 					type: string
 					/**
@@ -161,9 +164,41 @@ declare module '@sqlite.org/sqlite-wasm' {
 					columnNames: string[]
 				}) => void
 				/**
-				 * a single value valid as an argument for Stmt.bind(). This is only applied to the first non-empty statement in the SQL which has any bindable parameters. (Empty statements are skipped entirely.)
+				 * a single value valid as an argument for Stmt.bind(). This is only
+				 * applied to the first non-empty statement in the SQL which has any
+				 * bindable parameters. (Empty statements are skipped entirely.)
 				 */
 				bind?: Exclude<TODO, undefined>
+				/* TODO:
+				columnNames: TODO[]
+				resultRows: TODO[]
+				*/
+				/**
+				 * Specifies type of the callback's first argument. It may be any of:
+				 * - A string describing what type of argument should be passed as the first argument to the callback:
+				 *		- `'array'` - (default) causes the results of stmt.get([]) to be 
+				 *			passed to the callback and/or appended to `resultRows`.
+				 *
+				 *		- `'object'` - causes the results of `stmt.get(Object.create(null))` to 
+				 *			be passed to the callback and/or appended to `resultRows`. Achtung: an SQL
+				 *			result may have multiple columns with identical names. In that case, the
+				 *			right-most column will be the one set in this object!
+				 *
+				 *		- `'stmt'` - causes the current Stmt to be passed to the callback, but 
+				 *			this mode will trigger an exception if `resultRows` is an array because 
+				 *			appending the statement to the array would be downright unhelpful.
+				 *
+				 * - An integer, indicating a zero-based column in the result row. 
+				 *	Only that one single value will be passed on.
+				 *
+				 * - A string with a minimum length of 2 and leading character of $ will fetch the row as an object,
+				 *	extract that one field, and pass that field's value to the callback. Note that these keys are 
+				 *	case-sensitive so must match the case used in the SQL. e.g. "select a A from t" with a rowMode 
+				 *	of '$A' would work but '$a' would not. A reference to a column not in the result set will trigger 
+				 *	an exception on the first row (as the check is not performed until rows are fetched).
+				 */
+				rowMode?: 'array' | 'object' | 'stmt' | number | `$${string}`
+
 				[key: string]: TODO //
 			}
 			result: { [key: string]: TODO }
