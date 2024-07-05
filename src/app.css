@@ -4,8 +4,10 @@
   font-weight: 400;
 
   color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #111111;
+  color: oklch(0.81 0 89.88);
+
+	--line: oklch(0.28 0 0);
+  background-color: oklch(0.16 0 0);
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -28,6 +30,11 @@ html, body {
 	display: flex;
 	flex-direction: column;
 	min-height: 100%;
+	display: grid;
+	grid-template-rows: [header-start] min-content [header-end] 1fr;
+	grid-template-columns: [full-start] min-content[chan-end] repeat(3, 1rem 1fr) [full-end];
+
+	/* grid-template-columns: [chan-] min-content[chan-end]  repeat(3, 1rem 1fr); */
 }
 
 h1 {

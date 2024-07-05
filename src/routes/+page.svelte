@@ -25,6 +25,8 @@
 		}
 
 		const el_mouseDown = () => {
+			el.style.cursor = 'col-resize'
+
 			document.addEventListener('mousemove', doc_mouseMove)
 			document.addEventListener('mouseup', doc_mouseUp)
 		}
@@ -41,52 +43,48 @@
 	}
 </script>
 
-<main>
-	<div class="pane left" bind:clientWidth={leftWidth}>
-		<a href="/df/adsaf" class="item">link</a>
-		<a href="/gf/adsdsafdsf" class="item">link</a>
-		<a href="/rtf/fsdsaf" class="item">link</a>
-		<a href="/dhf/adsdsf" class="item">link</a>
-		<a href="/dh/adsaf" class="item">link</a>
-		<a href="/nf/adfsaf" class="item">link</a>
-		<a href="/erwf/adsdaf" class="item">link</a>
-		{#each channels.list as { title, slug }}
+<div class="pane left" bind:clientWidth={leftWidth}>
+	<a href="/df/adsaf" class="item">link</a>
+	<a href="/gf/adsdsafdsf" class="item">link</a>
+	<a href="/rtf/fsdsaf" class="item">link</a>
+	<a href="/dhf/adsdsf" class="item">link</a>
+	<a href="/dh/adsaf" class="item">link</a>
+	<a href="/nf/adfsaf" class="item">link</a>
+	<a href="/erwf/adsdaf" class="item">link</a>
+	<!-- 		{#each channels.list as { title, slug }}
 			{title}
-			<!-- <GridView content={channels} /> -->
+			<!-- <GridView content={channels} /> --
 		{:else}
 			<div class="item">empty</div>
-		{/each}
-	</div>
-	<div class="handle" draggable use:resizer>
-		<div></div>
-	</div>
-	<div class="pane right">
-		<a href="/df/adsaf" class="item"> link</a>
-		<a href="/gf/adsdsafdsf" class="item"> link</a>
-		<a href="/rtf/fsdsaf" class="item"> link</a>
-		<a href="/dhf/adsdsf" class="item"> link</a>
-		<a href="/dh/adsaf" class="item"> link</a>
-		<a href="/nf/adfsaf" class="item"> link</a>
-		<a href="/erwf/adsdaf" class="item"> link</a>
-	</div>
-	<!-- <div class="handle"></div> -->
-</main>
+		{/each} -->
+</div>
+<div class="handle" draggable use:resizer>
+	<div></div>
+</div>
+<div class="pane right">
+	<a href="/df/adsaf" class="item"> link</a>
+	<a href="/gf/adsdsafdsf" class="item"> link</a>
+	<a href="/rtf/fsdsaf" class="item"> link</a>
+	<a href="/dhf/adsdsf" class="item"> link</a>
+	<a href="/dh/adsaf" class="item"> link</a>
+	<a href="/nf/adfsaf" class="item"> link</a>
+	<a href="/erwf/adsdaf" class="item"> link</a>
+</div>
+
+<div class="handle">
+	<div></div>
+</div>
 
 <style>
-	main {
-		flex-grow: 1;
-
-		display: flex;
-	}
-
 	.handle {
 		width: 1rem;
+		grid-row: 2;
 		/* opacity: 0; */
 		outline: 4px solid transparent;
 		display: flex;
 		justify-content: center;
 		transition: background-color 100ms 80ms ease-out;
-		
+
 		&:hover {
 			animation: delayed-resize 0ms 150ms ease-out forwards;
 			background: oklch(0.24 0 89.88);
@@ -98,7 +96,7 @@
 		& div {
 			width: 1px;
 			height: 100%;
-			background: oklch(0.32 0 89.88);
+			background: var(--line);
 			opacity: 1;
 		}
 	}
@@ -115,9 +113,10 @@
 	.pane {
 		display: flex;
 		flex-direction: column;
-		width: 20ch;
 		/* border-inline-end: 1px solid hsl(0 0% 24%); */
 		/* padding: .5em; */
+		grid-row-start: 2;
+		/* width: 1fr; */
 		.item {
 			/* border-block: 1px solid ; */
 			padding: 0.25em 0.75em;
@@ -127,8 +126,16 @@
 			}
 		}
 	}
-	.pane.right {
+	.pane.left { 
+		grid-column: full-start / chan-end;
+		min-width: fit-content;
+		width: 20ch;
+		} 
+		
+		.pane.right {
+			/* min-width: fit-content; */
+			/* width: 40ch; */
 		/* background: brown; */
-		flex: 1;
+		/* width: 100%; */
 	}
 </style>
