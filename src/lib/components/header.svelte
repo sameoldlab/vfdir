@@ -17,7 +17,7 @@
     display: flex;
     justify-content: space-between;
     padding-inline: 2em;
-		grid-row: header-start / header-end;
+		/* grid-row: header-start / header-end; */
 		grid-column: full-start / full-end;
 		border-bottom: 1px solid var(--line);
   }

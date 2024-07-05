@@ -31,10 +31,10 @@ html, body {
 	flex-direction: column;
 	min-height: 100%;
 	display: grid;
-	grid-template-rows: [header-start] min-content [header-end] 1fr;
-	grid-template-columns: [full-start] min-content[chan-end] repeat(3, 1rem 1fr) [full-end];
+	grid-template-rows: [header-start] 2.5rem [header-end] repeat(auto-fill, minmax(1.3rem, 1fr));
+	/* grid-template-rows: [header-start] min-content [header-end] 1fr; */
 
-	/* grid-template-columns: [chan-] min-content[chan-end]  repeat(3, 1rem 1fr); */
+	grid-template-columns: [full-start] min-content[chan-end] repeat(3, 1rem 1fr) [full-end];
 }
 
 h1 {

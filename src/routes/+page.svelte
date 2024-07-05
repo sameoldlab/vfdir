@@ -44,8 +44,10 @@
 </script>
 
 <div class="pane left" bind:clientWidth={leftWidth}>
-	<a href="/df/adsaf" class="item">link</a>
-	<a href="/gf/adsdsafdsf" class="item">link</a>
+	<a href="/df/adsaf" class="item">Convivially Situated</a>
+	<a href="/gf/adsdsafdsf" class="item"
+		>yet another UI Metachanel on are dot na</a
+	>
 	<a href="/rtf/fsdsaf" class="item">link</a>
 	<a href="/dhf/adsdsf" class="item">link</a>
 	<a href="/dh/adsaf" class="item">link</a>
@@ -78,7 +80,7 @@
 <style>
 	.handle {
 		width: 1rem;
-		grid-row: 2;
+		grid-row: 2 /-1;
 		/* opacity: 0; */
 		outline: 4px solid transparent;
 		display: flex;
@@ -111,30 +113,38 @@
 		}
 	}
 	.pane {
-		display: flex;
-		flex-direction: column;
+		display: grid;
+		grid-template-rows: subgrid;
+		grid-row: 2 / -1;
+		align-items: baseline;
 		/* border-inline-end: 1px solid hsl(0 0% 24%); */
 		/* padding: .5em; */
-		grid-row-start: 2;
 		/* width: 1fr; */
+		padding: 0.75em 0.5em;
 		.item {
 			/* border-block: 1px solid ; */
-			padding: 0.25em 0.75em;
+			padding: 0.75em 0.5em;
+			overflow: hidden;
+			font-size: 0.8rem;
+			/* height: 1.1rem; */
+			white-space: nowrap;
+			text-overflow: ellipsis;
+			/* margin: 0.25em 0.75em; */
 			&:hover,
 			&:focus {
-				background: red;
+				background: oklch(0.24 0 89.88);
 			}
 		}
 	}
-	.pane.left { 
+	.pane.left {
 		grid-column: full-start / chan-end;
 		min-width: fit-content;
-		width: 20ch;
-		} 
-		
-		.pane.right {
-			/* min-width: fit-content; */
-			/* width: 40ch; */
+		width: 30ch;
+	}
+
+	.pane.right {
+		/* min-width: fit-content; */
+		/* width: 40ch; */
 		/* background: brown; */
 		/* width: 100%; */
 	}
