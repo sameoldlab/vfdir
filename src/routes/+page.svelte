@@ -2,39 +2,41 @@
 	// import GridView from '$lib/components/GridView.svelte'
 	import { channels } from '$lib/store/data.svelte.js'
 	import type { Action } from 'svelte/action'
-	let leftWidth: number
+
 	const resizer: Action<HTMLDivElement> = el => {
-		const leftPane = el.previousElementSibling as HTMLDivElement
-		const rightPane = el.nextElementSibling as HTMLDivElement
-		// let directionX = 0
+		const left = el.previousElementSibling as HTMLDivElement
+		const leftWidth = left.getBoundingClientRect().width
 
 		const doc_mouseMove = (e: MouseEvent) => {
-			leftPane.style.width = `${leftWidth + e.movementX}px`
-			document.body.style.cursor = 'col-resize'
-			document.body.style.userSelect = 'none'
-			document.body.style.pointerEvents = 'none'
-			// directionY = e.movementY
+			const leftWidth = left.getBoundingClientRect().width
+			left.style.width = `${leftWidth + e.movementX}px`
 		}
 		const doc_mouseUp = () => {
 			document.body.style.removeProperty('cursor')
 			document.body.style.removeProperty('user-select')
-			document.body.style.removeProperty('pointer-events')
+			// document.body.style.removeProperty('pointer-events')
 
 			document.removeEventListener('mousemove', doc_mouseMove)
 			document.removeEventListener('mouseup', doc_mouseUp)
 		}
 
 		const el_mouseDown = () => {
-			el.style.cursor = 'col-resize'
-
+			document.body.style.cursor = 'col-resize'
+			document.body.style.userSelect = 'none'
+			// document.body.style.pointerEvents = 'none'
 			document.addEventListener('mousemove', doc_mouseMove)
 			document.addEventListener('mouseup', doc_mouseUp)
 		}
+		const el_dblclick = () => {
+			left.style.width = `${leftWidth}px`
+		}
 
+		el.addEventListener('dblclick', el_dblclick)
 		el.addEventListener('mousedown', el_mouseDown)
 
 		return {
 			destroy() {
+				el.removeEventListener('dblclick', el_dblclick)
 				el.removeEventListener('mousedown', el_mouseDown)
 				document.removeEventListener('mousemove', doc_mouseMove)
 				document.removeEventListener('mouseup', doc_mouseUp)
@@ -72,8 +74,7 @@
 	<a href="/nf/adfsaf" class="item"> link</a>
 	<a href="/erwf/adsdaf" class="item"> link</a>
 </div>
-
-<div class="handle">
+<div class="handle" draggable use:resizer>
 	<div></div>
 </div>
 
@@ -114,18 +115,21 @@
 	}
 	.pane {
 		display: grid;
+		/* display: flex; */
+		/* flex-direction: column; */
 		grid-template-rows: subgrid;
 		grid-row: 2 / -1;
-		align-items: baseline;
+		align-items: center;
 		/* border-inline-end: 1px solid hsl(0 0% 24%); */
 		/* padding: .5em; */
 		/* width: 1fr; */
-		padding: 0.75em 0.5em;
+		padding: 0.75rem 0.15rem;
 		.item {
 			/* border-block: 1px solid ; */
-			padding: 0.75em 0.5em;
+			width: 100%;
+			font-size: 0.85rem;
+			padding: 0.5em 0.5em;
 			overflow: hidden;
-			font-size: 0.8rem;
 			/* height: 1.1rem; */
 			white-space: nowrap;
 			text-overflow: ellipsis;
@@ -138,14 +142,18 @@
 	}
 	.pane.left {
 		grid-column: full-start / chan-end;
-		min-width: fit-content;
+		padding-inline-start: 0.5rem;
+		max-width: 50ch;
+		min-width: 5ch;
 		width: 30ch;
 	}
 
 	.pane.right {
-		/* min-width: fit-content; */
+		min-width: 10ch;
+
 		/* width: 40ch; */
 		/* background: brown; */
+		width: 100%;
 		/* width: 100%; */
 	}
 </style>
