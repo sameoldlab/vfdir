@@ -31,15 +31,12 @@ html, body {
 }
 
 .contents {
-	display: flex;
-	flex-direction: column;
-	min-height: 100%;
-	display: grid;
-	grid-template-rows: [header-start] 2.5rem [header-end] repeat(auto-fill, minmax(min-content, 1.2rem));
-	/* grid-template-rows: [header-start] min-content [header-end] 1fr; */
-
-	grid-template-columns: [full-start] auto [chan-end] 1rem 1fr 1rem 3fr [full-end];
+	min-height: 100dvh;
 	max-width: 100%;
+	overflow: clip;
+	display: grid;
+	grid-template-rows: [header-start] 2rem [header-end] repeat(auto-fill, 2.5rem);
+	grid-template-columns: [full-start] auto [chan-end] 1rem 1fr 1rem 3fr [full-end];
 }
 
 h1 {

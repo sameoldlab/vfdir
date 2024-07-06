@@ -45,8 +45,8 @@
 	}
 </script>
 
-<div class="pane left" bind:clientWidth={leftWidth}>
-	<a href="/df/adsaf" class="item">Convivially Situated</a>
+<div class="pane left">
+	<a href="/df/adsaf" class="item" tabindex="0">Convivially Situated</a>
 	<a href="/gf/adsdsafdsf" class="item"
 		>yet another UI Metachanel on are dot na</a
 	>
@@ -78,9 +78,16 @@
 	<div></div>
 </div>
 
+<div class="pane detail">
+	<h1>Details</h1>
+	<h1>Details</h1>
+	<h1>Details</h1>
+	<h1>Details</h1>
+</div>
+
 <style>
 	.handle {
-		width: 1rem;
+		width: .5rem;
 		grid-row: 2 /-1;
 		/* opacity: 0; */
 		outline: 4px solid transparent;
@@ -90,7 +97,7 @@
 
 		&:hover {
 			animation: delayed-resize 0ms 150ms ease-out forwards;
-			background: oklch(0.24 0 89.88);
+			/* background: oklch(0.24 0 89.88); */
 			/* outline: 4px solid oklch(.3 0 0); */
 			/* delay 200ms then transition cursor to resize */
 			/* width: 4px; */
@@ -115,8 +122,6 @@
 	}
 	.pane {
 		display: grid;
-		/* display: flex; */
-		/* flex-direction: column; */
 		grid-template-rows: subgrid;
 		grid-row: 2 / -1;
 		align-items: center;
@@ -154,6 +159,11 @@
 		/* width: 40ch; */
 		/* background: brown; */
 		width: 100%;
-		/* width: 100%; */
+	}
+	.pane.detail {
+		/* background: red; */
+		width: 1fr;
+		display: block;
+		/* flex-direction: column; */
 	}
 </style>
