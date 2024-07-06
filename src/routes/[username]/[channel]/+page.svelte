@@ -1,17 +1,29 @@
 <script lang="ts">
-  import {page} from '$app/stores'
-  import GridView from "$lib/components/GridView.svelte";
-  import { getContents as getArenaContents } from '$lib/store/arena-apiv2.svelte.js'
+	import { page } from '$app/stores'
+	import { channels } from '$lib/store/data.svelte.js'
+	import { db } from '$lib/store/initSqlite.svelte'
+	const { channel: slug, username } = $page.params
 
-	const channel = $page.params.channel
-	let contents
-	getArenaContents(channel).then(data => {
-		console.log(data)
-	})
+	// const channels = getChannels(db.promiser)
+
+	// console.log('fetching "channels"')
+	// getArenaChannels().then(async res => {
+	// 	console.log("res", res)
+	// 	await channels.push(res.channels)
+	// 	console.log('Filled', channels.list)
+	// })
+
+	channels.update(db.promiser)
+	const metadata = $derived(channels.list.find(v => v.slug === slug))
+	$effect(() => console.log(metadata))
 </script>
 
-<h1>{channel}</h1>
-{#if contents}
-	{contents}
-	<!-- <GridView content={contents.list} /> -->
+<h1>{slug}</h1>
+<!-- <GridView content={contents.list} /> -->
+Data:
+{#if metadata}
+	<li>{metadata.created_at}</li>
+	<li>{metadata.slug}</li>
+	<li>{metadata.status}</li>
+	<li>{metadata.title}</li>
 {/if}

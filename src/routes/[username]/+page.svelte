@@ -8,6 +8,7 @@
 	
 	// getArenaContents(channel).then(data => {		console.log(data)	})
 </script>
-<h1>Channels</h1>
+<h1>vfdir / {username}</h1>
+<br>
 
-{username}
+<h2>Channels</h2>
