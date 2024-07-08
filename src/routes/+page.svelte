@@ -1,6 +1,7 @@
 <script lang="ts">
+  import BlockDetails from './blockDetails.svelte';
 	// import GridView from '$lib/components/GridView.svelte'
-	import { channels } from '$lib/store/data.svelte.js'
+	// import { channels } from '$lib/store/data.svelte.js'
 	import type { Action } from 'svelte/action'
 
 	const resizer: Action<HTMLDivElement> = el => {
@@ -79,10 +80,7 @@
 </div>
 
 <div class="pane detail">
-	<h1>Details</h1>
-	<h1>Details</h1>
-	<h1>Details</h1>
-	<h1>Details</h1>
+	<BlockDetails/>	
 </div>
 
 <style>
@@ -161,9 +159,12 @@
 		width: 100%;
 	}
 	.pane.detail {
+		/* grid-column: 5 / full-end; */
 		/* background: red; */
-		width: 1fr;
+		min-width: 30ch;
+		width: 40ch;
 		display: block;
+		overflow-y: auto;
 		/* flex-direction: column; */
 	}
 </style>
