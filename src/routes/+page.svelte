@@ -44,6 +44,28 @@
 			},
 		}
 	}
+	const key: Action<HTMLAnchorElement> = (a) => {
+		const prev = a.previousElementSibling as HTMLAnchorElement | null
+		const next = a.nextElementSibling as HTMLAnchorElement | null
+		function keydown(e: KeyboardEvent) {
+			console.log(e);
+			console.log(next);
+			if(e.key === "ArrowDown") {
+				next.focus()
+				return
+			}
+			if(e.key === "ArrowUp") {
+				prev.focus()
+				return
+			}
+		}
+		a.addEventListener('keydown', keydown)
+		return({
+			destroy() {
+				a.removeEventListener('keydown', keydown)
+			},
+		})
+	}
 </script>
 
 <div class="pane left">
@@ -67,13 +89,13 @@
 	<div></div>
 </div>
 <div class="pane right">
-	<a href="/df/adsaf" class="item"> link</a>
-	<a href="/gf/adsdsafdsf" class="item"> link</a>
-	<a href="/rtf/fsdsaf" class="item"> link</a>
-	<a href="/dhf/adsdsf" class="item"> link</a>
-	<a href="/dh/adsaf" class="item"> link</a>
-	<a href="/nf/adfsaf" class="item"> link</a>
-	<a href="/erwf/adsdaf" class="item"> link</a>
+	<a href="/df/adsaf" class="item" use:key> link</a>
+	<a href="/gf/adsdsafdsf" class="item" use:key> link</a>
+	<a href="/rtf/fsdsaf" class="item" use:key> link</a>
+	<a href="/dhf/adsdsf" class="item" use:key> link</a>
+	<a href="/dh/adsaf" class="item" use:key> link</a>
+	<a href="/nf/adfsaf" class="item" use:key> link</a>
+	<a href="/erwf/adsdaf" class="item" use:key> link</a>
 </div>
 <div class="handle" draggable use:resizer>
 	<div></div>
