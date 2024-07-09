@@ -91,7 +91,6 @@
 		outline: 4px solid transparent;
 		display: flex;
 		justify-content: center;
-		transition: background-color 100ms 80ms ease-out;
 
 		&:hover {
 			animation: delayed-resize 0ms 150ms ease-out forwards;
@@ -100,12 +99,17 @@
 			/* delay 200ms then transition cursor to resize */
 			/* width: 4px; */
 			opacity: 1;
+			animation: delayed-resize 0ms 80ms ease-out forwards;
+			div {
+				background-color: color-mix(in oklch, var(--line), oklch(.7 0.2 80));
+			}
 		}
 		& div {
 			width: 1px;
 			height: 100%;
 			background: var(--line);
 			opacity: 1;
+			transition: background-color 100ms 80ms ease-out;
 		}
 	}
 
@@ -146,23 +150,25 @@
 	.pane.left {
 		grid-column: full-start / chan-end;
 		padding-inline-start: 0.5rem;
-		max-width: 50ch;
-		min-width: 5ch;
-		width: 30ch;
+		max-width: 35ch;
+		min-width: 15ch;
+		/* width: 25ch; */
 	}
 
 	.pane.right {
+		/* grid-column: 3 / 4; */
 		min-width: 10ch;
-
+		max-width: 30ch;
+		min-width: 1fr;
 		/* width: 40ch; */
 		/* background: brown; */
-		width: 100%;
+		width: 1fr;
 	}
 	.pane.detail {
 		/* grid-column: 5 / full-end; */
 		/* background: red; */
 		min-width: 30ch;
-		width: 40ch;
+		/* width: 40ch; */
 		display: block;
 		overflow-y: auto;
 		/* flex-direction: column; */
