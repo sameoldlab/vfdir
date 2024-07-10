@@ -1,51 +1,70 @@
 <script lang="ts">
 	import block from '$lib/dummy/block.js'
-	import original from '$lib/dummy/original.png'
-
 	console.log(block);
 
-	const {title, class: cl, description, image, connections, user, state, visibility, created_at, source} = block
+	const {title, class: cl, description, image, connections, user, created_at, source} = block
 	
 </script>
-
-<h1>{title}</h1>
-<p class="description">{description}</p>
-<img src={block.image.original.url} crossorigin="anonymous" alt="failed">
-<img src={original} alt={"description"}>
-<div class="metadata">
-<div class="data-item">
-	<p>Type</p>
-	<p>{cl}</p>
-</div>
-<div class="data-item">
-	<p>Added</p>
-	<p>{new Date(created_at).toLocaleDateString()}</p>
-</div>
-<div class="data-item">
-	<p>By</p>
-	<a href={user.slug}> {user.username} </a>
-</div>
-<h2>Related</h2>
-<div class="connections">
-{#each connections as conn}
-	<div class="connection">
-		<p>
-			<a href={conn.slug}>{conn.title}</a>
-		</p>
-		<p>{conn.length} blocks</p>
-		<p>{conn.user_id}</p>
+<article>
+	<header>
+		<h1>{title}</h1>
+		<p class="description">{description}</p>
+	</header>
+	<div>
+		<div class="block">
+			<img src={image.original.url} crossorigin="anonymous" alt="failed">
+		</div>
+		<div class="metadata">
+			<div class="data-item">
+				<p>Type</p>
+				<p>{cl}</p>
+			</div>
+			<div class="data-item">
+				<p>Added</p>
+				<p>{new Date(created_at).toLocaleDateString()}</p>
+			</div>
+			<div class="data-item">
+				<p>By</p>
+				<a href={user.slug}> {user.username} </a>
+			</div>
+			<h2>Related</h2>
+			<div class="connections">
+			{#each connections as conn}
+				<div class="connection">
+					<p>
+						<a href={conn.slug}>{conn.title}</a>
+					</p>
+					<p>{conn.length} blocks</p>
+					<p>{conn.user_id}</p>
+				</div>
+			{/each}
+		</div>
+			<!--<pre>{JSON.stringify(block).replaceAll(/\{/g, '\n    ')}</pre>-->
 	</div>
-{/each}
-</div>
-<!--<pre>{JSON.stringify(block).replaceAll(/\{/g, '\n    ')}</pre>-->
+</article>
 
-</div>
 <style>
-	img {
+	article {
 		width: 100%;
+		& > div {
+			display: flex;	
+			gap: 2em;
+			flex-wrap: wrap;
+			width: 100%;
+			justify-content: space-evenly;
+			align-items: center;
+		}
+	}
+	div.block {
+		flex-grow: 1;
+		display: flex;
+		justify-content: center;
 		padding-block: 1rem;
 	}
-	h1, h2, h3 {
+	img {
+		width: min(100%, 700px);
+	}
+	h1, h2 {
 		font-size: 1rem;
 		padding-block-start: .75em;
 		padding-block-end: .25em;
