@@ -24,7 +24,10 @@ function createPromiser() {
 		
 		db.fulfilled = true
 	}
-	initialize()
+
+	console.log('init')
+	if(db.promiser === null) initialize()
+
 	return db
 }
 
