@@ -1,14 +1,64 @@
 <script lang="ts">
-  import BlockDetails from '$lib/components/blockDetails.svelte';
-	// import GridView from '$lib/components/GridView.svelte'
-	// import { channels } from '$lib/store/data.svelte.js'
-	import type { Action } from 'svelte/action'
+  import BlockDetails from '$lib/components/BlockDetails.svelte';
+	import GridView from '$lib/components/GridView.svelte'
+	import {resizer, key} from '$lib/actions'
+  import type { Channel } from '$lib/store/data.svelte';
+	import { db } from '$lib/store/tinyb.svelte'
+  import { channels} from '$lib/store/data.svelte';
+  import { pushState } from '$app/navigation'
+  import { page } from '$app/stores'
 
+	// let channels = {list: []}
+	const addItem = (e: MouseEvent) => {
+		pushState('', {
+			show: true
 		})
 	}
+
+	const addChannel = (channel: Partial<Channel>) => {
+		if(!channels) return
+		const {
+			title,
+			status,
+			author_slug,
+			flags
+		} = {
+			...channel,
+			status: 'local',
+			author_slug: 'local',
+			flags: [],
+			} as Channel
+		console.log('channel', title, status, author_slug, flags)
+		const sanitize = (str: string): string => str.replaceAll(' ', '-')
+		
+		channels.push(db.db, [{
+			slug: sanitize(title)+(new Date().getMilliseconds().toString()),
+			title,
+			created_at: new Date().toISOString(),
+			status,
+			author_slug,
+			flags
+		}])
+	}
+	addChannel({
+		title: 'fdsfTestng'
+	})
+
+	// const loadDb = async () => {
+	// 	console.log('loading db...')
+	// 	const data = await import("$lib/store/data.svelte")
+	// 	channels = data.channels
+	// 	console.log('db loaded: ', data)
+	// }
+	// onMount(loadDb)
 </script>
 
 <div class="pane left">
+	{#each channels.list as { title, slug }}
+		<a href={slug} class="item">{title}</a>
+		{:else}
+			<div class="item">empty</div>
+	{/each} 
 	<a href="/df/adsaf" class="item" tabindex="0">Convivially Situated</a>
 	<a href="/gf/adsdsafdsf" class="item"
 		>yet another UI Metachanel on are dot na</a
@@ -18,17 +68,13 @@
 	<a href="/dh/adsaf" class="item">link</a>
 	<a href="/nf/adfsaf" class="item">link</a>
 	<a href="/erwf/adsdaf" class="item">link</a>
-	<!-- 		{#each channels.list as { title, slug }}
-			{title}
-			<!-- <GridView content={channels} /> --
-		{:else}
-			<div class="item">empty</div>
-		{/each} -->
 </div>
 <div class="handle" draggable use:resizer>
 	<div></div>
 </div>
 <div class="pane right">
+	<button onclick={addItem}>New Channel</button>
+
 	<a href="/df/adsaf" class="item" use:key> link</a>
 	<a href="/gf/adsdsafdsf" class="item" use:key> link</a>
 	<a href="/rtf/fsdsaf" class="item" use:key> link</a>
@@ -55,12 +101,6 @@
 		justify-content: center;
 
 		&:hover {
-			animation: delayed-resize 0ms 150ms ease-out forwards;
-			/* background: oklch(0.24 0 89.88); */
-			/* outline: 4px solid oklch(.3 0 0); */
-			/* delay 200ms then transition cursor to resize */
-			/* width: 4px; */
-			opacity: 1;
 			animation: delayed-resize 0ms 80ms ease-out forwards;
 			div {
 				background-color: color-mix(in oklch, var(--line), oklch(.7 0.2 80));
