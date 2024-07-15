@@ -26,6 +26,9 @@ importers:
       '@tsconfig/svelte':
         specifier: ^5.0.4
         version: 5.0.4
+      '@vlcn.io/crsqlite-wasm':
+        specifier: ^0.16.0
+        version: 0.16.0
       arena-ts:
         specifier: ^1.0.2
         version: 1.0.2
@@ -40,7 +43,7 @@ importers:
         version: 5.1.4(postcss@8.4.39)(svelte@5.0.0-next.141)(typescript@5.5.3)
       tinybase:
         specifier: ^5.0.4
-        version: 5.0.4(@sqlite.org/sqlite-wasm@3.46.0-build1)
+        version: 5.0.4(@sqlite.org/sqlite-wasm@3.46.0-build1)(@vlcn.io/crsqlite-wasm@0.16.0)
       tslib:
         specifier: ^2.6.3
         version: 2.6.3
@@ -401,6 +404,15 @@ packages:
   '@types/pug@2.0.10':
     resolution: {integrity: sha512-Sk/uYFOBAB7mb74XcpizmH0KOR2Pv3D2Hmrh1Dmy5BmK3MpdSa5kqZcg6EKBdklU0bFXX9gCfzvpnyUehrPIuA==}
 
+  '@vlcn.io/crsqlite-wasm@0.16.0':
+    resolution: {integrity: sha512-5gf52eyMYvZirxuEUo4QS65JhEsw3fndoO+tCtCEOxuiIEtvaKB2/6wuuKGRlMVkxIp4Bls70D3DCF5v9lcJxA==}
+
+  '@vlcn.io/wa-sqlite@0.22.0':
+    resolution: {integrity: sha512-OujKro0mAqP7/efUeCGB6zBiyMoSCFVe7jQKPF0n47U9ZhOaIW3kQUVCwF+CmzvzQfN1Vl4PrFQRNNxlSwTCNQ==}
+
+  '@vlcn.io/xplat-api@0.15.0':
+    resolution: {integrity: sha512-2/aE7VgI3EbIO5EcJGrskAJuCa2pteY1rWNWfhovFKMERe9NhJdlDMIB1I31X0sN/WC2DnF30RqcdTXNfYyzhQ==}
+
   acorn-typescript@1.4.13:
     resolution: {integrity: sha512-xsc9Xv0xlVfwp2o7sQ+GCQ1PgbkdcpWdTzrwXxO3xDMTAywVS3oXVOcOHuRjAPkS4P9b+yc/qNF15460v+jp4Q==}
     peerDependencies:
@@ -420,6 +432,9 @@ packages:
 
   aria-query@5.3.0:
     resolution: {integrity: sha512-b0P0sZPKtyu8HkeRAfCq0IfURZK+SuwMjY1UXGBU27wpAiTwQAIlq56IbIO+ytk/JjS1fMR14ee5WBBfKi5J6A==}
+
+  async-mutex@0.4.1:
+    resolution: {integrity: sha512-WfoBo4E/TbCX1G95XTjbWTE3X2XLG0m1Xbv2cwOtuPdyH9CZvnaA5nCt1ucjaKEgW2A5IF71hxrRhr83Je5xjA==}
 
   asynckit@0.4.0:
     resolution: {integrity: sha512-Oei9OH4tRh0YqU3GxhX79dM/mwVgvbZJaSNaRk+bshkj0S5cfHcgYakreBjrHwatXKbz+IoIdYLxrKim2MjW0Q==}
@@ -458,6 +473,9 @@ packages:
   combined-stream@1.0.8:
     resolution: {integrity: sha512-FQN4MRfuJeHf7cBbBMJFXhKSDq+2kAArBlmRBvcvFE5BB1HZKXtSFASDhdlz9zOYwxh8lDdnvmMOe/+5cdoEdg==}
     engines: {node: '>= 0.8'}
+
+  comlink@4.4.1:
+    resolution: {integrity: sha512-+1dlx0aY5Jo1vHy/tSsIGpSkN4tS9rZSW8FIhG0JH/crs9wwweswIo/POr451r7bZww3hFbPAKnTpimzL/mm4Q==}
 
   concat-map@0.0.1:
     resolution: {integrity: sha512-/Srv4dswyQNBfohGpz9o6Yb3Gz3SrUDqBH5rTuhGR7ahtlbYKnVxw2bCFMRljaA7EXHaXZ8wsHdodFvbkhKmqg==}
@@ -1138,6 +1156,18 @@ snapshots:
 
   '@types/pug@2.0.10': {}
 
+  '@vlcn.io/crsqlite-wasm@0.16.0':
+    dependencies:
+      '@vlcn.io/wa-sqlite': 0.22.0
+      '@vlcn.io/xplat-api': 0.15.0
+      async-mutex: 0.4.1
+
+  '@vlcn.io/wa-sqlite@0.22.0': {}
+
+  '@vlcn.io/xplat-api@0.15.0':
+    dependencies:
+      comlink: 4.4.1
+
   acorn-typescript@1.4.13(acorn@8.12.1):
     dependencies:
       acorn: 8.12.1
@@ -1154,6 +1184,10 @@ snapshots:
   aria-query@5.3.0:
     dependencies:
       dequal: 2.0.3
+
+  async-mutex@0.4.1:
+    dependencies:
+      tslib: 2.6.3
 
   asynckit@0.4.0: {}
 
@@ -1201,6 +1235,8 @@ snapshots:
   combined-stream@1.0.8:
     dependencies:
       delayed-stream: 1.0.0
+
+  comlink@4.4.1: {}
 
   concat-map@0.0.1: {}
 
@@ -1493,9 +1529,10 @@ snapshots:
       globalyzer: 0.1.0
       globrex: 0.1.2
 
-  tinybase@5.0.4(@sqlite.org/sqlite-wasm@3.46.0-build1):
+  tinybase@5.0.4(@sqlite.org/sqlite-wasm@3.46.0-build1)(@vlcn.io/crsqlite-wasm@0.16.0):
     optionalDependencies:
       '@sqlite.org/sqlite-wasm': 3.46.0-build1
+      '@vlcn.io/crsqlite-wasm': 0.16.0
 
   to-regex-range@5.0.1:
     dependencies:
