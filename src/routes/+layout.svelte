@@ -1,14 +1,23 @@
 <script>
   import '../app.css'
   import Header from '$lib/components/header.svelte'
-	import { db } from '$lib/store/initSqlite.svelte'
-	// import { bootstrap } from '$lib/store/data.svelte'
+	import { db } from '$lib/store/tinyb.svelte'
+	import { channels } from '$lib/store/data.svelte'
 	let { children } = $props();
+
+	let ready = $state(false)
+	$effect(()=> {
+		if(db.fulfilled) {
+			channels.init(db.db)
+			ready = true
+		}
+	})
+
 </script>
 
 <Header />
 
-{#if db.fulfilled === false }
+{#if !ready }
 	setting up sqlite
 {:else}
 	{@render children()}
