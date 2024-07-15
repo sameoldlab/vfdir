@@ -9,8 +9,9 @@
 //     console.log(val)
 //   })
 
-import type { Promiser } from '@sqlite.org/sqlite-wasm'
-import { filename } from './initSqlite.svelte'
+import { db, Cr } from '$lib/store/tinyb.svelte'
+import type { DB} from '@vlcn.io/crsqlite-wasm'
+
 type ChannelStatus = "local" | "closed" | "public" | "open"
 export type Channel = {
 	slug: string
@@ -20,67 +21,47 @@ export type Channel = {
 	author_slug: string
 	flags: string[]
 }
+
 class Channels {
 	list = $state<Channel[]>([])
+	#db: DB
 
-	async pull(promiser: Promiser, dbId: string | undefined) {
-		dbId = dbId ?? (await promiser('open', { filename })).dbId
-		console.log(`updating with ${dbId}`)
+	init(db: DB) {
+		this.#db = db
 
-		await promiser('exec', {
-			dbId,
-			sql: 'SELECT slug,title,created_at,status,author_slug,flags FROM Channels LIMIT 50',
-			callback: result => {
-				if (!result.row) return
-				const { row } = result
-				if (this.list.find(i => i.slug === row[0]) !== undefined) return
-				const item = {
-					slug: row[0],
-					title: row[1],
-					created_at: row[2],
-					status: row[3],
-					author_slug: row[4],
-					flags: row[5]
-				}
-				console.log(item)
-				console.log('pulled item from db')
-
-				this.list.push(item)
-				console.log('saved item from to this.list')
-				console.log(this.list)
-			},
-		})
-		await promiser('close', { dbId })
-		console.log(this.list)
+		db.onUpdate((type, dbName, tblName, rowid) => {
+		  console.log(`row ${rowid} in ${dbName}.${tblName} was ${type}`);
+		  this.pull()
+		});
 	}
 
-	async push(promiser: Promiser, channels: typeof this.list) {
-		console.log('promiser is ', promiser)
-		
-		const { dbId } = await promiser('open', { filename })
-		console.log(`opening ${dbId} for push`)
+	async pull() {
+		const query = await this.#db.execO<Channel>('SELECT slug,title,created_at,status,author_slug,flags FROM Channels')
+		console.log(query)
+		this.list=[...new Set([query, this.list].flat(1))]
+		// if (this.list.find(i => i.slug === row[0]) !== undefined) return
+		console.log(this.list)
 
-		channels.forEach(v => {
-			console.log(v)
-			if (
-				this.list.find(i => {
-					console.log(i)
-					return i?.slug === v.slug
-				}) !== undefined
-			)
-				return
-			console.log('item added to db')
-			promiser('exec', {
-				dbId,
-				sql: /* sql */ `
-					INSERT INTO Channels(slug,title,created_at,status,author_id,flags) VALUES(?,?,?,?,?,?);
-				`,
-				bind: [v.slug, v.title, v.created_at, v.status, v.author_slug, v.flags],
-			})
-		})
+		// await db.close()
+	}
 
-		this.pull(promiser, dbId)
-		promiser('close', { dbId })
+	async push(db: DB, channels: typeof this.list) {
+		const stmt = await db.prepare(`INSERT INTO Channels (slug, title, created_at, status, author_slug, flags) VALUES (?, ?, ?, ?, ?, ?);`)
+		// await db.tx(async (tx) => {
+			channels.forEach(async v => {
+				console.log(v)
+				if (
+					this.list.find(i => {
+						console.log(i)
+						return i?.slug === v.slug
+					}) !== undefined
+				) return
+					await stmt.run(null, v.slug, v.title, v.created_at, v.status, v.author_slug, v.flags)
+				})
+		// })
+		stmt.finalize(null)
+		// this.pull(promiser)
+		// promiser('close', { dbId })
 		// console.log(this.list)
 	}
 }
