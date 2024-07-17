@@ -9,8 +9,7 @@
 //     console.log(val)
 //   })
 
-import { db, Cr } from '$lib/store/tinyb.svelte'
-import type { DB} from '@vlcn.io/crsqlite-wasm'
+import type { DB } from '@vlcn.io/crsqlite-wasm'
 
 type ChannelStatus = "local" | "closed" | "public" | "open"
 export type Channel = {
@@ -24,32 +23,43 @@ export type Channel = {
 
 class Channels {
 	list = $state<Channel[]>([])
-	#db: DB
 
 	init(db: DB) {
-		this.#db = db
+		// load existing items from memory into store
+		db.execO<Channel>(`SELECT * FROM Channels`).then(q => this.list = q)
 
-		db.onUpdate((type, dbName, tblName, rowid) => {
-		  console.log(`row ${rowid} in ${dbName}.${tblName} was ${type}`);
-		  this.pull()
+		// callback to upload store on db change
+		// type === 18 is an addition have not worked on deletions or updates yet
+		db.onUpdate((type, _, tblName, rowid) => {
+			if (tblName !== 'Channels') return
+			console.log(`row ${rowid} in Blocks was ${type}`);
+			this.pull(db, rowid)
 		});
 	}
 
-	async pull() {
-		const query = await this.#db.execO<Channel>('SELECT slug,title,created_at,status,author_slug,flags FROM Channels')
-		console.log(query)
-		this.list=[...new Set([query, this.list].flat(1))]
-		// if (this.list.find(i => i.slug === row[0]) !== undefined) return
-		console.log(this.list)
-
+	async pull(db: DB, row: bigint | undefined = undefined) {
+		const query = await db.execO<Channel>(`SELECT * FROM Channels ${row === undefined ? '' : `WHERE rowId = ${row}`}`)
+		// console.log('query', query)
+		query.forEach(q => { if (this.list.findIndex(i => i.slug === q.slug) == -1) this.list.push(q) })
+		// console.table(this.list)
 		// await db.close()
 	}
 
 	async push(db: DB, channels: typeof this.list) {
 		const stmt = await db.prepare(`INSERT INTO Channels (slug, title, created_at, status, author_slug, flags) VALUES (?, ?, ?, ?, ?, ?);`)
-		// await db.tx(async (tx) => {
+		await db.tx(async (tx) => {
 			channels.forEach(async v => {
-				console.log(v)
+				if (this.list.findIndex(i => i.slug === v.slug) !== -1) return
+				await stmt.run(tx, v.slug, v.title, v.created_at, v.status, v.author_slug, v.flags)
+			})
+		})
+		stmt.finalize(null)
+		// this.pull(promiser)
+		// promiser('close', { dbId })
+		// console.log(this.list)
+	}
+}
+
 				if (
 					this.list.find(i => {
 						console.log(i)
