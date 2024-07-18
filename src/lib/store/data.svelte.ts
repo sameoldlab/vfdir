@@ -60,14 +60,52 @@ class Channels {
 	}
 }
 
+export const channels = new Channels()
+
+export type Block = {
+	"id": number,
+	"title": string,
+	"filename": string,
+	"description": string,
+	"type": string,
+	"content": string,
+	"image": string,
+	"created_at": string,
+	"updated_at": string,
+	"source": string,
+	"author_id": string,
+}
+class Blocks {
+	#list = $state<Map<Block['id'], Block>>(new SvelteMap())
+	get list() {return this.#list}
+
+	init(db: DB) {
+		db.execO<Block>(`SELECT * FROM Blocks`).then(q => {
+			this.#list = q.reduce((acc, curr) => acc.set(curr.id, curr), this.#list)
+		})
+
+		db.onUpdate((type, _, table, row) => {
+			if (table !== 'Blocks') return
+			console.log(`row ${row} in ${table} was ${type}`);
+			pull({db, row, list: this.#list, key: keys.Blocks, table})
+		})
+	}
+
+	async push(db: DB, blocks: Block[]) {
+		const stmt = await db.prepare(`INSERT INTO Blocks (id,title,filename,description,type,content,image,created_at,updated_at,source) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);`)
+
+		await db.tx(async (tx) => {
+			blocks.forEach(async v => {
+				if (this.#list.has(v[keys.Blocks])) return
+				await stmt.run(tx, v.id, v.title, v.filename, v.description, v.type, v.content, v.image, v.created_at, v.updated_at, v.source)
+			})
+		})
 		stmt.finalize(null)
-		// this.pull(promiser)
-		// promiser('close', { dbId })
 		// console.log(this.list)
 	}
 }
 
-export const channels = new Channels()
+export const blocks = new Blocks()
 
 function populateChannels() {
 	/* 
@@ -79,5 +117,7 @@ function populateChannels() {
 	*/
 }
 function getBlocks() {
-	
+
 }
+
+
