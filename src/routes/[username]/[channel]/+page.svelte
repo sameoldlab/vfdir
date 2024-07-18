@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { page } from '$app/stores'
 	import { channels } from '$lib/store/data.svelte.js'
-	import { db } from '$lib/store/initSqlite.svelte'
 	const { channel: slug, username } = $page.params
 
 	// const channels = getChannels(db.promiser)
@@ -13,8 +12,7 @@
 	// 	console.log('Filled', channels.list)
 	// })
 
-	channels.update(db.promiser)
-	const metadata = $derived(channels.list.find(v => v.slug === slug))
+	const metadata = $derived(channels.list.get(slug))
 	$effect(() => console.log(metadata))
 </script>
 

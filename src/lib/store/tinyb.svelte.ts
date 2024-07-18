@@ -9,7 +9,6 @@ export class Cr {
 	error = $state<Error>()
 }
 
-export const filename = 'file:vfdir.sqlite3?vfs=opfs'
 export const db = init()
 
 function init() {
