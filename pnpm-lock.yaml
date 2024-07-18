@@ -8,9 +8,6 @@ importers:
 
   .:
     devDependencies:
-      '@sqlite.org/sqlite-wasm':
-        specifier: 3.46.0-build1
-        version: 3.46.0-build1
       '@sveltejs/adapter-auto':
         specifier: ^3.2.2
         version: 3.2.2(@sveltejs/kit@2.5.18(@sveltejs/vite-plugin-svelte@3.1.1(svelte@5.0.0-next.190)(vite@5.3.4))(svelte@5.0.0-next.190)(vite@5.3.4))
@@ -41,9 +38,6 @@ importers:
       svelte-preprocess:
         specifier: ^5.1.4
         version: 5.1.4(postcss@8.4.39)(svelte@5.0.0-next.190)(typescript@5.5.3)
-      tinybase:
-        specifier: ^5.0.4
-        version: 5.0.4(@sqlite.org/sqlite-wasm@3.46.0-build1)(@vlcn.io/crsqlite-wasm@0.16.0)
       tslib:
         specifier: ^2.6.3
         version: 2.6.3
@@ -353,10 +347,6 @@ packages:
     resolution: {integrity: sha512-yjk2MAkQmoaPYCSu35RLJ62+dz358nE83VfTePJRp8CG7aMg25mEJYpXFiD+NcevhX8LxD5OP5tktPXnXN7GDw==}
     cpu: [x64]
     os: [win32]
-
-  '@sqlite.org/sqlite-wasm@3.46.0-build1':
-    resolution: {integrity: sha512-uWmSLLpcSiDkvbup5wA8Ks5gsg3hOXd2+wILZvj5NrjEM+Hr4Zo04BOOjdTEmWNAukngLQSm+czYUKiofHCzWg==}
-    hasBin: true
 
   '@sveltejs/adapter-auto@3.2.2':
     resolution: {integrity: sha512-Mso5xPCA8zgcKrv+QioVlqMZkyUQ5MjDJiEPuG/Z7cV/5tmwV7LmcVWk5tZ+H0NCOV1x12AsoSpt/CwFwuVXMA==}
@@ -770,60 +760,6 @@ packages:
   tiny-glob@0.2.9:
     resolution: {integrity: sha512-g/55ssRPUjShh+xkfx9UPDXqhckHEsHr4Vd9zX55oSdGZc/MD0m3sferOkwWtp98bv+kcVfEHtRJgBVJzelrzg==}
 
-  tinybase@5.0.4:
-    resolution: {integrity: sha512-Jh8qbVifvAqSN7AxX1jJ4ZhvoYFldmtSGAEOdbGFIOl8ZO5Rj1vn9dB5Gh30G+0eRCNxDMKyn2fShlV61AoLYQ==}
-    hasBin: true
-    peerDependencies:
-      '@automerge/automerge-repo': ^1.2.0
-      '@journeyapps/powersync-sdk-common': ^1.6.0
-      '@libsql/client': ^0.7.0
-      '@sqlite.org/sqlite-wasm': ^3.46.0-build2
-      '@vlcn.io/crsqlite-wasm': ^0.16.0
-      electric-sql: ^0.12.1
-      expo: ^51.0.0
-      expo-sqlite: ^14.0.3
-      partykit: ^0.0.107
-      partysocket: ^1.0.1
-      prettier: ^3.3.2
-      react: ^18.2.0
-      react-dom: ^18.2.0
-      sqlite3: ^5.1.7
-      ws: ^8.17.0
-      yjs: ^13.6.18
-    peerDependenciesMeta:
-      '@automerge/automerge-repo':
-        optional: true
-      '@journeyapps/powersync-sdk-common':
-        optional: true
-      '@libsql/client':
-        optional: true
-      '@sqlite.org/sqlite-wasm':
-        optional: true
-      '@vlcn.io/crsqlite-wasm':
-        optional: true
-      electric-sql:
-        optional: true
-      expo:
-        optional: true
-      expo-sqlite:
-        optional: true
-      partykit:
-        optional: true
-      partysocket:
-        optional: true
-      prettier:
-        optional: true
-      react:
-        optional: true
-      react-dom:
-        optional: true
-      sqlite3:
-        optional: true
-      ws:
-        optional: true
-      yjs:
-        optional: true
-
   to-regex-range@5.0.1:
     resolution: {integrity: sha512-65P7iz6X5yEr1cwcgvQxbbIw7Uk3gOy5dIdtZ4rDveLqhrdJP+Li/Hx6tyK0NEb+2GCyneCMJiGqrADCSNk8sQ==}
     engines: {node: '>=8.0'}
@@ -1096,8 +1032,6 @@ snapshots:
 
   '@rollup/rollup-win32-x64-msvc@4.18.1':
     optional: true
-
-  '@sqlite.org/sqlite-wasm@3.46.0-build1': {}
 
   '@sveltejs/adapter-auto@3.2.2(@sveltejs/kit@2.5.18(@sveltejs/vite-plugin-svelte@3.1.1(svelte@5.0.0-next.190)(vite@5.3.4))(svelte@5.0.0-next.190)(vite@5.3.4))':
     dependencies:
@@ -1527,11 +1461,6 @@ snapshots:
     dependencies:
       globalyzer: 0.1.0
       globrex: 0.1.2
-
-  tinybase@5.0.4(@sqlite.org/sqlite-wasm@3.46.0-build1)(@vlcn.io/crsqlite-wasm@0.16.0):
-    optionalDependencies:
-      '@sqlite.org/sqlite-wasm': 3.46.0-build1
-      '@vlcn.io/crsqlite-wasm': 0.16.0
 
   to-regex-range@5.0.1:
     dependencies:
