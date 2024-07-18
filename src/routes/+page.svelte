@@ -1,6 +1,6 @@
 <script lang="ts">
   import BlockDetails from '$lib/components/BlockDetails.svelte';
-	import GridView from '$lib/components/GridView.svelte'
+	// import GridView from '$lib/components/GridView.svelte'
 	import {resizer, key} from '$lib/actions'
   import type { Channel } from '$lib/store/data.svelte';
 	import { db } from '$lib/store/tinyb.svelte'
@@ -54,7 +54,7 @@
 </script>
 
 <div class="pane left">
-	{#each channels.list as { title, slug }}
+	{#each channels.list as [key, {slug, title}]}
 		<a href={slug} class="item">{title}</a>
 		{:else}
 			<div class="item">empty</div>

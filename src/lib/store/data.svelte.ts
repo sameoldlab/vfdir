@@ -1,15 +1,16 @@
-// import { ArenaClient } from "arena-ts";
-// const client = new ArenaClient({
-//   //   fetch: ("https://api.are.na/v2/",)
-//   token: "A86xyp6p1qm_ADrW40doxkitwLwDJ4T7HWmQSmZAhyc",
-// });
-// let Channels = [];
-// client.channels().then((val)=>{
-//     // Channels = val
-//     console.log(val)
-//   })
-
 import type { DB } from '@vlcn.io/crsqlite-wasm'
+import { SvelteMap } from 'svelte/reactivity'
+
+async function pull<V extends object, K extends keyof V, >({ db, row, list, key, table }:
+	{ db: DB, row: bigint | undefined, list: Map<V[K], V>, key: K, table: string }) {
+	const query = await db.execO<V>(`SELECT * FROM ${table}${row === undefined ? '' : ` WHERE rowId = ${row}`};`)
+	query.forEach(q => {if (!list.has(q[key])) list.set(q[key], q)})
+}
+
+const keys = Object.freeze({
+	'Channels': 'slug',
+	'Blocks': 'id'
+})
 
 type ChannelStatus = "local" | "closed" | "public" | "open"
 export type Channel = {
@@ -22,53 +23,43 @@ export type Channel = {
 }
 
 class Channels {
-	list = $state<Channel[]>([])
+	#list = $state<Map<Channel['slug'], Channel>>(new SvelteMap())
+
+	get list() {
+		return this.#list
+	}
 
 	init(db: DB) {
 		// load existing items from memory into store
-		db.execO<Channel>(`SELECT * FROM Channels`).then(q => this.list = q)
+		db.execO<Channel>(`SELECT * FROM Channels`).then(q => {
+			this.#list = q.reduce((acc, curr) => acc.set(curr.slug, curr), this.#list)
+		})
 
 		// callback to upload store on db change
 		// type === 18 is an addition have not worked on deletions or updates yet
-		db.onUpdate((type, _, tblName, rowid) => {
-			if (tblName !== 'Channels') return
-			console.log(`row ${rowid} in Blocks was ${type}`);
-			this.pull(db, rowid)
+		db.onUpdate((type, _, table, row) => {
+			if (table !== 'Channels') return
+			console.log(`row ${row} in ${table} was ${type}`);
+			pull({db, row, list: this.#list, key: keys.Channels, table})
+			// this.pull(db, row)
 		});
 	}
 
-	async pull(db: DB, row: bigint | undefined = undefined) {
-		const query = await db.execO<Channel>(`SELECT * FROM Channels ${row === undefined ? '' : `WHERE rowId = ${row}`}`)
-		// console.log('query', query)
-		query.forEach(q => { if (this.list.findIndex(i => i.slug === q.slug) == -1) this.list.push(q) })
-		// console.table(this.list)
-		// await db.close()
-	}
-
-	async push(db: DB, channels: typeof this.list) {
+	async push(db: DB, channels: Channel[]) {
 		const stmt = await db.prepare(`INSERT INTO Channels (slug, title, created_at, status, author_slug, flags) VALUES (?, ?, ?, ?, ?, ?);`)
 		await db.tx(async (tx) => {
 			channels.forEach(async v => {
-				if (this.list.findIndex(i => i.slug === v.slug) !== -1) return
+				if (this.#list.has(v[keys.Channels])) return
 				await stmt.run(tx, v.slug, v.title, v.created_at, v.status, v.author_slug, v.flags)
 			})
 		})
 		stmt.finalize(null)
 		// this.pull(promiser)
 		// promiser('close', { dbId })
-		// console.log(this.list)
+		// console.log(this.#list)
 	}
 }
 
-				if (
-					this.list.find(i => {
-						console.log(i)
-						return i?.slug === v.slug
-					}) !== undefined
-				) return
-					await stmt.run(null, v.slug, v.title, v.created_at, v.status, v.author_slug, v.flags)
-				})
-		// })
 		stmt.finalize(null)
 		// this.pull(promiser)
 		// promiser('close', { dbId })
