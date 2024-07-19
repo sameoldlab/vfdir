@@ -1,54 +1,50 @@
 <script lang="ts">
-  import BlockDetails from '$lib/components/BlockDetails.svelte';
+	// import BlockDetails from '$lib/components/BlockDetails.svelte';
 	// import GridView from '$lib/components/GridView.svelte'
-	import {resizer, key} from '$lib/actions'
-  import type { Channel } from '$lib/store/data.svelte';
-  import { pushState } from '$app/navigation'
-  import { page } from '$app/stores'
-	import { db } from '$lib/store/sqlite.svelte'
-  import { channels} from '$lib/store/daa.s elte';
+	import { resizer, key } from "$lib/actions";
+	import type { Channel } from "$lib/store/data.svelte";
+	import { pushState } from "$app/navigation";
+	import { page } from "$app/stores";
+	import { db } from "$lib/store/sqlite.svelte";
+	import { channels } from "$lib/store/data.svelte";
 
 	// let channels = {list: []}
 	const addItem = (e: MouseEvent) => {
-		pushState('', {
-			show: true
-		})
-	}
+		pushState("", {
+			show: true,
+		});
+	};
 
 	const addChannel = (channel: Partial<Channel>) => {
-		if(!channels) return
-		const {
-			title,
-			status,
-			author_slug,
-			flags
-		} = {
+		if (!channels) return;
+		const { title, status, author_slug, flags } = {
 			...channel,
-			status: 'local',
-			author_slug: 'local',
+			status: "private",
+			author_slug: "local",
 			flags: [],
-			} as Channel
-		console.log('channel', title, status, author_slug, flags)
-		const sanitize = (str: string): string => str.replaceAll(' ', '-')
-		
-		channels.push(db.db, [{
-			slug: sanitize(title)+(new Date().getMilliseconds().toString()),
-			title,
-			created_at: new Date().toISOString(),
-			status,
-			author_slug,
-			flags
-		}])
-	}
+		} as Channel;
+		console.log("channel", title, status, author_slug, flags);
+		const sanitize = (str: string): string => str.replaceAll(" ", "-");
 
+		channels.push(db.db, [
+			{
+				slug: sanitize(title) + new Date().getMilliseconds().toString(),
+				title,
+				created_at: new Date(),
+				status,
+				author_slug,
+				flags,
+			},
+		]);
+	};
 </script>
 
 <div class="pane left">
-	{#each channels.list as [key, {slug, title}]}
+	{#each channels.list as [key, { slug, title }]}
 		<a href={slug} class="item">{title}</a>
-		{:else}
-			<div class="item">empty</div>
-	{/each} 
+	{:else}
+		<div class="item">empty</div>
+	{/each}
 	<a href="/df/adsaf" class="item" tabindex="0">Convivially Situated</a>
 	<a href="/gf/adsdsafdsf" class="item"
 		>yet another UI Metachanel on are dot na</a
@@ -78,12 +74,12 @@
 </div>
 
 <div class="pane detail">
-	<BlockDetails/>	
+	<BlockDetails />
 </div>
 
 <style>
 	.handle {
-		width: .5rem;
+		width: 0.5rem;
 		grid-row: 2 /-1;
 		/* opacity: 0; */
 		outline: 4px solid transparent;
@@ -93,7 +89,7 @@
 		&:hover {
 			animation: delayed-resize 0ms 80ms ease-out forwards;
 			div {
-				background-color: color-mix(in oklch, var(--line), oklch(.7 0.2 80));
+				background-color: color-mix(in oklch, var(--line), oklch(0.7 0.2 80));
 			}
 		}
 		& div {
