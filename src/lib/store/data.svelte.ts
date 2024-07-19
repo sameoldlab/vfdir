@@ -18,7 +18,8 @@ type ChannelFlags =  'published' | 'collaboration' | 'default' | 'profile'
 export type Channel = {
 	slug: string
 	title: string
-	created_at: string
+	updated: Date
+	created_at: Date
 	status: ChannelStatus
 	author_slug: string
 	flags: ChannelFlags[]
@@ -69,11 +70,11 @@ export const channels = new Channels()
 export type Block = {
 	"id": number,
 	"title": string,
-	"filename": string,
+	"filename"?: string,
 	"description": string,
 	"type": string,
-	"content": string,
-	"image": string,
+	"content"?: string,
+	"image"?: string,
 	"created_at": string,
 	"updated_at": string,
 	"source": string,
@@ -96,13 +97,13 @@ class Blocks {
 		})
 	}
 
-	async push(db: DB, blocks: Block[]) {
-		const stmt = await db.prepare(`INSERT INTO Blocks (id,title,filename,description,type,content,image,created_at,updated_at,source) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);`)
+	async push(db: DB, blocks: Exclude<Block, 'id'>[]) {
+		const stmt = await db.prepare(`INSERT INTO Blocks (title,filename,description,type,content,image,created_at,updated_at,source) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);`)
 
 		await db.tx(async (tx) => {
 			blocks.forEach(async v => {
 				if (this.#list.has(v[keys.Blocks])) return
-				await stmt.run(tx, v.id, v.title, v.filename, v.description, v.type, v.content, v.image, v.created_at, v.updated_at, v.source)
+				await stmt.run(tx, v.title, v.filename, v.description, v.type, v.content, v.image, v.created_at, v.updated_at, v.source)
 			})
 		})
 		stmt.finalize(null)
