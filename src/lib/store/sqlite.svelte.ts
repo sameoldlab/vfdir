@@ -43,23 +43,23 @@ async function initDb(db: DB) {
 		await db.tx(tx => tx.exec(`
 			pragma journal_mode = wal;
 			CREATE TABLE IF NOT EXISTS Users(
-						id INT PRIMARY KEY,
-						slug TEXT,
-						firstname TEXT,
-						lastname TEXT,
-						avatar TEXT
-					) WITHOUT ROWID;
-					
-			CREATE TABLE IF NOT EXISTS Channels(
 				id INT PRIMARY KEY,
-				slug TEXT, 
+				slug TEXT,
+				firstname TEXT,
+				lastname TEXT,
+				avatar TEXT
+			);
+
+			CREATE TABLE IF NOT EXISTS Channels(
+				slug TEXT PRIMARY KEY UNIQUE,
 				title TEXT DEFAULT '',
 				created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-				status TEXT DEFAULT 'offline',
+				status TEXT DEFAULT 'private',
 				author_slug TEXT DEFAULT 'local',
-				flags TEXT default '[]'
+				flags TEXT default '[]',
+				arena_id INT
 			);
-			
+
 			INSERT INTO Users(id) VALUES ('local');
 			
 			CREATE TABLE IF NOT EXISTS Blocks(
@@ -69,11 +69,12 @@ async function initDb(db: DB) {
 				description TEXT DEFAULT '',
 				type TEXT ,
 				content TEXT,
-				image TEXT
+				image TEXT,
 				created_at TEXT DEFAULT CURRENT_TIMESTAMP,
 				updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
 				source TEXT,
-				author_id TEXT DEFAULT 'local'
+				author_id TEXT DEFAULT 'local',
+				arena_id INT
 			);
 			
 			CREATE TABLE IF NOT EXISTS BlocksConnections(
