@@ -41,6 +41,7 @@ async function initDb(db: DB) {
 
 		console.debug('Initializing database...')
 		await db.tx(tx => tx.exec(`
+			pragma journal_mode = wal;
 			CREATE TABLE IF NOT EXISTS Users(
 						id INT PRIMARY KEY,
 						slug TEXT,

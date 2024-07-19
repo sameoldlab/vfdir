@@ -3,10 +3,10 @@
 	// import GridView from '$lib/components/GridView.svelte'
 	import {resizer, key} from '$lib/actions'
   import type { Channel } from '$lib/store/data.svelte';
-	import { db } from '$lib/store/tinyb.svelte'
-  import { channels} from '$lib/store/data.svelte';
   import { pushState } from '$app/navigation'
   import { page } from '$app/stores'
+	import { db } from '$lib/store/sqlite.svelte'
+  import { channels} from '$lib/store/daa.s elte';
 
 	// let channels = {list: []}
 	const addItem = (e: MouseEvent) => {
