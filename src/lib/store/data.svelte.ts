@@ -12,14 +12,17 @@ const keys = Object.freeze({
 	'Blocks': 'id'
 })
 
-type ChannelStatus = "local" | "closed" | "public" | "open"
+type ChannelStatus = "private" | "closed" | "public"
+type ChannelFlags =  'published' | 'collaboration' | 'default' | 'profile'
+
 export type Channel = {
 	slug: string
 	title: string
 	created_at: string
 	status: ChannelStatus
 	author_slug: string
-	flags: string[]
+	flags: ChannelFlags[]
+	blocks: Block[]
 }
 
 class Channels {
@@ -53,6 +56,7 @@ class Channels {
 				await stmt.run(tx, v.slug, v.title, v.created_at, v.status, v.author_slug, v.flags)
 			})
 		})
+
 		stmt.finalize(null)
 		// this.pull(promiser)
 		// promiser('close', { dbId })
@@ -74,6 +78,7 @@ export type Block = {
 	"updated_at": string,
 	"source": string,
 	"author_id": string,
+	"arena_id": number
 }
 class Blocks {
 	#list = $state<Map<Block['id'], Block>>(new SvelteMap())
