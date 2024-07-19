@@ -40,17 +40,7 @@
 			flags
 		}])
 	}
-	addChannel({
-		title: 'fdsfTestng'
-	})
 
-	// const loadDb = async () => {
-	// 	console.log('loading db...')
-	// 	const data = await import("$lib/store/data.svelte")
-	// 	channels = data.channels
-	// 	console.log('db loaded: ', data)
-	// }
-	// onMount(loadDb)
 </script>
 
 <div class="pane left">
