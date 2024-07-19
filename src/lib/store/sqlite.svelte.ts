@@ -43,7 +43,7 @@ async function initDb(db: DB) {
 		await db.tx(tx => tx.exec(`
 			pragma journal_mode = wal;
 			CREATE TABLE IF NOT EXISTS Users(
-				id INT PRIMARY KEY,
+				id TEXT PRIMARY KEY NOT NULL,
 				slug TEXT,
 				firstname TEXT,
 				lastname TEXT,
@@ -51,7 +51,8 @@ async function initDb(db: DB) {
 			);
 
 			CREATE TABLE IF NOT EXISTS Channels(
-				slug TEXT PRIMARY KEY UNIQUE,
+				id TEXT PRIMARY KEY NOT NULL,
+				slug TEXT,
 				title TEXT DEFAULT '',
 				created_at TEXT DEFAULT CURRENT_TIMESTAMP,
 				status TEXT DEFAULT 'private',
@@ -63,23 +64,34 @@ async function initDb(db: DB) {
 			INSERT INTO Users(id) VALUES ('local');
 			
 			CREATE TABLE IF NOT EXISTS Blocks(
-				id INTEGER PRIMARY KEY,
+				id TEXT PRIMARY KEY NOT NULL,
 				title TEXT DEFAULT '',
-				filename TEXT DEFAULT '',
-				description TEXT DEFAULT '',
-				type TEXT ,
-				content TEXT,
-				image TEXT,
+				type TEXT,
 				created_at TEXT DEFAULT CURRENT_TIMESTAMP,
 				updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
+				description TEXT DEFAULT '',
+				content TEXT,
+				image TEXT,
 				source TEXT,
+				filename TEXT,
 				author_id TEXT DEFAULT 'local',
-				arena_id INT
+				arena_id INTEGER
 			);
-			
-			CREATE TABLE IF NOT EXISTS BlocksConnections(
+
+			CREATE TABLE IF NOT EXISTS Providers(
+				id TEXT PRIMARY KEY NOT NULL,
+				url TEXT,
+				name TEXT
+			);
+
+			CREATE TABLE IF NOT EXISTS Connections(
 				block_id INTEGER NOT NULL,
-				channel_slug TEXT NOT NULL
+				channel_slug TEXT NOT NULL,
+				is_channel INTEGER DEFAULT 0,
+				position INTEGER,
+				selected INTEGER,
+				connected_at TEXT,
+				user_id INTEGER
 			);
 		`
 		))
