@@ -1,14 +1,18 @@
 import { defineConfig } from 'vite'
 import { sveltekit } from '@sveltejs/kit/vite'
-import mkcert from 'vite-plugin-mkcert'
+import { readFileSync } from 'fs'
+
 // https://vitejs.dev/config/
 export default defineConfig({
+	server: {
+		port: 5461,
+		https: {
+			key: readFileSync('./certs/key.pem'),
+			cert: readFileSync('./certs/cert.pem')
+		},
 		proxy: {}
+	},
 	plugins: [
-		mkcert({
-			mkcertPath: '/usr/bin/mkcert',
-			savePath: './certs',
-		}),
 		sveltekit(),
 	],
 })
