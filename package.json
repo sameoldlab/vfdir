@@ -7,7 +7,8 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "check": "svelte-check --tsconfig ./tsconfig.json"
+    "check": "svelte-check --tsconfig ./tsconfig.json",
+    "mkcert": "rm -rf ./certs && mkdir ./certs && mkcert --key-file ./certs/key.pem --cert-file ./certs/cert.pem 'localhost'"
   },
   "devDependencies": {
     "@sveltejs/adapter-auto": "^3.2.2",
