@@ -1,5 +1,5 @@
 <script lang="ts">
-	// import BlockDetails from '$lib/components/BlockDetails.svelte';
+	import BlockDetails from "$lib/components/BlockDetails.svelte";
 	// import GridView from '$lib/components/GridView.svelte'
 	import { resizer, key } from "$lib/actions";
 	import type { Channel } from "$lib/store/data.svelte";
