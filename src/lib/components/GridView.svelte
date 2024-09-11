@@ -1,5 +1,5 @@
 <script lang="ts">
-  export let content;
+  let {content} = $props()
 </script>
 
 <div class="grid">
