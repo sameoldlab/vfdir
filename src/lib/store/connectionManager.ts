@@ -14,6 +14,7 @@ class DbPool {
 	#sqlite: SQLite3;
 	dbName: string;
 	available = $state(false)
+	queries = []
 
 	constructor(
 		{ maxConnections, dbName } = { maxConnections: 5, dbName: "vfdir.db" },
@@ -65,13 +66,14 @@ class DbPool {
 		this.#connections.clear();
 	}
 
-	exec<R>(fn: (d: DB) => R) {
+	query<R>(fn: (d: DB) => R) {
 		let value = $state<Awaited<R>>();
 		let db: DB;
 		this.#connect()
 			.then(async (_db) => {
 				db = _db;
 				value = await fn(db);
+				this.queries.push(fn)
 			})
 			.catch((err) => {
 				console.log(err);
@@ -82,7 +84,23 @@ class DbPool {
 			});
 		return value;
 	}
+
+	exec<R>(fn: (d: DB) => R) {
+		let db: DB;
+		this.#connect()
+			.then(async (_db) => {
+				db = _db;
+				fn(db);
+			})
+			.catch((err) => {
+				console.log(err);
+				throw err;
+			})
+			.finally(() => {
+				this.#close(db);
+			});
+	}
 }
 
-export const dp = new DbPool();
-const res = dp.exec((x) => x.execO<{ id: string }>(""));
+export const pool = new DbPool();
+// const res = dp.exec((x) => x.execO<{ id: string }>(""));
