@@ -13,13 +13,20 @@ class DbPool {
 	#connections = new SvelteSet<DB>();
 	#sqlite: SQLite3;
 	dbName: string;
+	available = $state(false)
 
 	constructor(
 		{ maxConnections, dbName } = { maxConnections: 5, dbName: "vfdir.db" },
 	) {
 		this.#maxConnections = maxConnections;
 		this.dbName = dbName;
-		initWasm(() => wasmUrl).then((sqlite) => (this.#sqlite = sqlite));
+		try {
+			initWasm(() => wasmUrl).then((sqlite) => (this.#sqlite = sqlite));
+			this.available = true
+		} catch(err) {
+			console.error(err)
+			this.available = false
+		}
 	}
 
 	async #connect() {
