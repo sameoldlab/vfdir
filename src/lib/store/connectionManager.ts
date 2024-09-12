@@ -31,13 +31,25 @@ class DbPool {
 
 	async #connect() {
 		if (this.#connections.size < this.#maxConnections) {
-			const connection = await this.#createConnection(this.dbName);
+			let connection: DB | undefined
+			try {
+				connection = await this.#sqlite.open(this.dbName);
+			} catch (err) {
+				console.error(err);
+				throw err;
+			}
 			connection.onUpdate(this.#subscribe);
-
 			this.#connections.add(connection);
 			return connection;
 		}
 		return [...this.#connections.values()][0];
+	}
+
+	#subscribe(...[type, db, table, rowid]: UpdateEvent) {
+		console.log({ type, dbName: db, tblName: table, rowid });
+		console.log(this.queries)
+		switch (type) {
+		}
 	}
 
 	async #close(connection: DB) {
@@ -46,27 +58,11 @@ class DbPool {
 		return res;
 	}
 
-	async #createConnection(dbName: string) {
-		try {
-			const connection = await this.#sqlite.open(dbName);
-			return connection;
-		} catch (err) {
-			console.error(err);
-			throw err;
-		}
-	}
-
-	async closeAll() {
+	async #closeAll() {
 		for (const connection of this.#connections) {
 			await connection.close();
 		}
 		this.#connections.clear();
-	}
-
-	#subscribe(...[type, db, table, rowid]: UpdateEvent) {
-		console.log({ type, dbName: db, tblName: table, rowid });
-		switch (type) {
-		}
 	}
 
 	exec<R>(fn: (d: DB) => R) {
