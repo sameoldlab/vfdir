@@ -13,8 +13,8 @@ class DbPool {
 	#connections = new SvelteSet<DB>();
 	#sqlite: SQLite3;
 	dbName: string;
-	available = $state(false)
-	queries = []
+	available = $state<boolean>();
+	#queries = [];
 
 	constructor(
 		{ maxConnections, dbName } = { maxConnections: 5, dbName: "vfdir.db" },
@@ -22,24 +22,28 @@ class DbPool {
 		this.#maxConnections = maxConnections;
 		this.dbName = dbName;
 		try {
-			initWasm(() => wasmUrl).then((sqlite) => (this.#sqlite = sqlite));
-			this.available = true
-		} catch(err) {
-			console.error(err)
-			this.available = false
+			initWasm(() => wasmUrl).then((sqlite) => {
+				this.#sqlite = sqlite;
+				this.available = true;
+			});
+		} catch (err) {
+			console.error(err);
+			this.available = false;
 		}
 	}
 
 	async #connect() {
+		if (this.#sqlite === undefined) throw Error("SQLite is not initialized");
 		if (this.#connections.size < this.#maxConnections) {
-			let connection: DB | undefined
+			let connection: DB | undefined;
 			try {
 				connection = await this.#sqlite.open(this.dbName);
 			} catch (err) {
 				console.error(err);
-				throw err;
 			}
-			connection.onUpdate(this.#subscribe);
+			connection.onUpdate((...args) => {
+				this.#subscribe(...args);
+			});
 			this.#connections.add(connection);
 			return connection;
 		}
@@ -47,9 +51,20 @@ class DbPool {
 	}
 
 	#subscribe(...[type, db, table, rowid]: UpdateEvent) {
-		console.log({ type, dbName: db, tblName: table, rowid });
-		console.log(this.queries)
+		console.log(this.#queries);
 		switch (type) {
+			case 18: {
+				console.log(`Row ${rowid} inserted in ${db}:${table}`);
+				break;
+			}
+			case 9: {
+				console.log(`Row ${rowid} deleted in ${db}:${table}`);
+				break;
+			}
+			case 23: {
+				console.log(`Row ${rowid} updated in ${db}:${table}`);
+				break;
+			}
 		}
 	}
 
@@ -73,7 +88,7 @@ class DbPool {
 			.then(async (_db) => {
 				db = _db;
 				value = await fn(db);
-				this.queries.push(fn)
+				this.#queries.push(fn);
 			})
 			.catch((err) => {
 				console.log(err);
@@ -86,18 +101,14 @@ class DbPool {
 	}
 
 	exec<R>(fn: (d: DB) => R) {
-		let db: DB;
 		this.#connect()
-			.then(async (_db) => {
-				db = _db;
+			.then(async (db) => {
 				fn(db);
+				this.#close(db);
 			})
 			.catch((err) => {
-				console.log(err);
+				console.error(err);
 				throw err;
-			})
-			.finally(() => {
-				this.#close(db);
 			});
 	}
 }
