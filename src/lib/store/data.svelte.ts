@@ -5,6 +5,7 @@ async function pull<V extends object, K extends keyof V, >({ db, row, list, key,
 	{ db: DB, row: bigint | undefined, list: Map<V[K], V>, key: K, table: string }) {
 	const query = await db.execO<V>(`SELECT * FROM ${table}${row === undefined ? '' : ` WHERE rowId = ${row}`};`)
 	query.forEach(q => {if (!list.has(q[key])) list.set(q[key], q)})
+import type { Block, Channel } from './schema'
 }
 
 const keys = Object.freeze({
@@ -12,19 +13,6 @@ const keys = Object.freeze({
 	'Blocks': 'id'
 })
 
-type ChannelStatus = "private" | "closed" | "public"
-type ChannelFlags =  'published' | 'collaboration' | 'default' | 'profile'
-
-export type Channel = {
-	slug: string
-	title: string
-	updated: Date
-	created_at: Date
-	status: ChannelStatus
-	author_slug: string
-	flags: ChannelFlags[]
-	blocks: Block[]
-}
 
 class Channels {
 	#list = $state<Map<Channel['slug'], Channel>>(new SvelteMap())
@@ -67,20 +55,6 @@ class Channels {
 
 export const channels = new Channels()
 
-export type Block = {
-	"id": number,
-	"title": string,
-	"filename"?: string,
-	"description": string,
-	"type": string,
-	"content"?: string,
-	"image"?: string,
-	"created_at": string,
-	"updated_at": string,
-	"source": string,
-	"author_id": string,
-	"arena_id": number
-}
 class Blocks {
 	#list = $state<Map<Block['id'], Block>>(new SvelteMap())
 	get list() {return this.#list}
