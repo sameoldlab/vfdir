@@ -1,7 +1,7 @@
 <script lang='ts'>
   import '../app.css'
   import Header from '$lib/components/header.svelte'
-	import { initTables } from '$lib/store/sqlite.svelte'
+	import { createTables } from '$lib/store/createTables'
 	import { pool } from '$lib/store/connectionPool.svelte'
   import { untrack } from 'svelte'
 	import { channels } from '$lib/store/data.svelte'
@@ -16,7 +16,7 @@
 		if(pool.status === 'available') {
 			untrack(() => {
 				pool.exec(async (db) => {
-					await initTables(db)
+					await createTables(db)
 					// channels.init(db)
 					bootstrap(db)
 				})
