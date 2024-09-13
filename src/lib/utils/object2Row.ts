@@ -1,5 +1,5 @@
 import type { DB } from "@vlcn.io/crsqlite-wasm";
-import type { Block, Channel } from "$lib/types";
+import type { Block, Channel } from "$lib/store/schema";
 
 /**
 	Insert an array off items into the given database.
