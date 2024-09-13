@@ -13,7 +13,7 @@ class DbPool {
 	#connections = new SvelteSet<DB>();
 	#sqlite: SQLite3;
 	dbName: string;
-	available = $state<boolean>();
+	status = $state<'available'>();
 	#queries = [];
 
 	constructor(
@@ -24,11 +24,11 @@ class DbPool {
 		try {
 			initWasm(() => wasmUrl).then((sqlite) => {
 				this.#sqlite = sqlite;
-				this.available = true;
+				this.status = 'available';
 			});
 		} catch (err) {
 			console.error(err);
-			this.available = false;
+			this.status = err;
 		}
 	}
 
