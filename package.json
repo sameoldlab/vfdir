@@ -10,7 +10,9 @@
 		"check": "svelte-check --tsconfig ./tsconfig.json",
 		"mkcert": "rm -rf ./certs && mkdir ./certs && mkcert --key-file ./certs/key.pem --cert-file ./certs/cert.pem 'localhost'",
 		"format": "prettier --write .",
-		"lint": "prettier --check ."
+		"lint": "prettier --check .",
+		"test:unit": "vitest",
+		"test": "pnpm test:unit"
 	},
 	"devDependencies": {
 		"@sveltejs/adapter-auto": "^3.2.4",
@@ -23,11 +25,13 @@
 		"nanoid": "^5.0.7",
 		"prettier": "^3.3.2",
 		"prettier-plugin-svelte": "^3.2.5",
+		"superstruct": "^2.0.2",
 		"svelte": "5.0.0-next.244",
 		"svelte-check": "^4.0.1",
 		"svelte-preprocess": "^6.0.2",
 		"tslib": "^2.7.0",
 		"typescript": "^5.6.2",
-		"vite": "^5.4.3"
+		"vite": "^5.4.3",
+		"vitest": "^2.0.4"
 	}
 }
