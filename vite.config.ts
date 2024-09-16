@@ -1,4 +1,4 @@
-import { defineConfig } from 'vite'
+import { defineConfig } from 'vitest/config'
 import { sveltekit } from '@sveltejs/kit/vite'
 import { readFileSync } from 'fs'
 
@@ -12,7 +12,10 @@ export default defineConfig({
 		},
 		proxy: {}
 	},
-	plugins: [
-		sveltekit(),
-	],
+
+	plugins: [sveltekit()],
+
+	test: {
+		include: ['src/**/*.{test,spec}.{js,ts}']
+	}
 })
