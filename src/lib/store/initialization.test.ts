@@ -19,35 +19,34 @@ describe('Database initialization', () => {
   })
 
   it('Users table matches type', async () => {
-    const user = await db.execO('SELECT * FROM Users  limit 1')[0]
     expect(() => assert(user, Users)).not.toThrowErrorMatchingSnapshot()
+    const user = (await db.execO('select * from users limit 1'))[0]
   })
 
   it('has an initial user', async () => {
     await createTables(db)
-    const users = await db.execO('select * from users limit 1')[0]
     expect(() => users.id).toEqual('local')
   })
 
   it('Blocks table matches type', async () => {
-    const block = await db.execO('SELECT * FROM Blocks limit 1')[0]
-    expect(() => assert(block, Block)).not.toThrowErrorMatchingSnapshot()
+    const block = (await db.execO('SELECT * FROM Blocks limit 1'))[0]
+    expect(() => assert(block, Block)).not.toThrow()
   })
 
   it('Channels table matches type', async () => {
-    const channel = await db.execO('SELECT * FROM Channels limit 1')[0]
-    expect(() => assert(channel, Channel)).not.toThrowErrorMatchingSnapshot()
+    const channel = (await db.execO('SELECT * FROM Channels limit 1'))[0]
+    expect(() => assert(channel, Channel)).not.toThrow()
   })
 
   it('Connections table matches type', async () => {
-    const connection = await db.execO('SELECT * FROM Connections limit 1')[0]
-    expect(() => assert(connection, Connections)).not.toThrowErrorMatchingSnapshot()
+    const connection = (await db.execO('SELECT * FROM Connections limit 1'))[0]
+    expect(() => assert(connection, Connections)).not.toThrow()
 
   })
 
   it('Providers table matches type', async () => {
-    const provider = await db.execO('SELECT * FROM Providers limit 1')[0]
-    expect(() => assert(provider, Providers)).not.toThrowErrorMatchingSnapshot()
+    const provider = (await db.execO('SELECT * FROM Providers limit 1'))[0]
+    expect(() => assert(provider, Providers)).not.toThrow()
   })
 
 
