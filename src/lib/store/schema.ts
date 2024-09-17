@@ -1,8 +1,3 @@
-// user_id INT NOT NULL default 0,
-// updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-// FOREIGN KEY (user_id) REFERENCES Users(rowid)
-// kind = 'default | 'profile'
-// Tags: published, open, collaboration, (kind == 'default' ? null : 'profile')
 import {
 	array,
 	coerce,
@@ -20,9 +15,10 @@ const parseDate = coerce(string(), date(), (value) => new Date(value))
 export const Block = object({
 	id: string(),
 	title: string(),
+	// block, channel, profile
 	type: string(),
-	updated_at: string(),
-	created_at: string(),
+	updated_at: number(),
+	created_at: number(),
 	description: string(),
 	content: nullable(string()),
 	image: nullable(string()),
@@ -38,8 +34,8 @@ CREATE TABLE IF NOT EXISTS Blocks(
 	id TEXT PRIMARY KEY NOT NULL,
 	title TEXT DEFAULT '',
 	type TEXT,
-	updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
-	created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+	updated_at INTEGER DEFAULT (strftime('%s', 'now')),
+	created_at INTEGER DEFAULT (strftime('%s', 'now')),
 	description TEXT DEFAULT '',
 	content TEXT,
 	image TEXT,
@@ -63,6 +59,7 @@ export type Block = Infer<typeof Block>
 export type BlockParsed = Infer<typeof BlockParsed>
 
 // Channels
+
 export const Channel = object({
 	id: string(),
 	slug: nullable(string()),
@@ -70,8 +67,8 @@ export const Channel = object({
 	/** `JSON.stringified` array */
 	flags: string(),
 	status: enums(['private', 'closed', 'public']),
-	updated_at: string(),
-	created_at: string(),
+	updated_at: number(),
+	created_at: number(),
 	author_id: string(),
 	/** if imported from external service,
 	 * service identifier ':' imported id
@@ -87,12 +84,13 @@ CREATE TABLE IF NOT EXISTS Channels(
 	title TEXT DEFAULT '',
 	flags TEXT DEFAULT '[]',
 	status TEXT DEFAULT 'private',
-	updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
-	created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+	updated_at INTEGER DEFAULT (strftime('%s', 'now')),
+	created_at INTEGER DEFAULT (strftime('%s', 'now')),
 	author_id TEXT DEFAULT 'local',
 	external_id TEXT UNIQUE
 );
 `
+// Tags: published, open, collaboration, (kind == 'default' ? null : 'profile')
 export const ChannelParsed = object({
 	...Channel.schema,
 	updated_at: date(),
@@ -123,7 +121,7 @@ CREATE TABLE IF NOT EXISTS Connections(
 	is_channel INTEGER DEFAULT 0,
 	position INTEGER,
 	selected INTEGER DEFAULT 0,
-	connected_at TEXT DEFAULT CURRENT_TIMESTAMP,
+	connected_at INTEGER DEFAULT (strftime('%s', 'now')),
 	user_id TEXT DEFAULT 'local'
 );
 `
@@ -174,12 +172,4 @@ ${blocks}
 ${channels}
 ${connections}
 ${providers}
-
-CREATE INDEX idx_blocks_type_author_id ON Blocks(type, author_id);
-CREATE INDEX idx_blocks_author_id ON Blocks(author_id);
-CREATE INDEX idx_blocks_created_at ON Blocks(created_at);
-
-CREATE INDEX idx_connections_child_id ON Connections(child_id);
-CREATE INDEX idx_connections_parent_child ON Connections(parent_id, child_id);
-CREATE INDEX idx_connections_position ON Connections(parent_id, position);
 `
