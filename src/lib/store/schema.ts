@@ -2,6 +2,7 @@ import {
 	array,
 	coerce,
 	date,
+	defaulted,
 	enums,
 	nullable,
 	number,
@@ -66,7 +67,7 @@ export const Channel = object({
 	title: string(),
 	/** `JSON.stringified` array */
 	flags: string(),
-	status: enums(['private', 'closed', 'public']),
+	status: defaulted(enums(['private', 'closed', 'public']), 'private'),
 	updated_at: number(),
 	created_at: number(),
 	author_id: string(),
@@ -111,7 +112,7 @@ export const Connections = object({
 	selected: enums([0, 1]),
 	connected_at: string(),
 	/** User who created the connection */
-	user_id: string(),
+	user_id: string()
 })
 
 const connections = `
@@ -134,7 +135,7 @@ export const Users = object({
 	slug: nullable(string()),
 	firstname: nullable(string()),
 	lastname: nullable(string()),
-	avatar: nullable(string()),
+	avatar: nullable(string())
 })
 
 const users = `
@@ -152,7 +153,7 @@ export type Users = Infer<typeof Users>
 export const Providers = object({
 	id: string(),
 	url: nullable(string()),
-	name: nullable(string()),
+	name: nullable(string())
 })
 const providers = `
 CREATE TABLE IF NOT EXISTS Providers(
