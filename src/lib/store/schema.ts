@@ -3,14 +3,14 @@ import {
 	coerce,
 	date,
 	enums,
+	nullable,
 	number,
 	object,
-	nullable,
 	string,
 	type Infer
 } from 'superstruct'
 
-const parseDate = coerce(string(), date(), (value) => new Date(value))
+const parseDate = coerce(string(), number(), (value) => new Date(value).valueOf())
 
 export const Block = object({
 	id: string(),
