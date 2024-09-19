@@ -3,7 +3,7 @@ import type { DB } from '@vlcn.io/crsqlite-wasm'
 import { arenaChannels } from '$lib/dummy/channels'
 import type { ArenaChannelContents, ArenaChannelWithDetails } from 'arena-ts'
 import { nanoid } from 'nanoid/non-secure'
-import type { Block, Channel, ChannelParsed, Users } from './schema'
+import { Block, Channel, type ChannelParsed, type User } from './schema'
 import { coerce, create, number, string } from 'superstruct'
 
 const parseDate = coerce(number(), string(), (value) => new Date(value).valueOf())
@@ -14,8 +14,8 @@ export async function bootstrap(db: DB) {
 	parseArenaChannels(db, arenaChannels)
 }
 
-const upsertUser = async (db: DB, user: Omit<Users, 'id'>) => {
-	const res = (await db.execA<Users['id'][]>('insert or ignore into Users values (?,?,?,?,?,?) returning id;', [
+const upsertUser = async (db: DB, user: Omit<User, 'id'>) => {
+	const res = (await db.execA<User['id'][]>('insert or ignore into Users values (?,?,?,?,?,?) returning id;', [
 		nanoid(10),
 		user.slug,
 		user.firstname,
@@ -25,7 +25,7 @@ const upsertUser = async (db: DB, user: Omit<Users, 'id'>) => {
 	]))[0]
 
 	if (res === undefined) {
-		return db.execA<Users['id'][]>(`select (id) from Users where slug='${user.slug}'`).then((id) => id[0][0])
+		return db.execA<User['id'][]>(`select (id) from Users where slug='${user.slug}'`).then((id) => id[0][0])
 	} else {
 		return res[0]
 	}
