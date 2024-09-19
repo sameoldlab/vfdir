@@ -11,13 +11,13 @@ const parseDate = coerce(number(), string(), (value) => new Date(value).valueOf(
 export async function bootstrap(db: DB) {
 	// const arenaChannels = await getChannels()
 	// const arenaBlocks = await getBlocks()
-
 	let chans = arenaChannels.map((chan) => {
 		const chanId = nanoid(10)
 		// console.log(chan.slug)
 		// Parse and insert Blocks
-		let blocks = chan?.contents?.map((bl) => {
-			const userId = `arena-${bl.class === 'Channel' ? bl.owner_id : bl.user.id}`
+		let blocks = chan?.contents?.map(async (bl) => {
+			const debug = bl.id === 27425402
+
 			const blockId = nanoid(10)
 			const block: Block = {
 				id: blockId,
@@ -32,21 +32,29 @@ export async function bootstrap(db: DB) {
 				source: null,
 				provider_id: null,
 				image: null,
-				author_id: userId
+				author_id: null
 			}
 
 			block.description = bl.class !== 'Channel' ? bl.description : null
+			let userId = (await db.execA('insert or ignore into Users values (?,?,?,?,?,?) returning id;', [
+				nanoid(10),
+				bl.user.slug,
+				bl.user.first_name,
+				bl.user.last_name,
+				bl.user.avatar,
+				`arena:${bl.class === 'Channel' ? bl.owner_id : bl.user.id}`
+			]))[0]
+			if (userId === undefined) {
+				await db.execA(`select (id) from Users where slug='${bl.user.slug}'`).then((id) => userId = id[0][0])
+			} else {
+				userId = userId[0]
+			}
+			block.author_id = userId
 
 			switch (bl.class) {
 				case 'Channel':
 					{
-						db.exec('insert or ignore into Users values (?,?,?,?,?)', [
-							userId,
-							bl.user.slug,
-							bl.user.first_name,
-							bl.user.last_name,
-							bl.user.avatar
-						])
+
 						db.exec(`insert into Connections values (?,?,?,?,?,?,?);`, [
 							blockId,
 							chanId,
@@ -60,6 +68,7 @@ export async function bootstrap(db: DB) {
 					break;
 				case 'Text':
 					block.content = bl.content
+					block.source = bl.source.url
 					break
 				case 'Attachment':
 					block.filename = bl.attachment.content_type
@@ -73,16 +82,28 @@ export async function bootstrap(db: DB) {
 							...bl.source.provider,
 							id: nanoid(8)
 						}
-						console.log(provider)
-						db.exec(`insert into Providers values (?,?,?);`, [
+						await db.execA(`insert or ignore into Providers values (?,?,?) returning id;`, [
 							provider.id,
 							provider.url,
 							provider.name
-						])
-						block.provider_id = provider.id
+						]).then(async (res) => {
+							const id = res.flat()[0]
+							if (!id) {
+								// console.warn('Duplicate attempt. retreiving id for provider URL:', provider.url);
+								await db.execA(`select (id) from Providers where url='${provider.url}'`).then((id) => block.provider_id = id.flat().pop())
+							} else {
+								block.provider_id = id
+							}
+						})
 					}
 					break
 			}
+			if (debug) {
+				// console.log(block)
+				// console.log(bl)
+			}
+			// if (bl.source.url !== bl.source.provider.url)
+			// console.log({ name: bl.name, type: bl.class, source: bl.source })
 			return block
 		})
 
@@ -122,6 +143,7 @@ export async function bootstrap(db: DB) {
 		*/
 		// await db.exec(`INSERT INTO Channels() VALUES()`)
 	)
+	return true
 }
 
 
