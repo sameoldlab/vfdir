@@ -60,7 +60,7 @@ describe('Bootstrap database and validate types', async () => {
 	})
 
 	it('Channels table matches type', async () => {
-		const channel = (await db.execO('SELECT * FROM Channels limit 1'))[0]
+		const channel = (await db.execO(`SELECT * FROM Blocks where type='channel' limit 1`))[0]
 		expect(() => assert(channel, Channel)).not.toThrow()
 	})
 

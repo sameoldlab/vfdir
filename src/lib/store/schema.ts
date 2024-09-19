@@ -1,5 +1,7 @@
 import {
 	array,
+	assign,
+	boolean,
 	coerce,
 	date,
 	defaulted,
@@ -8,92 +10,61 @@ import {
 	number,
 	object,
 	string,
+	union,
+	type,
 	type Infer
 } from 'superstruct'
 
-const parseDate = coerce(string(), number(), (value) => new Date(value).valueOf())
+const parseDate = coerce(date(), number(), (value) => new Date(value).valueOf())
 
-export const Block = object({
+export const Block = type({
 	id: string(),
 	title: string(),
-	// block, channel, profile
+	/** block, channel, profile */
 	type: string(),
 	updated_at: number(),
 	created_at: number(),
 	description: string(),
 	content: nullable(string()),
 	image: nullable(string()),
+	/** source url or (if type===channel) import source (arena,omnivore,fs,raindrop) */
 	source: nullable(string()),
 	filename: nullable(string()),
 	provider_id: nullable(string()),
-	arena_id: nullable(number()),
-	author_id: string()
-})
-
-
-const blocks = `
-CREATE TABLE IF NOT EXISTS Blocks(
-	id TEXT PRIMARY KEY NOT NULL,
-	title TEXT DEFAULT '',
-	type TEXT,
-	updated_at INTEGER DEFAULT (strftime('%s', 'now')),
-	created_at INTEGER DEFAULT (strftime('%s', 'now')),
-	description TEXT DEFAULT '',
-	content TEXT,
-	image TEXT,
-	source TEXT,
-	filename TEXT,
-	provider_id TEXT,
-	author_id TEXT DEFAULT 'local',
-	arena_id INTEGER,
-	foreign key (author_id) references Users(id),
-	foreign key (provider_id) references Providers(id)
-);
-`
-
-// Application Block Schema
-const BlockParsed = object({
-	...Block.schema,
-	updated_at: date(),
-	created_at: date()
-})
-
-export type Block = Infer<typeof Block>
-export type BlockParsed = Infer<typeof BlockParsed>
-
-// Channels
-
-export const Channel = object({
-	id: string(),
-	slug: nullable(string()),
-	title: string(),
-	/** `JSON.stringified` array */
-	flags: string(),
-	status: defaulted(enums(['private', 'closed', 'public']), 'private'),
-	updated_at: number(),
-	created_at: number(),
 	author_id: string(),
 	/** if imported from external service,
 	 * service identifier ':' imported id
 	 * @example `arena:2948201`
 	 */
-	external_id: nullable(string())
+	external_ref: nullable(string()),
 })
 
-const channels = `
-CREATE TABLE IF NOT EXISTS Channels(
-	id TEXT PRIMARY KEY NOT NULL,
-	slug TEXT,
-	title TEXT DEFAULT '',
-	flags TEXT DEFAULT '[]',
-	status TEXT DEFAULT 'private',
-	updated_at INTEGER DEFAULT (strftime('%s', 'now')),
-	created_at INTEGER DEFAULT (strftime('%s', 'now')),
-	author_id TEXT DEFAULT 'local',
-	external_id TEXT UNIQUE
-);
-`
-const nBlocks = `
+const BlockParsed = assign(Block, object({
+	updated_at: parseDate,
+	created_at: parseDate,
+}))
+
+export const Channel = assign(Block, object({
+	type: enums(['channel']),
+	slug: nullable(string()),
+	/** `JSON.stringified` array */
+	flags: string(),
+	status: defaulted(enums(['private', 'closed', 'public']), 'private'),
+}))
+const ChannelParsed = assign(Channel, object({
+	updated_at: parseDate,
+	created_at: parseDate,
+	flags: coerce(array(enums(['published', 'collaboration', 'default', 'profile'])), string(), value => JSON.parse(value))
+}))
+const BlocksRow = union([Block, Channel])
+
+export type BlocksRow = Infer<typeof BlocksRow>
+export type Block = Infer<typeof Block>
+export type BlockParsed = Infer<typeof BlockParsed>
+export type Channel = Infer<typeof Channel>
+export type ChannelParsed = Infer<typeof ChannelParsed>
+
+const blocks = `
 CREATE TABLE IF NOT EXISTS Blocks(
 	id TEXT PRIMARY KEY NOT NULL,
 	title TEXT DEFAULT '',
@@ -108,25 +79,16 @@ CREATE TABLE IF NOT EXISTS Blocks(
 	filename TEXT,
 	provider_id TEXT,
 	author_id TEXT DEFAULT 'local',
-	external_id text UNIQUE,
+	external_ref text UNIQUE,
 	--exists if type='channel'
 	slug text,
 	flags TEXT DEFAULT '[]',
 	status TEXT DEFAULT 'private',
 	--exists if type='channel',
-	foreign key (author_id) references Users(id)
+	foreign key (author_id) references Users(id),
+	foreign key (provider_id) references Providers(id)
 );
 `
-// Tags: published, open, collaboration, (kind == 'default' ? null : 'profile')
-export const ChannelParsed = object({
-	...Channel.schema,
-	updated_at: date(),
-	created_at: date(),
-	flags: array(enums(['published', 'collaboration', 'default', 'profile']))
-})
-
-export type Channel = Infer<typeof Channel>
-export type ChannelParsed = Infer<typeof ChannelParsed>
 
 // Connections
 export const Connections = object({
@@ -139,6 +101,12 @@ export const Connections = object({
 	connected_at: string(),
 	/** User who created the connection */
 	user_id: string()
+})
+const intToBool = coerce(boolean(), enums([0, 1]), (value) => value === 1)
+export const ConnectionsParsed = object({
+	...Connections.schema,
+	is_channel: intToBool,
+	selected: intToBool,
 })
 
 const connections = `
@@ -155,6 +123,7 @@ CREATE TABLE IF NOT EXISTS Connections(
 `
 
 export type Connections = Infer<typeof Connections>
+export type ConnectionsParsed = Infer<typeof ConnectionsParsed>
 
 // Users
 export const Users = object({
@@ -199,7 +168,6 @@ pragma journal_mode = wal;
 ${users}
 INSERT INTO Users(id) VALUES ('local');
 ${blocks}
-${channels}
 ${connections}
 ${providers}
 
