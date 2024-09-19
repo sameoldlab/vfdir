@@ -1,7 +1,7 @@
 import type { DB } from '@vlcn.io/crsqlite-wasm'
 // import { getChannels, getBlocks } from '$lib/store/api/arenav2'
 import { arenaChannels } from '$lib/dummy/channels'
-import type { ArenaChannelContents } from 'arena-ts'
+import type { ArenaChannelContents, ArenaChannelWithDetails } from 'arena-ts'
 import { nanoid } from 'nanoid/non-secure'
 import type { Block, Channel, ChannelParsed } from './schema'
 import { coerce, create, number, string } from 'superstruct'
@@ -11,7 +11,11 @@ const parseDate = coerce(number(), string(), (value) => new Date(value).valueOf(
 export async function bootstrap(db: DB) {
 	// const arenaChannels = await getChannels()
 	// const arenaBlocks = await getBlocks()
-	let chans = arenaChannels.map((chan) => {
+	parseArenaChannels(db, arenaChannels)
+}
+
+export async function parseArenaChannels(db: DB, channels: ArenaChannelWithDetails[]) {
+	let chans = channels.map((chan) => {
 		const chanId = nanoid(10)
 		// console.log(chan.slug)
 		// Parse and insert Blocks
