@@ -4,7 +4,7 @@ import wasmUrl from '@vlcn.io/crsqlite-wasm/crsqlite.wasm?url'
 import { assert } from 'superstruct'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { createTables } from './createTables'
-import { Block, Channel, Connections, Providers, Users } from './schema'
+import { Block, Channel, Connection, Provider, User } from './schema'
 import { bootstrap } from './sync.svelte'
 
 describe('Database initialization', () => {
@@ -51,7 +51,7 @@ describe('Bootstrap database and validate types', async () => {
 
 	it('Users table matches type', async () => {
 		const user = (await db.execO('SELECT * FROM Users  limit 1'))[0]
-		expect(() => assert(user, Users)).not.toThrow()
+		expect(() => assert(user, User)).not.toThrow()
 	})
 
 	it('Blocks table matches type', async () => {
@@ -66,11 +66,11 @@ describe('Bootstrap database and validate types', async () => {
 
 	it('Connections table matches type', async () => {
 		const connection = (await db.execO('SELECT * FROM Connections limit 1'))[0]
-		expect(() => assert(connection, Connections)).not.toThrow()
+		expect(() => assert(connection, Connection)).not.toThrow()
 	})
 
 	it('Providers table matches type', async () => {
 		const provider = (await db.execO('SELECT * FROM Providers limit 1'))[0]
-		expect(() => assert(provider, Providers)).not.toThrow()
+		expect(() => assert(provider, Provider)).not.toThrow()
 	})
 })

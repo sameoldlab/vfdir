@@ -91,7 +91,7 @@ CREATE TABLE IF NOT EXISTS Blocks(
 `
 
 // Connections
-export const Connections = object({
+export const Connection = object({
 	child_id: string(),
 	parent_id: string(),
 	/** if child block is of type Channel */
@@ -103,8 +103,8 @@ export const Connections = object({
 	user_id: string()
 })
 const intToBool = coerce(boolean(), enums([0, 1]), (value) => value === 1)
-export const ConnectionsParsed = object({
-	...Connections.schema,
+export const ConnectionParsed = object({
+	...Connection.schema,
 	is_channel: intToBool,
 	selected: intToBool,
 })
@@ -122,11 +122,11 @@ CREATE TABLE IF NOT EXISTS Connections(
 );
 `
 
-export type Connections = Infer<typeof Connections>
-export type ConnectionsParsed = Infer<typeof ConnectionsParsed>
+export type Connection = Infer<typeof Connection>
+export type ConnectionParsed = Infer<typeof ConnectionParsed>
 
 // Users
-export const Users = object({
+export const User = object({
 	id: string(),
 	slug: nullable(string()),
 	firstname: nullable(string()),
@@ -145,10 +145,10 @@ CREATE TABLE IF NOT EXISTS Users(
 	external_ref TEXT UNIQUE
 );
 `
-export type Users = Infer<typeof Users>
+export type User = Infer<typeof User>
 
 // Providers
-export const Providers = object({
+export const Provider = object({
 	id: string(),
 	url: nullable(string()),
 	name: nullable(string())
@@ -160,7 +160,7 @@ CREATE TABLE IF NOT EXISTS Providers(
 	name TEXT
 );
 `
-export type Providers = Infer<typeof Providers>
+export type Provider = Infer<typeof Provider>
 
 // schema
 export const schema = /*sql*/ `
