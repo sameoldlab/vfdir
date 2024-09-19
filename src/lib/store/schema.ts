@@ -30,6 +30,7 @@ export const Block = object({
 	author_id: string()
 })
 
+
 const blocks = `
 CREATE TABLE IF NOT EXISTS Blocks(
 	id TEXT PRIMARY KEY NOT NULL,
@@ -45,7 +46,8 @@ CREATE TABLE IF NOT EXISTS Blocks(
 	provider_id TEXT,
 	author_id TEXT DEFAULT 'local',
 	arena_id INTEGER,
-	foreign key (author_id) references Users(id)
+	foreign key (author_id) references Users(id),
+	foreign key (provider_id) references Providers(id)
 );
 `
 
@@ -91,6 +93,30 @@ CREATE TABLE IF NOT EXISTS Channels(
 	external_id TEXT UNIQUE
 );
 `
+const nBlocks = `
+CREATE TABLE IF NOT EXISTS Blocks(
+	id TEXT PRIMARY KEY NOT NULL,
+	title TEXT DEFAULT '',
+	type TEXT, -- channel or block_{type}
+	updated_at INTEGER DEFAULT (strftime('%s', 'now')),
+	created_at INTEGER DEFAULT (strftime('%s', 'now')),
+	description TEXT DEFAULT '',
+	content TEXT,
+	image TEXT,
+	-- url or (if type=channel) import source (arena,omnivore,fs,raindrop)
+	source TEXT,
+	filename TEXT,
+	provider_id TEXT,
+	author_id TEXT DEFAULT 'local',
+	external_id text UNIQUE,
+	--exists if type='channel'
+	slug text,
+	flags TEXT DEFAULT '[]',
+	status TEXT DEFAULT 'private',
+	--exists if type='channel',
+	foreign key (author_id) references Users(id)
+);
+`
 // Tags: published, open, collaboration, (kind == 'default' ? null : 'profile')
 export const ChannelParsed = object({
 	...Channel.schema,
@@ -123,7 +149,8 @@ CREATE TABLE IF NOT EXISTS Connections(
 	position INTEGER,
 	selected INTEGER DEFAULT 0,
 	connected_at INTEGER DEFAULT (strftime('%s', 'now')),
-	user_id TEXT DEFAULT 'local'
+	user_id TEXT DEFAULT 'local',
+	unique (parent_id, child_id)
 );
 `
 
@@ -135,16 +162,18 @@ export const Users = object({
 	slug: nullable(string()),
 	firstname: nullable(string()),
 	lastname: nullable(string()),
-	avatar: nullable(string())
+	avatar: nullable(string()),
+	external_ref: nullable(string())
 })
 
 const users = `
 CREATE TABLE IF NOT EXISTS Users(
 	id TEXT PRIMARY KEY NOT NULL,
-	slug TEXT,
+	slug TEXT UNIQUE,
 	firstname TEXT,
 	lastname TEXT,
-	avatar TEXT
+	avatar TEXT,
+	external_ref TEXT UNIQUE
 );
 `
 export type Users = Infer<typeof Users>
@@ -158,7 +187,7 @@ export const Providers = object({
 const providers = `
 CREATE TABLE IF NOT EXISTS Providers(
 	id TEXT PRIMARY KEY NOT NULL,
-	url TEXT,
+	url TEXT UNIQUE NOT NULL,
 	name TEXT
 );
 `
