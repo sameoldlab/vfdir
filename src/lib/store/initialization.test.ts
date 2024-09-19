@@ -5,7 +5,8 @@ import { assert } from 'superstruct'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { createTables } from './createTables'
 import { Block, Channel, Connection, Provider, User } from './schema'
-import { bootstrap } from './sync.svelte'
+import { bootstrap, parseArenaChannels } from './sync.svelte'
+import { arenaChannels } from '$lib/dummy/channels'
 
 describe('Database initialization', () => {
 	let db: DB
@@ -28,21 +29,36 @@ describe('Database initialization', () => {
 	})
 })
 
-describe('Bootstrap database and validate types', async () => {
+describe('Bootstrap database', async () => {
 	const sqlite = await initWasm(() => wasmUrl)
 	const db = await sqlite.open(':memory:')
 	await createTables(db)
 
-	afterAll(() => {
-		if (db) db.close()
-	})
-
 	it('runs bootstrap without error', async () => {
-		await createTables(db)
 		const res = await bootstrap(db)
 		expect(res).toBeTruthy()
 	})
 
+	it('does not duplicate inserts', async () => {
+		await parseArenaChannels(db, arenaChannels)
+		const res = await parseArenaChannels(db, arenaChannels)
+		expect(res).toBeTruthy()
+	})
+
+	afterAll(async () => {
+		// await db.close()
+	})
+})
+
+describe('Validate types', async () => {
+	const sqlite = await initWasm(() => wasmUrl)
+	const db = await sqlite.open(':memory:')
+	await createTables(db)
+	await bootstrap(db)
+
+	afterAll(async () => {
+		await db.close()
+	})
 	// reinserting the same data does not duplicate rows
 	// adds in all blocks and connections
 	// can find a providers based on the block
