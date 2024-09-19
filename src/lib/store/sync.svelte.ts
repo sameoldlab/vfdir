@@ -63,8 +63,7 @@ export async function parseArenaChannels(db: DB, channels: ArenaChannelWithDetai
 			switch (bl.class) {
 				case 'Channel':
 					{
-						db.exec(`insert into Connections values (?,?,?,?,?,?,?);`, [
-							blockId,
+						db.exec(`insert into Connections(parent_id, child_id, is_channel, position, selected, connected_at, user_id) values (?,?,?,?,?,?,?);`, [
 							chanId,
 							block.id,
 							1,
