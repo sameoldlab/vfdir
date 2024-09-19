@@ -3,7 +3,7 @@ import type { DB } from '@vlcn.io/crsqlite-wasm'
 import { arenaChannels } from '$lib/dummy/channels'
 import type { ArenaChannelContents, ArenaChannelWithDetails } from 'arena-ts'
 import { nanoid } from 'nanoid/non-secure'
-import type { Block, Channel, ChannelParsed } from './schema'
+import type { Block, Channel, ChannelParsed, Users } from './schema'
 import { coerce, create, number, string } from 'superstruct'
 
 const parseDate = coerce(number(), string(), (value) => new Date(value).valueOf())
@@ -14,13 +14,35 @@ export async function bootstrap(db: DB) {
 	parseArenaChannels(db, arenaChannels)
 }
 
+const upsertUser = async (db: DB, user: Omit<Users, 'id'>) => {
+	const res = (await db.execA<Users['id'][]>('insert or ignore into Users values (?,?,?,?,?,?) returning id;', [
+		nanoid(10),
+		user.slug,
+		user.firstname,
+		user.lastname,
+		user.avatar,
+		user.external_ref,
+	]))[0]
+
+	if (res === undefined) {
+		return db.execA<Users['id'][]>(`select (id) from Users where slug='${user.slug}'`).then((id) => id[0][0])
+	} else {
+		return res[0]
+	}
+}
 export async function parseArenaChannels(db: DB, channels: ArenaChannelWithDetails[]) {
 	let chans = channels.map((chan) => {
 		const chanId = nanoid(10)
-		// console.log(chan.slug)
 		// Parse and insert Blocks
 		let blocks = chan?.contents?.map(async (bl) => {
-			const debug = bl.id === 27425402
+
+			let userId = await upsertUser(db, {
+				slug: bl.user.slug,
+				firstname: bl.user.first_name,
+				lastname: bl.user.last_name,
+				avatar: bl.user.avatar,
+				external_ref: `arena:${bl.class === 'Channel' ? bl.owner_id : bl.user.id}`
+			})
 
 			const blockId = nanoid(10)
 			const block: Block = {
@@ -30,35 +52,18 @@ export async function parseArenaChannels(db: DB, channels: ArenaChannelWithDetai
 				updated_at: create(bl.updated_at, parseDate),
 				title: bl.title ?? '',
 				arena_id: bl.id,
-				description: null,
+				description: bl.class !== 'Channel' ? bl.description : null,
 				content: null,
 				filename: null,
 				source: null,
 				provider_id: null,
 				image: null,
-				author_id: null
+				author_id: userId
 			}
-
-			block.description = bl.class !== 'Channel' ? bl.description : null
-			let userId = (await db.execA('insert or ignore into Users values (?,?,?,?,?,?) returning id;', [
-				nanoid(10),
-				bl.user.slug,
-				bl.user.first_name,
-				bl.user.last_name,
-				bl.user.avatar,
-				`arena:${bl.class === 'Channel' ? bl.owner_id : bl.user.id}`
-			]))[0]
-			if (userId === undefined) {
-				await db.execA(`select (id) from Users where slug='${bl.user.slug}'`).then((id) => userId = id[0][0])
-			} else {
-				userId = userId[0]
-			}
-			block.author_id = userId
 
 			switch (bl.class) {
 				case 'Channel':
 					{
-
 						db.exec(`insert into Connections values (?,?,?,?,?,?,?);`, [
 							blockId,
 							chanId,
@@ -66,7 +71,7 @@ export async function parseArenaChannels(db: DB, channels: ArenaChannelWithDetai
 							bl.position,
 							bl.selected ? 1 : 0,
 							bl.connected_at,
-							userId
+							userId // TODO: not acurrate. someone else can create a blocak which I create a connetion for
 						])
 					}
 					break;
