@@ -3,7 +3,7 @@ import type { DB } from '@vlcn.io/crsqlite-wasm'
 import { arenaChannels } from '$lib/dummy/channels'
 import type { ArenaChannelContents, ArenaChannelWithDetails } from 'arena-ts'
 import { nanoid } from 'nanoid/non-secure'
-import { Block, Channel, type ChannelParsed, type User } from './schema'
+import { Block, Channel, type ChannelParsed, Provider, type User } from './schema'
 import { coerce, create, number, string } from 'superstruct'
 
 const parseDate = coerce(number(), string(), (value) => new Date(value).valueOf())
@@ -11,11 +11,20 @@ const parseDate = coerce(number(), string(), (value) => new Date(value).valueOf(
 export async function bootstrap(db: DB) {
 	// const arenaChannels = await getChannels()
 	// const arenaBlocks = await getBlocks()
-	parseArenaChannels(db, arenaChannels)
+	await parseArenaChannels(db, arenaChannels)
+	return true
 }
 
-const upsertUser = async (db: DB, user: Omit<User, 'id'>) => {
-	const res = (await db.execA<User['id'][]>('insert or ignore into Users values (?,?,?,?,?,?) returning id;', [
+const cachedFn = <T>(fn: (cache: Map<string, string>) => T) => {
+	const cache = new Map<string, string>()
+	return fn(cache)
+}
+
+const upsertUser = cachedFn((cache) => async (db: DB, user: Omit<User, 'id'>) => {
+	const cached = cache.get(user.slug)
+	if (cached) return cached
+
+	const id = (await db.execA<User['id'][]>('insert or ignore into Users values (?,?,?,?,?,?) returning id;', [
 		nanoid(10),
 		user.slug,
 		user.firstname,
@@ -24,12 +33,34 @@ const upsertUser = async (db: DB, user: Omit<User, 'id'>) => {
 		user.external_ref,
 	]))[0]
 
-	if (res === undefined) {
-		return db.execA<User['id'][]>(`select (id) from Users where slug='${user.slug}'`).then((id) => id[0][0])
+	if (id === undefined) {
+		return db.execA<User['id'][]>(`select id from Users where slug='${user.slug}'`).then((id) => id[0][0])
 	} else {
-		return res[0]
+		cache.set(user.slug, id[0])
+		return id[0]
 	}
 }
+)
+
+const upsertProvider = cachedFn((cache) => async (db: DB, provider: Omit<Provider, 'id'>) => {
+	const cached = cache.get(provider.url)
+	if (cached) return cached
+	const id = (await db.execA<Provider['id'][]>(`insert or ignore into Providers values (?,?,?) returning id;`, [
+		nanoid(10),
+		provider.url,
+		provider.name
+	]))[0]
+	if (id === undefined) {
+		return await db.execA(`select (id) from Providers where url='${provider.url}'`).then((id) => {
+			cache.set(provider.url, id[0][0])
+			return id[0][0]
+		})
+	} else {
+		cache.set(provider.url, id[0])
+		return id[0]
+	}
+})
+
 export async function parseArenaChannels(db: DB, channels: ArenaChannelWithDetails[]) {
 	let chans = channels.map((chan) => {
 		const chanId = nanoid(10)
@@ -86,23 +117,7 @@ export async function parseArenaChannels(db: DB, channels: ArenaChannelWithDetai
 					block.image = bl.image.original.url
 					if (bl.source) {
 						block.source = bl.source.url
-						const provider = {
-							...bl.source.provider,
-							id: nanoid(8)
-						}
-						await db.execA(`insert or ignore into Providers values (?,?,?) returning id;`, [
-							provider.id,
-							provider.url,
-							provider.name
-						]).then(async (res) => {
-							const id = res.flat()[0]
-							if (!id) {
-								// console.warn('Duplicate attempt. retreiving id for provider URL:', provider.url);
-								await db.execA(`select (id) from Providers where url='${provider.url}'`).then((id) => block.provider_id = id.flat().pop())
-							} else {
-								block.provider_id = id
-							}
-						})
+						block.provider_id = await upsertProvider(db, bl.source.provider)
 					}
 					break
 			}
