@@ -44,14 +44,13 @@ export async function parseArenaChannels(db: DB, channels: ArenaChannelWithDetai
 				external_ref: `arena:${bl.class === 'Channel' ? bl.owner_id : bl.user.id}`
 			})
 
-			const blockId = nanoid(10)
-			const block: Block = {
-				id: blockId,
+			const block = create({
+				id: nanoid(10),
 				type: bl.class,
 				created_at: create(bl.created_at, parseDate),
 				updated_at: create(bl.updated_at, parseDate),
 				title: bl.title ?? '',
-				arena_id: bl.id,
+				external_ref: `arena:${bl.id}`,
 				description: bl.class !== 'Channel' ? bl.description : null,
 				content: null,
 				filename: null,
@@ -59,7 +58,7 @@ export async function parseArenaChannels(db: DB, channels: ArenaChannelWithDetai
 				provider_id: null,
 				image: null,
 				author_id: userId
-			}
+			}, Block)
 
 			switch (bl.class) {
 				case 'Channel':
@@ -67,6 +66,7 @@ export async function parseArenaChannels(db: DB, channels: ArenaChannelWithDetai
 						db.exec(`insert into Connections values (?,?,?,?,?,?,?);`, [
 							blockId,
 							chanId,
+							block.id,
 							1,
 							bl.position,
 							bl.selected ? 1 : 0,
@@ -120,7 +120,7 @@ export async function parseArenaChannels(db: DB, channels: ArenaChannelWithDetai
 		if (chan.collaboration) flags.push('collaboration')
 		if (chan.published) flags.push('published')
 
-		return {
+		return create({
 			...chan,
 			// updated_at: new P
 			id: chanId,
@@ -129,10 +129,8 @@ export async function parseArenaChannels(db: DB, channels: ArenaChannelWithDetai
 			created_at: create(chan.created_at, parseDate),
 			updated_at: create(chan.updated_at, parseDate),
 			author_id: chan.owner_slug,
-			external_id: `arena:${chan.id}`
-
-			// blocks: blocks?.map((v) => v.id),
-		} satisfies Channel
+			external_ref: `arena:${chan.id}`
+		}, Channel)
 	}
 
 		// console.log(chans);
