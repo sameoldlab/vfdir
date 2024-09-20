@@ -12,26 +12,18 @@ import {
 	string,
 	union,
 	type,
-	type Infer
+	type Infer,
+	optional
 } from 'superstruct'
 
 const int_date = coerce(date(), number(), (value) => new Date(value))
 const date_int = coerce(number(), union([string(), date()]), (value) => typeof value === 'string' ? new Date(value).valueOf() : value.valueOf())
 
-export const Block = type({
+export const BlockShared = type({
 	id: string(),
 	title: string(),
 	/** block, channel, profile */
 	type: string(),
-	updated_at: number(),
-	created_at: number(),
-	description: string(),
-	content: nullable(string()),
-	image: nullable(string()),
-	/** source url or (if type===channel) import source (arena,omnivore,fs,raindrop) */
-	source: nullable(string()),
-	filename: nullable(string()),
-	provider_id: nullable(string()),
 	updated_at: date_int,
 	created_at: date_int,
 	author_id: string(),
@@ -42,25 +34,38 @@ export const Block = type({
 	external_ref: nullable(string()),
 })
 
+export const Block = assign(BlockShared, object({
+	description: optional(string()),
+	provider_id: nullable(string()),
+	content: nullable(string()),
+	image: nullable(string()),
+	filename: nullable(string()),
+	/** source url */
+	source: nullable(string()),
+}))
+
 const BlockParsed = assign(Block, object({
 	updated_at: int_date,
 	created_at: int_date,
 }))
 
-export const Channel = assign(Block, object({
+const channelFlags = enums(['published', 'collaboration', 'default', 'profile'])
+export const Channel = assign(BlockShared, object({
 	type: enums(['channel']),
 	slug: nullable(string()),
 	/** `JSON.stringified` array */
 	flags: coerce(string(), array(channelFlags), (value) => JSON.stringify(value)),
 	status: defaulted(enums(['private', 'closed', 'public']), 'private'),
+	/** import source (arena,omnivore,fs,raindrop) */
+	source: nullable(string()),
 }))
 const ChannelParsed = assign(Channel, object({
 	updated_at: int_date,
 	created_at: int_date,
 	flags: coerce(array(channelFlags), string(), value => JSON.parse(value))
 }))
-const BlocksRow = union([Block, Channel])
 
+const BlocksRow = union([Block, Channel])
 export type BlocksRow = Infer<typeof BlocksRow>
 export type Block = Infer<typeof Block>
 export type BlockParsed = Infer<typeof BlockParsed>
