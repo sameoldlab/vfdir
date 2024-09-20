@@ -33,14 +33,12 @@ const upsertUser = cachedFn((cache) => async (db: DB, user: Omit<User, 'id'>) =>
 		user.external_ref,
 	]))[0]
 
-	if (id === undefined) {
-		return db.execA<User['id'][]>(`select id from Users where slug='${user.slug}'`).then((id) => id[0][0])
-	} else {
-		cache.set(user.slug, id[0])
-		return id[0]
-	}
-}
-)
+	if (id === undefined)
+		return db.execA<User['id'][]>(`select id from Users where slug='${user.slug}'`)
+			.then((id) => id[0][0])
+	cache.set(user.slug, id[0])
+	return id[0]
+})
 
 const upsertProvider = cachedFn((cache) => async (db: DB, provider: Omit<Provider, 'id'>) => {
 	const cached = cache.get(provider.url)
@@ -50,15 +48,11 @@ const upsertProvider = cachedFn((cache) => async (db: DB, provider: Omit<Provide
 		provider.url,
 		provider.name
 	]))[0]
-	if (id === undefined) {
-		return await db.execA(`select (id) from Providers where url='${provider.url}'`).then((id) => {
-			cache.set(provider.url, id[0][0])
-			return id[0][0]
-		})
-	} else {
-		cache.set(provider.url, id[0])
-		return id[0]
-	}
+	if (id === undefined)
+		return db.execA(`select (id) from Providers where url='${provider.url}'`)
+			.then((id) => id[0][0])
+	cache.set(provider.url, id[0])
+	return id[0]
 })
 
 export async function parseArenaChannels(db: DB, channels: ArenaChannelWithDetails[]) {
