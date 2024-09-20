@@ -61,12 +61,12 @@ describe('Validate types', async () => {
 	})
 	// reinserting the same data does not duplicate rows
 	// adds in all blocks and connections
-	// can find a providers based on the block
+	// can find providers based on the block
 	// lists all blocks for a channel
 	// lists all channels for a block
 
 	it('Users table matches type', async () => {
-		const user = (await db.execO('SELECT * FROM Users  limit 1'))[0]
+		const user = (await db.execO('SELECT * FROM Users limit 1'))[0]
 		expect(() => assert(user, User)).not.toThrow()
 	})
 
