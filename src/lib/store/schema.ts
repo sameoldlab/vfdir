@@ -15,7 +15,8 @@ import {
 	type Infer
 } from 'superstruct'
 
-const parseDate = coerce(date(), number(), (value) => new Date(value).valueOf())
+const int_date = coerce(date(), number(), (value) => new Date(value))
+const date_int = coerce(number(), union([string(), date()]), (value) => typeof value === 'string' ? new Date(value).valueOf() : value.valueOf())
 
 export const Block = type({
 	id: string(),
@@ -31,6 +32,8 @@ export const Block = type({
 	source: nullable(string()),
 	filename: nullable(string()),
 	provider_id: nullable(string()),
+	updated_at: date_int,
+	created_at: date_int,
 	author_id: string(),
 	/** if imported from external service,
 	 * service identifier ':' imported id
@@ -40,21 +43,21 @@ export const Block = type({
 })
 
 const BlockParsed = assign(Block, object({
-	updated_at: parseDate,
-	created_at: parseDate,
+	updated_at: int_date,
+	created_at: int_date,
 }))
 
 export const Channel = assign(Block, object({
 	type: enums(['channel']),
 	slug: nullable(string()),
 	/** `JSON.stringified` array */
-	flags: string(),
+	flags: coerce(string(), array(channelFlags), (value) => JSON.stringify(value)),
 	status: defaulted(enums(['private', 'closed', 'public']), 'private'),
 }))
 const ChannelParsed = assign(Channel, object({
-	updated_at: parseDate,
-	created_at: parseDate,
-	flags: coerce(array(enums(['published', 'collaboration', 'default', 'profile'])), string(), value => JSON.parse(value))
+	updated_at: int_date,
+	created_at: int_date,
+	flags: coerce(array(channelFlags), string(), value => JSON.parse(value))
 }))
 const BlocksRow = union([Block, Channel])
 
