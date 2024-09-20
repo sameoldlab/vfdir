@@ -214,32 +214,12 @@ export async function parseArenaChannels(db: DB, channels: ArenaChannelWithDetai
 		insertO(db, blocks, 'Blocks'),
 		insertO(db, chans, 'Blocks')
 	])
-	// for (const key of Object.keys(blocks)) {
-	// 	console.log(key)
-	// }
-	// const stmt = await db.prepare( `INSERT INTO Blocks(slug, title, created_at, status, author_slug, flags) VALUES (?, ?, ?, ?, ?, ?);` )
-	/* blocks.forEach(async (v) => {
-		// if (this.#list.has(v[keys.Channels])) return
-		await stmt.run(
-			db,
-			v.slug,
-			v.title,
-			v.created_at,
-			v.status,
-			v.author_slug,
-			v.flags
-		)
-	}) */
-	// stmt.finalize(null)
 
 	/*
 		get user's channels and blocks
 		save to database
-
 		create poll to check if there are new blocks
 	*/
-	// await db.exec(`INSERT INTO Channels() VALUES()`)
-
 }
 
 
