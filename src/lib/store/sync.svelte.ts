@@ -75,98 +75,171 @@ const insertO = async <O extends object>(db: DB, rows: O[], table: string) => {
 }
 
 export async function parseArenaChannels(db: DB, channels: ArenaChannelWithDetails[]) {
-	let chans = channels.map((chan) => {
-		const chanId = nanoid(10)
-	const blocks = []
-		// Parse and insert Blocks
-		let blocks = chan?.contents?.map(async (bl) => {
-
-			let userId = await upsertUser(db, {
-				slug: bl.user.slug,
-				firstname: bl.user.first_name,
-				lastname: bl.user.last_name,
-				avatar: bl.user.avatar,
-				external_ref: `arena:${bl.class === 'Channel' ? bl.owner_id : bl.user.id}`
-			})
-
-			const block = create({
-				id: nanoid(10),
-				type: bl.class,
-				created_at: create(bl.created_at, parseDate),
-				updated_at: create(bl.updated_at, parseDate),
-				title: bl.title ?? '',
-				external_ref: `arena:${bl.id}`,
-				description: bl.class !== 'Channel' ? bl.description : null,
-				content: null,
-				filename: null,
-				source: null,
-				provider_id: null,
-				image: null,
-				author_id: userId
-			}, Block)
-
-			switch (bl.class) {
-				case 'Channel':
-					{
-						db.exec(`insert into Connections(parent_id, child_id, is_channel, position, selected, connected_at, user_id) values (?,?,?,?,?,?,?);`, [
-							chanId,
-							block.id,
-							1,
-							bl.position,
-							bl.selected ? 1 : 0,
-							bl.connected_at,
-							userId // TODO: not acurrate. someone else can create a blocak which I create a connetion for
-						])
-					}
-					break;
-				case 'Text':
-					block.content = bl.content
-					block.source = bl.source.url
-					break
-				case 'Attachment':
-					block.filename = bl.attachment.content_type
-				case 'Link':
-				case 'Image':
-				case 'Media':
-					block.image = bl.image.original.url
-					if (bl.source) {
-						block.source = bl.source.url
-						block.provider_id = await upsertProvider(db, bl.source.provider)
-					}
-					break
-			}
-			if (debug) {
-				// console.log(block)
-				// console.log(bl)
-			}
-			// if (bl.source.url !== bl.source.provider.url)
-			// console.log({ name: bl.name, type: bl.class, source: bl.source })
-			return block
-		})
-
-		const flags: ChannelParsed['flags'] = [chan.kind]
-		if (chan.collaboration) flags.push('collaboration')
-		if (chan.published) flags.push('published')
-
-		return create({
-			...chan,
-			// updated_at: new P
-			id: chanId,
-			flags: JSON.stringify(flags),
-			status: chan.status,
-			created_at: create(chan.created_at, parseDate),
-			updated_at: create(chan.updated_at, parseDate),
-			author_id: chan.owner_slug,
-			external_ref: `arena:${chan.id}`
-		}, Channel)
+	// const blockIds = await db.execO(`select id,external_ref from blocks`)
+	// console.log(blockIds)
+	const dedupe = {
+		blocks: new Map<string, string>(),
+		provider: new Map<string, string>(),
+		user: new Map<string, string>(),
 	}
+	const blocks = []
+	const chans = []
+
+	await Promise.all(channels.map(async (chan) => {
+		const external_ref = `arena:${chan.id}`
+		let chanId = dedupe.blocks.get(external_ref)
+
+		// add channel if it is not already in database
+		if (!chanId) {
+			const flags: ChannelParsed['flags'] = [chan.kind]
+			if (chan.collaboration) flags.push('collaboration')
+			if (chan.published) flags.push('published')
+
+			chanId = nanoid(10)
+			dedupe.blocks.set(external_ref, chanId)
+
+			chans.push(create({
+				id: chanId,
+				type: 'channel',
+				title: chan.title,
+				slug: chan.slug,
+				created_at: chan.created_at,
+				updated_at: chan.updated_at,
+				flags: flags,
+				status: chan.status,
+				source: 'arena',
+				author_id: chan.owner_slug,
+				external_ref
+			}, Channel))
+		}
+
+		// Parse and insert Blocks
+		chan.contents && await Promise.all(
+			chan.contents.map(async (bl) => {
+				const blockRef = `arena:${bl.id}`
+				let blockId = dedupe.blocks.get(blockRef)
+				// if block is already in db, insert connections and return
+				if (blockId) {
+
+					return
+				}
+
+				blockId = nanoid(10)
+				dedupe.blocks.set(blockRef, blockId)
+
+				const userId = await upsertUser(db, {
+					slug: bl.user.slug,
+					firstname: bl.user.first_name,
+					lastname: bl.user.last_name,
+					avatar: bl.user.avatar,
+					external_ref: `arena:${bl.class === 'Channel' ? bl.owner_id : bl.user.id}`
+				})
+
+				const connectedBy = await upsertUser(db, {
+					slug: bl.connected_by_user_slug,
+					firstname: null,
+					lastname: null,
+					avatar: null,
+					external_ref: `arena:${bl.connected_by_user_id}`
+				})
+				db.exec(`insert into Connections(parent_id, child_id, is_channel, position, selected, connected_at, user_id) values (?,?,?,?,?,?,?);`, [
+					chanId,
+					blockId,
+					bl.class === 'Channel' ? 1 : 0,
+					bl.position,
+					bl.selected ? 1 : 0,
+					bl.connected_at,
+					userId
+				])
+
+				if (bl.class === 'Channel') {
+					const flags: ChannelParsed['flags'] = [bl.kind]
+					if (bl.collaboration) flags.push('collaboration')
+					if (bl.published) flags.push('published')
+					chans.push(create({
+						id: blockId,
+						type: bl.class.toLowerCase(),
+						title: bl.title,
+						created_at: bl.created_at,
+						updated_at: bl.updated_at,
+						source: 'arena',
+						flags,
+						author_id: userId,
+						external_ref: blockRef,
+						slug: bl.slug
+					}, Channel))
+
+				} else {
+					const block = {
+						id: blockId,
+						type: bl.class.toLowerCase(),
+						title: bl.title ?? '',
+						description: bl.description ?? '',
+						created_at: bl.created_at,
+						updated_at: bl.updated_at,
+						content: null,
+						filename: null,
+						provider_id: null,
+						image: null,
+						source: null,
+						author_id: userId,
+						external_ref: `arena:${bl.id}`,
+					}
+
+					switch (bl.class) {
+						case 'Text':
+							block.content = bl.content
+							block.source = bl.source ? bl.source?.url : block.source
+							break
+						case 'Attachment':
+							block.filename = bl.attachment.content_type
+						case 'Link':
+						case 'Image':
+						case 'Media':
+							block.image = bl.image.original.url
+							if (bl.source) {
+								block.source = bl.source.url
+								block.provider_id = await upsertProvider(db, bl.source.provider)
+							}
+							break
+					}
+					blocks.push(create(block, Block))
+				}
+			}))
+	}))
+	// console.log(chans)
+	// console.log(blocks)
+
 	await Promise.all([
 		insertO(db, blocks, 'Blocks'),
 		insertO(db, chans, 'Blocks')
 	])
+	// for (const key of Object.keys(blocks)) {
+	// 	console.log(key)
+	// }
+	// const stmt = await db.prepare( `INSERT INTO Blocks(slug, title, created_at, status, author_slug, flags) VALUES (?, ?, ?, ?, ?, ?);` )
+	/* blocks.forEach(async (v) => {
+		// if (this.#list.has(v[keys.Channels])) return
+		await stmt.run(
+			db,
+			v.slug,
+			v.title,
+			v.created_at,
+			v.status,
+			v.author_slug,
+			v.flags
+		)
+	}) */
+	// stmt.finalize(null)
+
+	/*
+		get user's channels and blocks
+		save to database
+
+		create poll to check if there are new blocks
+	*/
 	// await db.exec(`INSERT INTO Channels() VALUES()`)
 
-	return true
 }
 
 
