@@ -55,9 +55,29 @@ const upsertProvider = cachedFn((cache) => async (db: DB, provider: Omit<Provide
 	return id[0]
 })
 
+const insertO = async <O extends object>(db: DB, rows: O[], table: string) => {
+	const keys = Object.keys(rows[0])
+	console.log(rows.length)
+	const sql = `
+		INSERT INTO ${table}(${keys.join(',')})
+		VALUES (${Array(keys.length).fill('?').join(', ')});`
+
+	return db.prepare(sql).then(stmt =>
+		Promise.all(rows.map(async (value) => {
+			stmt.bind(Object.values(value))
+			await stmt.run(db)
+			// stmt.run(db, Object.values(value))
+		}))
+			.finally(() =>
+				stmt.finalize(db)
+			)
+	)
+}
+
 export async function parseArenaChannels(db: DB, channels: ArenaChannelWithDetails[]) {
 	let chans = channels.map((chan) => {
 		const chanId = nanoid(10)
+	const blocks = []
 		// Parse and insert Blocks
 		let blocks = chan?.contents?.map(async (bl) => {
 
@@ -140,24 +160,12 @@ export async function parseArenaChannels(db: DB, channels: ArenaChannelWithDetai
 			external_ref: `arena:${chan.id}`
 		}, Channel)
 	}
+	await Promise.all([
+		insertO(db, blocks, 'Blocks'),
+		insertO(db, chans, 'Blocks')
+	])
+	// await db.exec(`INSERT INTO Channels() VALUES()`)
 
-		// console.log(chans);
-		// channels.push(db, chans)
-		// channels.push(db,
-		// arenaChannels.channels.map(chan =>
-		// 	chan.contents.map(block => [block.id, {...block}]
-		// ))
-		// )
-		// Create tables
-
-		/*
-			get user's channels and blocks
-			save to database
-
-			create poll to check if there are new blocks
-		*/
-		// await db.exec(`INSERT INTO Channels() VALUES()`)
-	)
 	return true
 }
 
