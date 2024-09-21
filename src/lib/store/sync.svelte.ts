@@ -4,9 +4,7 @@ import { arenaChannels } from '$lib/dummy/channels'
 import type { ArenaChannelContents, ArenaChannelWithDetails } from 'arena-ts'
 import { nanoid } from 'nanoid/non-secure'
 import { Block, Channel, type ChannelParsed, Provider, type User } from './schema'
-import { coerce, create, number, string } from 'superstruct'
-
-const parseDate = coerce(number(), string(), (value) => new Date(value).valueOf())
+import { create } from 'superstruct'
 
 export async function bootstrap(db: DB) {
 	// const arenaChannels = await getChannels()
