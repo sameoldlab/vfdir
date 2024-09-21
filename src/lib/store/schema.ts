@@ -36,7 +36,7 @@ export const BlockShared = type({
 
 export const Block = assign(BlockShared, object({
 	description: optional(string()),
-	provider_id: nullable(string()),
+	provider_url: nullable(string()),
 	content: nullable(string()),
 	image: nullable(string()),
 	filename: nullable(string()),
@@ -85,7 +85,7 @@ CREATE TABLE IF NOT EXISTS Blocks(
 	-- url or (if type=channel) import source (arena,omnivore,fs,raindrop)
 	source TEXT,
 	filename TEXT,
-	provider_id TEXT,
+	provider_url TEXT,
 	author_id TEXT DEFAULT 'local',
 	external_ref text,
 	--exists if type='channel'
@@ -94,7 +94,7 @@ CREATE TABLE IF NOT EXISTS Blocks(
 	status TEXT DEFAULT 'private',
 	--exists if type='channel',
 	foreign key (author_id) references Users(id),
-	foreign key (provider_id) references Providers(id)
+	foreign key (provider_url) references Providers(url)
 );
 `
 
