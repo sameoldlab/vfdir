@@ -3,7 +3,7 @@ import type { DB } from '@vlcn.io/crsqlite-wasm'
 import { arenaChannels } from '$lib/dummy/channels'
 import type { ArenaChannelContents, ArenaChannelWithDetails } from 'arena-ts'
 import { nanoid } from 'nanoid/non-secure'
-import { Block, Channel, type ChannelParsed, Provider, type User } from './schema'
+import { Block, Channel, type ChannelParsed, type User } from './schema'
 import { create } from 'superstruct'
 
 export async function bootstrap(db: DB) {
@@ -35,21 +35,6 @@ const upsertUser = cachedFn((cache) => async (db: DB, user: Omit<User, 'id'>) =>
 		return db.execA<User['id'][]>(`select id from Users where slug='${user.slug}'`)
 			.then((id) => id[0][0])
 	cache.set(user.slug, id[0])
-	return id[0]
-})
-
-const upsertProvider = cachedFn((cache) => async (db: DB, provider: Omit<Provider, 'id'>) => {
-	const cached = cache.get(provider.url)
-	if (cached) return cached
-	const id = (await db.execA<Provider['id'][]>(`insert or ignore into Providers values (?,?,?) returning id;`, [
-		nanoid(10),
-		provider.url,
-		provider.name
-	]))[0]
-	if (id === undefined)
-		return db.execA(`select (id) from Providers where url='${provider.url}'`)
-			.then((id) => id[0][0])
-	cache.set(provider.url, id[0])
 	return id[0]
 })
 
@@ -177,7 +162,7 @@ export async function parseArenaChannels(db: DB, channels: ArenaChannelWithDetai
 						updated_at: bl.updated_at,
 						content: null,
 						filename: null,
-						provider_id: null,
+						provider_url: null,
 						image: null,
 						source: null,
 						author_id: userId,
@@ -196,8 +181,12 @@ export async function parseArenaChannels(db: DB, channels: ArenaChannelWithDetai
 						case 'Media':
 							block.image = bl.image.original.url
 							if (bl.source) {
+								db.exec(`insert or ignore into Providers values (?,?);`, [
+									bl.source.provider.url,
+									bl.source.provider.name
+								])
 								block.source = bl.source.url
-								block.provider_id = await upsertProvider(db, bl.source.provider)
+								block.provider_url = bl.source.provider.url
 							}
 							break
 					}
