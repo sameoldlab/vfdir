@@ -87,7 +87,7 @@ CREATE TABLE IF NOT EXISTS Blocks(
 	filename TEXT,
 	provider_id TEXT,
 	author_id TEXT DEFAULT 'local',
-	external_ref text UNIQUE,
+	external_ref text,
 	--exists if type='channel'
 	slug text,
 	flags TEXT DEFAULT '[]',
@@ -100,6 +100,7 @@ CREATE TABLE IF NOT EXISTS Blocks(
 
 // Connections
 export const Connection = object({
+	id: string(),
 	child_id: string(),
 	parent_id: string(),
 	/** if child block is of type Channel */
@@ -119,6 +120,7 @@ export const ConnectionParsed = object({
 
 const connections = `
 CREATE TABLE IF NOT EXISTS Connections(
+	id TEXT PRIMARY KEY,
 	parent_id TEXT NOT NULL,
 	child_id TEXT NOT NULL,
 	is_channel INTEGER DEFAULT 0,
@@ -126,7 +128,6 @@ CREATE TABLE IF NOT EXISTS Connections(
 	selected INTEGER DEFAULT 0,
 	connected_at INTEGER DEFAULT (strftime('%s', 'now')),
 	user_id TEXT DEFAULT 'local',
-	unique (parent_id, child_id)
 );
 `
 
@@ -146,25 +147,23 @@ export const User = object({
 const users = `
 CREATE TABLE IF NOT EXISTS Users(
 	id TEXT PRIMARY KEY NOT NULL,
-	slug TEXT UNIQUE,
+	slug TEXT,
 	firstname TEXT,
 	lastname TEXT,
 	avatar TEXT,
-	external_ref TEXT UNIQUE
+	external_ref TEXT
 );
 `
 export type User = Infer<typeof User>
 
 // Providers
 export const Provider = object({
-	id: string(),
 	url: nullable(string()),
 	name: nullable(string())
 })
 const providers = `
 CREATE TABLE IF NOT EXISTS Providers(
-	id TEXT PRIMARY KEY NOT NULL,
-	url TEXT UNIQUE NOT NULL,
+	url TEXT PRIMARY KEY,
 	name TEXT
 );
 `
