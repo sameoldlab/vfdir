@@ -127,7 +127,7 @@ CREATE TABLE IF NOT EXISTS Connections(
 	position INTEGER,
 	selected INTEGER DEFAULT 0,
 	connected_at INTEGER DEFAULT (strftime('%s', 'now')),
-	user_id TEXT DEFAULT 'local',
+	user_id TEXT DEFAULT 'local'
 );
 `
 
