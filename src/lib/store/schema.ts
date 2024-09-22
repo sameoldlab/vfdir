@@ -170,19 +170,17 @@ CREATE TABLE IF NOT EXISTS Providers(
 export type Provider = Infer<typeof Provider>
 
 // schema
-export const schema = /*sql*/ `
-pragma journal_mode = wal;
-${users}
-INSERT INTO Users(id) VALUES ('local');
-${blocks}
-${connections}
-${providers}
-
-CREATE INDEX idx_blocks_type_author_id ON Blocks(type, author_id);
-CREATE INDEX idx_blocks_author_id ON Blocks(author_id);
-CREATE INDEX idx_blocks_created_at ON Blocks(created_at);
-
-CREATE INDEX idx_connections_child_id ON Connections(child_id);
-CREATE INDEX idx_connections_parent_child ON Connections(parent_id, child_id);
-CREATE INDEX idx_connections_position ON Connections(parent_id, position);
-`
+export const schema = [
+	'pragma journal_mode = wal;',
+	users,
+	blocks,
+	connections,
+	providers,
+	"INSERT INTO Users(id) VALUES ('local');",
+	'CREATE INDEX idx_blocks_type_author_id ON Blocks(type, author_id);',
+	'CREATE INDEX idx_blocks_author_id ON Blocks(author_id);',
+	'CREATE INDEX idx_blocks_created_at ON Blocks(created_at);',
+	'CREATE INDEX idx_connections_child_id ON Connections(child_id);',
+	'CREATE INDEX idx_connections_parent_child ON Connections(parent_id, child_id);',
+	'CREATE INDEX idx_connections_position ON Connections(parent_id, position);',
+]
