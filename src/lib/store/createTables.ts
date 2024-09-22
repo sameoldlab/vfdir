@@ -6,7 +6,7 @@ export async function createTables(db: DB) {
 	if (isReady.length > 0) return
 
 	console.debug('Initializing database...')
-	await db.tx(tx => tx.exec(schema))
+	await db.tx(tx => tx.execMany(schema))
 
 	// user_id INT NOT NULL default 0,
 	// updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
