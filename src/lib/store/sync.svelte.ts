@@ -3,8 +3,8 @@ import type { DB } from '@vlcn.io/crsqlite-wasm'
 import { arenaChannels } from '$lib/dummy/channels'
 import type { ArenaChannelContents, ArenaChannelWithDetails } from 'arena-ts'
 import { nanoid } from 'nanoid/non-secure'
-import { Block, Channel, type ChannelParsed, type User } from './schema'
-import { create } from 'superstruct'
+import { Block, Channel, Provider, type ChannelParsed, type User } from './schema'
+import { create, Struct } from 'superstruct'
 
 export async function bootstrap(db: DB) {
 	// const arenaChannels = await getChannels()
@@ -44,12 +44,15 @@ const insertO = async <O extends object>(db: DB, rows: O[], table: string) => {
 }
 
 export async function parseArenaChannels(db: DB, channels: ArenaChannelWithDetails[]) {
-	// const blockIds = await db.execO(`select id,external_ref from blocks`)
-	// console.log(blockIds)
+	let blockRefs: [Block['external_ref'], Block['id']][] = []
+	let userRefs: [User['external_ref'], User['id']][] = []
+	await db.tx(async (db) => {
+		blockRefs.push(...(await db.execA<[Block['external_ref'], Block['id']]>(`select external_ref,id from Blocks`)))
+		userRefs.push(...(await db.execA<[User['external_ref'], User['id']]>(`select external_ref,id from Users`)))
+	})
 	const dedupe = {
-		blocks: new Map<string, string>(),
-		provider: new Map<string, string>(),
-		user: new Map<string, string>(),
+		blocks: new Map<Block['external_ref'], Block['id']>(blockRefs),
+		user: new Map<User['external_ref'], User['id']>(userRefs),
 	}
 	const blocks = []
 	const chans = []
@@ -85,16 +88,16 @@ export async function parseArenaChannels(db: DB, channels: ArenaChannelWithDetai
 		// Parse and insert Blocks
 		chan.contents && await Promise.all(
 			chan.contents.map(async (bl) => {
-				const blockRef = `arena:${bl.id}`
-				let blockId = dedupe.blocks.get(blockRef)
-				// if block is already in db, insert connections and return
-				if (blockId) {
+			const blockRef = `arena:${bl.id}`
+			let blockId = dedupe.blocks.get(blockRef)
+			// if block is already in db, insert connections and return
+			if (blockId) {
 
-					return
-				}
+				return
+			}
 
-				blockId = nanoid(10)
-				dedupe.blocks.set(blockRef, blockId)
+			blockId = nanoid(10)
+			dedupe.blocks.set(blockRef, blockId)
 
 			const userExRef = `arena:${bl.class === 'Channel' ? bl.owner_id : bl.user.id}`
 			let userId = dedupe.user.get(userExRef)
@@ -189,6 +192,9 @@ export async function parseArenaChannels(db: DB, channels: ArenaChannelWithDetai
 							break
 					}
 					blocks.push(create(block, Block))
+				dedupe.user.set(connectedUserExRef, connectedBy)
+			}
+
 				}
 			}))
 	}))
