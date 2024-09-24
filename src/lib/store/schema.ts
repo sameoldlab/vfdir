@@ -4,7 +4,6 @@ import {
 	boolean,
 	coerce,
 	date,
-	defaulted,
 	enums,
 	nullable,
 	number,
@@ -55,7 +54,7 @@ export const Channel = assign(BlockShared, object({
 	slug: nullable(string()),
 	/** `JSON.stringified` array */
 	flags: coerce(string(), array(channelFlags), (value) => JSON.stringify(value)),
-	status: defaulted(enums(['private', 'closed', 'public']), 'private'),
+	status: nullable(enums(['private', 'closed', 'public'])),
 	/** import source (arena,omnivore,fs,raindrop) */
 	source: nullable(string()),
 }))
