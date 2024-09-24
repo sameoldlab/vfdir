@@ -13,30 +13,16 @@ export async function bootstrap(db: DB) {
 	return true
 }
 
-const cachedFn = <T>(fn: (cache: Map<string, string>) => T) => {
-	const cache = new Map<string, string>()
-	return fn(cache)
-}
-
-const upsertUser = cachedFn((cache) => async (db: DB, user: Omit<User, 'id'>) => {
-	const cached = cache.get(user.slug)
-	if (cached) return cached
-
-	const id = (await db.execA<User['id'][]>('insert or ignore into Users values (?,?,?,?,?,?) returning id;', [
-		nanoid(10),
+const insertUser = (db: DB, user: User) =>
+	db.exec('insert into Users values (?,?,?,?,?,?);', [
+		user.id,
 		user.slug,
 		user.firstname,
 		user.lastname,
 		user.avatar,
 		user.external_ref,
-	]))[0]
+	])
 
-	if (id === undefined)
-		return db.execA<User['id'][]>(`select id from Users where slug='${user.slug}'`)
-			.then((id) => id[0][0])
-	cache.set(user.slug, id[0])
-	return id[0]
-})
 
 const insertO = async <O extends object>(db: DB, rows: O[], table: string) => {
 	const keys = Object.keys(rows[0])
@@ -110,20 +96,32 @@ export async function parseArenaChannels(db: DB, channels: ArenaChannelWithDetai
 				blockId = nanoid(10)
 				dedupe.blocks.set(blockRef, blockId)
 
-				const userId = await upsertUser(db, {
+			const userExRef = `arena:${bl.class === 'Channel' ? bl.owner_id : bl.user.id}`
+			let userId = dedupe.user.get(userExRef)
+			if (!userId) {
+				userId = nanoid(10)
+				insertUser(db, {
+					id: userId,
 					slug: bl.user.slug,
 					firstname: bl.user.first_name,
 					lastname: bl.user.last_name,
 					avatar: bl.user.avatar,
-					external_ref: `arena:${bl.class === 'Channel' ? bl.owner_id : bl.user.id}`
+					external_ref: userExRef
 				})
+				dedupe.user.set(userExRef, userId)
+			}
 
-				const connectedBy = await upsertUser(db, {
+			const connectedUserExRef = `arena:${bl.connected_by_user_id}`
+			let connectedBy = dedupe.user.get(connectedUserExRef)
+			if (!connectedBy) {
+				connectedBy = nanoid(10)
+				insertUser(db, {
+					id: connectedBy,
 					slug: bl.connected_by_user_slug,
 					firstname: null,
 					lastname: null,
 					avatar: null,
-					external_ref: `arena:${bl.connected_by_user_id}`
+					external_ref: connectedUserExRef
 				})
 				db.exec(`insert into Connections(parent_id, child_id, is_channel, position, selected, connected_at, user_id) values (?,?,?,?,?,?,?);`, [
 					chanId,
