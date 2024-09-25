@@ -1,9 +1,8 @@
 import type { DB } from '@vlcn.io/crsqlite-wasm'
-// import { getChannels, getBlocks } from '$lib/store/api/arenav2'
 import { arenaChannels } from '$lib/dummy/channels'
 import type { ArenaChannelContents, ArenaChannelWithDetails } from 'arena-ts'
 import { ulid } from 'ulidx'
-import { Block, Channel, type ChannelParsed, type User } from './schema'
+import { Block, Channel, type ChannelParsed, type User } from '$lib/database/schema'
 import { create } from 'superstruct'
 
 export async function bootstrap(db: DB) {

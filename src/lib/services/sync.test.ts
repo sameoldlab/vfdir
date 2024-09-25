@@ -1,7 +1,7 @@
 import initWasm from '@vlcn.io/crsqlite-wasm'
 import wasmUrl from '@vlcn.io/crsqlite-wasm/crsqlite.wasm?url'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
-import { createTables } from './createTables'
+import { createTables } from '$lib/database/createTables'
 import { bootstrap, parseArenaChannels } from './sync.svelte'
 import { arenaChannels as mockChannels } from '$lib/dummy/channels'
 import duplicateChans from '$lib/dummy/duplicateChans'

@@ -1,4 +1,4 @@
-import { schema } from '$lib/store/schema'
+import { schema } from '$lib/database/schema'
 import type { DB } from "@vlcn.io/crsqlite-wasm"
 
 export async function createTables(db: DB) {
