@@ -46,6 +46,7 @@ const insertO = async <O extends object>(db: DB, rows: O[], table: string) => {
 export async function parseArenaChannels(db: DB, channels: ArenaChannelWithDetails[]) {
 	let blockRefs: [Block['external_ref'], Block['id']][] = []
 	let userRefs: [User['external_ref'], User['id']][] = []
+
 	await db.tx(async (db) => {
 		blockRefs.push(...(await db.execA<[Block['external_ref'], Block['id']]>(`select external_ref,id from Blocks`)))
 		userRefs.push(...(await db.execA<[User['external_ref'], User['id']]>(`select external_ref,id from Users`)))
@@ -57,9 +58,10 @@ export async function parseArenaChannels(db: DB, channels: ArenaChannelWithDetai
 	const blocks = []
 	const chans = []
 
-	await Promise.all(channels.map(async (chan) => {
+	channels.map((chan) => {
 		const external_ref = `arena:${chan.id}`
 		let chanId = dedupe.blocks.get(external_ref)
+		// console.log(chanId)
 
 		// add channel if it is not already in database
 		if (!chanId) {
@@ -86,8 +88,7 @@ export async function parseArenaChannels(db: DB, channels: ArenaChannelWithDetai
 		}
 
 		// Parse and insert Blocks
-		chan.contents && await Promise.all(
-			chan.contents.map(async (bl) => {
+		chan.contents && chan.contents.map((bl) => {
 			const blockRef = `arena:${bl.id}`
 			let blockId = dedupe.blocks.get(blockRef)
 			// if block is already in db, insert connections and return
@@ -126,84 +127,86 @@ export async function parseArenaChannels(db: DB, channels: ArenaChannelWithDetai
 					avatar: null,
 					external_ref: connectedUserExRef
 				})
-				db.exec(`insert into Connections(parent_id, child_id, is_channel, position, selected, connected_at, user_id) values (?,?,?,?,?,?,?);`, [
-					chanId,
-					blockId,
-					bl.class === 'Channel' ? 1 : 0,
-					bl.position,
-					bl.selected ? 1 : 0,
-					bl.connected_at,
-					userId
-				])
-
-				if (bl.class === 'Channel') {
-					const flags: ChannelParsed['flags'] = [bl.kind]
-					if (bl.collaboration) flags.push('collaboration')
-					if (bl.published) flags.push('published')
-					chans.push(create({
-						id: blockId,
-						type: bl.class.toLowerCase(),
-						title: bl.title,
-						created_at: bl.created_at,
-						updated_at: bl.updated_at,
-						source: 'arena',
-						flags,
-						author_id: userId,
-						external_ref: blockRef,
-						slug: bl.slug
-					}, Channel))
-
-				} else {
-					const block = {
-						id: blockId,
-						type: bl.class.toLowerCase(),
-						title: bl.title ?? '',
-						description: bl.description ?? '',
-						created_at: bl.created_at,
-						updated_at: bl.updated_at,
-						content: null,
-						filename: null,
-						provider_url: null,
-						image: null,
-						source: null,
-						author_id: userId,
-						external_ref: `arena:${bl.id}`,
-					}
-
-					switch (bl.class) {
-						case 'Text':
-							block.content = bl.content
-							block.source = bl.source ? bl.source?.url : block.source
-							break
-						case 'Attachment':
-							block.filename = bl.attachment.content_type
-						case 'Link':
-						case 'Image':
-						case 'Media':
-							block.image = bl.image.original.url
-							if (bl.source) {
-								db.exec(`insert or ignore into Providers values (?,?);`, [
-									bl.source.provider.url,
-									bl.source.provider.name
-								])
-								block.source = bl.source.url
-								block.provider_url = bl.source.provider.url
-							}
-							break
-					}
-					blocks.push(create(block, Block))
 				dedupe.user.set(connectedUserExRef, connectedBy)
 			}
 
+			db.exec(`insert into Connections(id,parent_id, child_id, is_channel, position, selected, connected_at, user_id) values (?,?,?,?,?,?,?,?);`, [
+				chanId + '+' + blockId,
+				chanId,
+				blockId,
+				bl.class === 'Channel' ? 1 : 0,
+				bl.position,
+				bl.selected ? 1 : 0,
+				bl.connected_at,
+				connectedBy
+			])
+
+			if (bl.class === 'Channel') {
+				const flags: ChannelParsed['flags'] = [bl.kind]
+				if (bl.collaboration) flags.push('collaboration')
+				if (bl.published) flags.push('published')
+				chans.push(create({
+					id: blockId,
+					type: bl.class.toLowerCase(),
+					title: bl.title,
+					slug: bl.slug,
+					created_at: bl.created_at,
+					updated_at: bl.updated_at,
+					flags,
+					status: bl.status,
+					source: 'arena',
+					author_id: userId,
+					external_ref: blockRef,
+				}, Channel))
+
+			} else {
+				const block = {
+					id: blockId,
+					type: bl.class.toLowerCase(),
+					title: bl.title ?? '',
+					description: bl.description ?? '',
+					created_at: bl.created_at,
+					updated_at: bl.updated_at,
+					content: null,
+					filename: null,
+					provider_url: null,
+					image: null,
+					source: null,
+					author_id: userId,
+					external_ref: `arena:${bl.id}`,
 				}
-			}))
-	}))
+
+				switch (bl.class) {
+					case 'Text':
+						block.content = bl.content
+						block.source = bl.source ? bl.source?.url : block.source
+						break
+					case 'Attachment':
+						block.filename = bl.attachment.content_type
+					case 'Link':
+					case 'Image':
+					case 'Media':
+						block.image = bl.image.original.url
+						if (bl.source) {
+							db.exec(`insert or ignore into Providers values (?,?);`, [
+								bl.source.provider.url,
+								bl.source.provider.name
+							])
+							block.source = bl.source.url
+							block.provider_url = bl.source.provider.url
+						}
+						break
+				}
+				blocks.push(create(block, Block))
+			}
+		})
+	})
 	// console.log(chans)
 	// console.log(blocks)
 
 	await Promise.all([
-		insertO(db, blocks, 'Blocks'),
-		insertO(db, chans, 'Blocks')
+		insertO(db, blocks, 'Blocks', Block),
+		insertO(db, chans, 'Blocks', Channel)
 	])
 
 	/*
