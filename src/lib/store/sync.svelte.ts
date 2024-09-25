@@ -22,8 +22,7 @@ const insertUser = (db: DB, user: User) =>
 		user.external_ref,
 	])
 
-
-const insertO = async <O extends object>(db: DB, rows: O[], table: string, schema: Struct) => {
+const insertO = async <O extends object>(db: DB, rows: O[], table: string) => {
 	if (!rows || rows.length === 0) return
 
 	const keys = Object.keys(rows[0])
@@ -205,8 +204,8 @@ export async function parseArenaChannels(db: DB, channels: ArenaChannelWithDetai
 	// console.log(blocks)
 
 	await Promise.all([
-		insertO(db, blocks, 'Blocks', Block),
-		insertO(db, chans, 'Blocks', Channel)
+		insertO(db, blocks, 'Blocks'),
+		insertO(db, chans, 'Blocks')
 	])
 
 	/*
