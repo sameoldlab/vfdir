@@ -24,7 +24,6 @@
 		"@vlcn.io/crsqlite-wasm": "^0.16.0",
 		"arena-ts": "^1.0.2",
 		"happy-dom": "^15.7.4",
-		"nanoid": "^5.0.7",
 		"prettier": "^3.3.2",
 		"prettier-plugin-svelte": "^3.2.5",
 		"superstruct": "^2.0.2",
@@ -33,6 +32,7 @@
 		"svelte-preprocess": "^6.0.2",
 		"tslib": "^2.7.0",
 		"typescript": "^5.6.2",
+		"ulidx": "^2.4.1",
 		"vite": "^5.4.3",
 		"vitest": "^2.0.4"
 	}

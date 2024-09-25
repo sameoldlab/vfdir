@@ -35,9 +35,6 @@ importers:
       happy-dom:
         specifier: ^15.7.4
         version: 15.7.4
-      nanoid:
-        specifier: ^5.0.7
-        version: 5.0.7
       prettier:
         specifier: ^3.3.2
         version: 3.3.3
@@ -62,6 +59,9 @@ importers:
       typescript:
         specifier: ^5.6.2
         version: 5.6.2
+      ulidx:
+        specifier: ^2.4.1
+        version: 2.4.1
       vite:
         specifier: ^5.4.3
         version: 5.4.3(@types/node@22.5.5)
@@ -757,6 +757,9 @@ packages:
     resolution: {integrity: sha512-o+NO+8WrRiQEE4/7nwRJhN1HWpVmJm511pBHUxPLtp0BUISzlBplORYSmTclCnJvQq2tKu/sgl3xVpkc7ZWuQQ==}
     engines: {node: '>=6'}
 
+  layerr@3.0.0:
+    resolution: {integrity: sha512-tv754Ki2dXpPVApOrjTyRo4/QegVb9eVFq4mjqp4+NM5NaX7syQvN5BBNfV/ZpAHCEHV24XdUVrBAoka4jt3pA==}
+
   locate-character@3.0.0:
     resolution: {integrity: sha512-SW13ws7BjaeJ6p7Q6CO2nchbYEc3X3J6WrmTTDto7yMPqVSZTUyY5Tjbid+Ab8gLnATtygYtiDIJGQRRn2ZOiA==}
 
@@ -798,11 +801,6 @@ packages:
   nanoid@3.3.7:
     resolution: {integrity: sha512-eSRppjcPIatRIMC1U6UngP8XFcz8MQWGQdt1MTBQ7NaAmvXDfvNxbvWV3x2y6CdEUciCSsDHDQZbhYaB8QEo2g==}
     engines: {node: ^10 || ^12 || ^13.7 || ^14 || >=15.0.1}
-    hasBin: true
-
-  nanoid@5.0.7:
-    resolution: {integrity: sha512-oLxFY2gd2IqnjcYyOXD8XGCftpGtZP2AbHbOkthDkvRywH5ayNtPVy9YlOPcHckXzbLTCHpkb7FB+yuxKV13pQ==}
-    engines: {node: ^18 || >=20}
     hasBin: true
 
   normalize-path@3.0.0:
@@ -1032,6 +1030,10 @@ packages:
     resolution: {integrity: sha512-NW8ByodCSNCwZeghjN3o+JX5OFH0Ojg6sadjEKY4huZ52TqbJTJnDo5+Tw98lSy63NZvi4n+ez5m2u5d4PkZyw==}
     engines: {node: '>=14.17'}
     hasBin: true
+
+  ulidx@2.4.1:
+    resolution: {integrity: sha512-xY7c8LPyzvhvew0Fn+Ek3wBC9STZAuDI/Y5andCKi9AX6/jvfaX45PhsDX8oxgPL0YFp0Jhr8qWMbS/p9375Xg==}
+    engines: {node: '>=16'}
 
   undici-types@6.19.8:
     resolution: {integrity: sha512-ve2KP6f/JnbPBFyobGHuerC9g1FYGn/F8n1LWTwNxCEzd6IfqTwUQcNXgEtmmQ6DlRrC1hrSrBnCZPokRrDHjw==}
@@ -1772,6 +1774,8 @@ snapshots:
 
   kleur@4.1.5: {}
 
+  layerr@3.0.0: {}
+
   locate-character@3.0.0: {}
 
   loupe@3.1.1:
@@ -1815,8 +1819,6 @@ snapshots:
   mute-stream@1.0.0: {}
 
   nanoid@3.3.7: {}
-
-  nanoid@5.0.7: {}
 
   normalize-path@3.0.0: {}
 
@@ -2007,6 +2009,10 @@ snapshots:
   type-fest@4.26.1: {}
 
   typescript@5.6.2: {}
+
+  ulidx@2.4.1:
+    dependencies:
+      layerr: 3.0.0
 
   undici-types@6.19.8: {}
 
