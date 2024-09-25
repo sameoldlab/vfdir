@@ -10,7 +10,6 @@ export async function bootstrap(db: DB) {
 	// const arenaChannels = await getChannels()
 	// const arenaBlocks = await getBlocks()
 	await parseArenaChannels(db, arenaChannels)
-	return true
 }
 
 const insertUser = (db: DB, user: User) =>
