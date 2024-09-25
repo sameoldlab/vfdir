@@ -4,7 +4,7 @@ import { assert } from 'superstruct'
 import { afterAll, describe, expect, it } from 'vitest'
 import { createTables } from './createTables'
 import { Block, Channel, Connection, Provider, User } from './schema'
-import { bootstrap } from './sync.svelte'
+import { bootstrap } from '$lib/services/sync.svelte'
 
 
 describe('Validate types', async () => {
