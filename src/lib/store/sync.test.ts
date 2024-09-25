@@ -4,6 +4,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { createTables } from './createTables'
 import { bootstrap, parseArenaChannels } from './sync.svelte'
 import { arenaChannels as mockChannels } from '$lib/dummy/channels'
+import duplicateChans from '$lib/dummy/duplicateChans'
 
 describe('Bootstrap database', async () => {
 	let db
@@ -51,7 +52,28 @@ describe('Bootstrap database', async () => {
 	})
 })
 
+describe('Deduplication and sync', async () => {
+	let db
+	beforeAll(async () => {
+		const sqlite = await initWasm(() => wasmUrl)
+		db = await sqlite.open()
+		await createTables(db)
+
+	})
 	afterAll(async () => {
 		await db.close()
+	})
+
+	it('skips repeated blocks', async () => {
+		await parseArenaChannels(db, duplicateChans)
+		const bLen = (await db.execA('select count(*) from Blocks;'))[0][0];
+		const cLen = (await db.execA('select count(*) from Connections;'))[0][0];
+		const uLen = (await db.execA('select count(*) from Users;'))[0][0];
+		const pLen = (await db.execA('select count(*) from Providers;'))[0][0];
+
+		expect(bLen).toEqual(2)
+		expect(cLen).toEqual(1)
+		expect(uLen).toEqual(2)
+		expect(pLen).toEqual(1)
 	})
 })
