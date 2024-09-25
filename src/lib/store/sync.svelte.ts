@@ -24,23 +24,24 @@ const insertUser = (db: DB, user: User) =>
 	])
 
 
-const insertO = async <O extends object>(db: DB, rows: O[], table: string) => {
-	const keys = Object.keys(rows[0])
-	console.log(rows.length)
-	const sql = `
-		INSERT INTO ${table}(${keys.join(',')})
-		VALUES (${Array(keys.length).fill('?').join(', ')});`
+const insertO = async <O extends object>(db: DB, rows: O[], table: string, schema: Struct) => {
+	if (!rows || rows.length === 0) return
 
-	return db.prepare(sql).then(stmt =>
-		Promise.all(rows.map(async (value) => {
-			stmt.bind(Object.values(value))
-			await stmt.run(db)
-			// stmt.run(db, Object.values(value))
-		}))
-			.finally(() =>
-				stmt.finalize(db)
-			)
-	)
+	const keys = Object.keys(rows[0])
+	const sql = `INSERT INTO ${table}(${keys.join(',')}) VALUES (${Array(keys.length).fill('?').join(',')});`
+	const stmt = await db.prepare(sql)
+
+	try {
+		await db.tx(async (tx) => {
+			await Promise.all(rows.map((value) =>
+				stmt.run(tx, ...Object.values(value))
+			))
+		})
+		await stmt.finalize(null)
+	} catch (error) {
+		console.error({ error, sent_bind: stmt.bindings, sql })
+		throw error
+	}
 }
 
 export async function parseArenaChannels(db: DB, channels: ArenaChannelWithDetails[]) {
