@@ -2,7 +2,7 @@ import type { DB } from '@vlcn.io/crsqlite-wasm'
 // import { getChannels, getBlocks } from '$lib/store/api/arenav2'
 import { arenaChannels } from '$lib/dummy/channels'
 import type { ArenaChannelContents, ArenaChannelWithDetails } from 'arena-ts'
-import { nanoid } from 'nanoid/non-secure'
+import { ulid } from 'ulidx'
 import { Block, Channel, Provider, type ChannelParsed, type User } from './schema'
 import { create, Struct } from 'superstruct'
 
@@ -69,7 +69,7 @@ export async function parseArenaChannels(db: DB, channels: ArenaChannelWithDetai
 			if (chan.collaboration) flags.push('collaboration')
 			if (chan.published) flags.push('published')
 
-			chanId = nanoid(10)
+			chanId = ulid()
 			dedupe.blocks.set(external_ref, chanId)
 
 			chans.push(create({
@@ -97,13 +97,13 @@ export async function parseArenaChannels(db: DB, channels: ArenaChannelWithDetai
 				return
 			}
 
-			blockId = nanoid(10)
+			blockId = ulid()
 			dedupe.blocks.set(blockRef, blockId)
 
 			const userExRef = `arena:${bl.class === 'Channel' ? bl.owner_id : bl.user.id}`
 			let userId = dedupe.user.get(userExRef)
 			if (!userId) {
-				userId = nanoid(10)
+				userId = ulid()
 				insertUser(db, {
 					id: userId,
 					slug: bl.user.slug,
@@ -118,7 +118,7 @@ export async function parseArenaChannels(db: DB, channels: ArenaChannelWithDetai
 			const connectedUserExRef = `arena:${bl.connected_by_user_id}`
 			let connectedBy = dedupe.user.get(connectedUserExRef)
 			if (!connectedBy) {
-				connectedBy = nanoid(10)
+				connectedBy = ulid()
 				insertUser(db, {
 					id: connectedBy,
 					slug: bl.connected_by_user_slug,
