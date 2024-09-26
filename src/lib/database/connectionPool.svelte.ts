@@ -22,10 +22,10 @@ export class DbPool {
 	#queries = $state(new SvelteMap<string, Query[]>())
 
 	constructor(
-		{ maxConnections, dbName }: { maxConnections: number | undefined, dbName: string | undefined }
+		args: { maxConnections: number | undefined, dbName: string | undefined }
 	) {
-		this.#maxConnections = maxConnections || 5
-		this.dbName = dbName || 'vfdir.db'
+		this.#maxConnections = args?.maxConnections || 5
+		this.dbName = args?.dbName || 'vfdir.db'
 		this.#initSql().then(sqlite => {
 			this.#sqlite = sqlite
 		})
