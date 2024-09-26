@@ -106,16 +106,17 @@ export class DbPool {
 		return value;
 	}
 
-	exec<R>(fn: (d: DB) => R) {
-		this.#connect()
-			.then(async (db) => {
-				fn(db);
-				this.#close(db);
+	async exec<R>(fn: (d: DB) => R) {
+		try {
+			const db = await this.#connect()
+			await db.tx(async (tx) => {
+				await fn(tx)
 			})
-			.catch((err) => {
-				console.error(err);
-				throw err;
-			});
+			this.#close(db)
+		} catch (err) {
+			console.error(err)
+			throw err
+		}
 	}
 }
 
