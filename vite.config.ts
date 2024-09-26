@@ -17,10 +17,10 @@ export default defineConfig({
 
 	test: {
 		environment: 'happy-dom',
-		include: ['src/**/*.{test,spec}.{js,ts}'],
+		include: ['src/**/*.{test,test.svelte,spec}.{js,ts}'],
 		browser: {
 			enabled: true,
-			name: 'firefox'
+			name: 'brave'
 		}
 	}
 })
