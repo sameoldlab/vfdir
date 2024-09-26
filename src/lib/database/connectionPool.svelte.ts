@@ -11,29 +11,23 @@ type UpdateEvent = [type: UpdateType, db: string, table: string, rowid: bigint];
 export class DbPool {
 	#maxConnections: number;
 	#connections = new SvelteSet<DB>();
-	#sqlite: SQLite3;
 	dbName: string;
 	status = $state<'available'>();
 	#queries = [];
+	#sqlite: SQLite3
+	status = $state<'available' | 'loading' | 'error'>('loading')
+	error = $state()
 
 	constructor(
 		{ maxConnections, dbName } = { maxConnections: 5, dbName: "vfdir.db" },
 	) {
 		this.#maxConnections = maxConnections;
 		this.dbName = dbName;
-		try {
-			initWasm(() => wasmUrl).then((sqlite) => {
-				this.#sqlite = sqlite;
-				this.status = 'available';
-			});
-		} catch (err) {
-			console.error(err);
-			this.status = err;
-		}
 	}
 
 	async #connect() {
-		if (this.#sqlite === undefined) throw Error("SQLite is not initialized");
+		this.#sqlite = this.#sqlite || await this.#initSql()
+
 		if (this.#connections.size < this.#maxConnections) {
 			let connection: DB | undefined;
 			try {
@@ -49,7 +43,16 @@ export class DbPool {
 		}
 		return [...this.#connections.values()][0];
 	}
-
+	async #initSql() {
+		try {
+			const sqlite = await initWasm(() => wasmUrl)
+			this.status = 'available'
+			return sqlite
+		} catch (e) {
+			this.status = 'error'
+			this.error = e
+		}
+	}
 	#subscribe(...[type, db, table, rowid]: UpdateEvent) {
 		console.log(this.#queries);
 		switch (type) {
