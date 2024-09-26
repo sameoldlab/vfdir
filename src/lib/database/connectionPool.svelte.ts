@@ -18,10 +18,13 @@ export class DbPool {
 	#queries = []
 
 	constructor(
-		{ maxConnections, dbName } = { maxConnections: 5, dbName: "vfdir.db" },
+		{ maxConnections, dbName }: { maxConnections: number | undefined, dbName: string | undefined }
 	) {
-		this.#maxConnections = maxConnections;
-		this.dbName = dbName;
+		this.#maxConnections = maxConnections || 5
+		this.dbName = dbName || 'vfdir.db'
+		this.#initSql().then(sqlite => {
+			this.#sqlite = sqlite
+		})
 	}
 
 	async #connect() {
@@ -35,10 +38,6 @@ export class DbPool {
 				console.error(err)
 			}
 			connection.onUpdate((...args) => {
-				this.#subscribe(...args);
-			});
-			this.#connections.add(connection);
-			return connection;
 				this.#subscribe(...args)
 			})
 			this.#connections.add(connection)
