@@ -1,12 +1,16 @@
 import initWasm, { DB, SQLite3 } from '@vlcn.io/crsqlite-wasm'
 import wasmUrl from '@vlcn.io/crsqlite-wasm/crsqlite.wasm?url'
-import { SvelteSet } from 'svelte/reactivity'
+import { SvelteMap, SvelteSet } from 'svelte/reactivity'
 
 type DELETE = 9
 type INSERT = 18
 type UPDATE = 23
 type UpdateType = DELETE | INSERT | UPDATE
 type UpdateEvent = [type: UpdateType, db: string, table: string, rowid: bigint]
+type Query = {
+	sql: string
+	data: [[], () => void]
+};
 
 export class DbPool {
 	#maxConnections: number
@@ -15,7 +19,7 @@ export class DbPool {
 	dbName: string
 	status = $state<'available' | 'loading' | 'error'>('loading')
 	error = $state()
-	#queries = []
+	#queries = $state(new SvelteMap<string, Query[]>())
 
 	constructor(
 		{ maxConnections, dbName }: { maxConnections: number | undefined, dbName: string | undefined }
@@ -56,7 +60,11 @@ export class DbPool {
 		}
 	}
 	#subscribe(...[type, db, table, rowid]: UpdateEvent) {
-		console.log(this.#queries)
+		// console.log(type, rowid, db, table)
+		let q = this.#queries.get(table)
+		if (q) console.log(q)
+		else return
+		console.log('tracking insert...')
 		switch (type) {
 			case 18: {
 				console.log(`Row ${rowid} inserted in ${db}:${table}`)
@@ -71,7 +79,15 @@ export class DbPool {
 				break
 			}
 		}
+		this.exec(async (db) => {
+			q.forEach(async ({ data, sql }) => {
+				const newD = await db.execO(sql)
+				console.log(newD)
+				data[1](newD);
+			})
+		})
 	}
+
 
 	async #close(connection: DB) {
 		const res = await connection.close()
@@ -79,30 +95,44 @@ export class DbPool {
 		return res
 	}
 
-	async #closeAll() {
+	async closeAll() {
 		for (const connection of this.#connections) {
 			await connection.close()
 		}
 		this.#connections.clear()
 	}
 
-	query<R>(fn: (d: DB) => R) {
-		let value = $state<Awaited<R>>();
-		let db: DB;
+	query<O extends object>(sql: string) {
+		let value = $state<O[]>([])
+		console.log(sql)
+		let db: DB
 		this.#connect()
 			.then(async (_db) => {
-				db = _db;
-				value = await fn(db);
-				this.#queries.push(fn);
+				db = _db
+				let tables = (await db.tablesUsedStmt.all(null, sql))[0]
+				tables.forEach((t) => {
+					let q = this.#queries.get(t)
+					if (q === undefined) {
+						this.#queries.set(t, [])
+						q = this.#queries.get(t)
+						q.push({ sql, data: [data, setData] })
+					} else {
+						q.push({ sql, data: [data, setData] })
+					}
+				})
+				value.push(...await db.execO<O>(sql))
+				// console.log(value)
 			})
 			.catch((err) => {
-				console.log(err);
-				throw err;
+				console.log(err)
+				throw err
 			})
 			.finally(() => {
-				this.#close(db);
-			});
-		return value;
+				this.#close(db)
+			})
+		function data() { return value }
+		function setData(v) { value = v }
+		return data
 	}
 
 	async exec<R>(fn: (d: DB) => R) {
