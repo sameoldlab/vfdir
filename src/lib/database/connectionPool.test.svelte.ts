@@ -3,7 +3,6 @@ import wasmUrl from '@vlcn.io/crsqlite-wasm/crsqlite.wasm?url'
 import { afterEach, beforeEach, describe, it } from 'vitest'
 import { useQuery } from './useQuery.svelte'
 
-
 describe('Check query reactivity', async () => {
   let db: DB
   beforeEach(async () => {
