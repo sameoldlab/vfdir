@@ -11,21 +11,21 @@
 
 	// let channels = {list: []}
 	const addItem = (e: MouseEvent) => {
-		pushState("", {
-			show: true,
-		});
-	};
+		pushState('', {
+			show: true
+		})
+	}
 
 	const addChannel = (channel: Partial<Channel>) => {
-		if (!channels) return;
+		if (!channels) return
 		const { title, status, author_slug, flags } = {
 			...channel,
-			status: "private",
-			author_slug: "local",
-			flags: [],
-		} as Channel;
-		console.log("channel", title, status, author_slug, flags);
-		const sanitize = (str: string): string => str.replaceAll(" ", "-");
+			status: 'private',
+			author_slug: 'local',
+			flags: []
+		} as Channel
+		console.log('channel', title, status, author_slug, flags)
+		const sanitize = (str: string): string => str.replaceAll(' ', '-')
 
 		channels.push(db.db, [
 			{
@@ -34,10 +34,10 @@
 				created_at: new Date(),
 				status,
 				author_slug,
-				flags,
-			},
-		]);
-	};
+				flags
+			}
+		])
+	}
 </script>
 
 <div class="pane left">
