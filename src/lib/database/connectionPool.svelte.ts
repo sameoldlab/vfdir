@@ -8,7 +8,7 @@ type UPDATE = 23;
 type UpdateType = DELETE | INSERT | UPDATE;
 type UpdateEvent = [type: UpdateType, db: string, table: string, rowid: bigint];
 
-class DbPool {
+export class DbPool {
 	#maxConnections: number;
 	#connections = new SvelteSet<DB>();
 	#sqlite: SQLite3;
