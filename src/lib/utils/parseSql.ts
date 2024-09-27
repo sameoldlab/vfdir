@@ -181,15 +181,12 @@ function parseOrder(a: SelectNode, c: string) {
   } else if (c.endsWith(',')) {
     [c.split(',')[0], ','].forEach((x) => parseOrder(a, x))
   } else if (c === 'desc' || c === 'asc') {
-    last(a.order).direction = c
-    last(a.order).expression = {
-      type: last(a.order).type,
-      variant: last(a.order).variant,
-      name: last(a.order).name,
+    a.order[a.order.length - 1] = {
+      direction: c,
+      expression: last(a.order) as ColumnNode,
+      type: 'expression',
+      variant: 'order',
     }
-    last(a.order).type = 'expression'
-    last(a.order).variant = 'order'
-    last(a.order).name = undefined
   } else {
     last(a.order).name = c
   }
