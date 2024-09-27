@@ -149,6 +149,15 @@ export const parseSql = (sql: string) => {
             }
             break;
           case "where":
+          case "order":
+            parseOrder(a, c)
+            break;
+          case "limit":
+            a.limit.type = 'expression'
+            a.limit.variant = 'limit'
+            a.limit.start.type = 'literal'
+            a.limit.start.value = c
+            a.limit.start.variant = 'decimal'
             break;
         }
 
@@ -158,4 +167,27 @@ export const parseSql = (sql: string) => {
       result: [],
       from: {}
     } as SelectNode)
+}
+
+function parseOrder(a: SelectNode, c: string) {
+  c = c.trim()
+  if (c === '') return
+
+  if (c === ',') {
+    a.order.push({ name: '', type: 'identifier', variant: 'column' })
+  } else if (c.endsWith(',')) {
+    [c.split(',')[0], ','].forEach((x) => parseOrder(a, x))
+  } else if (c === 'desc' || c === 'asc') {
+    last(a.order).direction = c
+    last(a.order).expression = {
+      type: last(a.order).type,
+      variant: last(a.order).variant,
+      name: last(a.order).name,
+    }
+    last(a.order).type = 'expression'
+    last(a.order).variant = 'order'
+    last(a.order).name = undefined
+  } else {
+    last(a.order).name = c
+  }
 }
