@@ -59,6 +59,7 @@ interface SelectNode extends BaseNode {
   limit?: LimitNode
   order?: (OrderNode | ColumnNode)[]
 }
+const last = <T>(arr: T[]) => arr[arr.length - 1]
 
 export const parseSql = (sql: string) => {
   sql = sql.trim().toLowerCase()
@@ -112,7 +113,8 @@ export const parseSql = (sql: string) => {
           case "result":
             if (c.includes(',')) {
               c.split(',').forEach((r) => {
-                if (r.trim() === '') return
+                r = r.trim()
+                if (r === '') return
                 a.result.push({
                   name: r,
                   type: 'identifier',
@@ -125,6 +127,10 @@ export const parseSql = (sql: string) => {
                 type: 'identifier',
                 variant: 'star'
               })
+            } else if (c === 'as') {
+              a.result[a.result.length - 1].alias = null
+            } else if (last(a.result)?.alias === null) {
+              last(a.result).alias = c
             } else {
               a.result.push({
                 name: c,
