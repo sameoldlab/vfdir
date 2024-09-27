@@ -140,9 +140,13 @@ export const parseSql = (sql: string) => {
             }
             break;
           case "from":
-            a.from.name = c
-            a.from.type = 'identifier'
-            a.from.variant = 'table'
+            if (a.from.name !== undefined) {
+              a.from.alias = c
+            } else {
+              a.from.name = c
+              a.from.type = 'identifier'
+              a.from.variant = 'table'
+            }
             break;
           case "where":
             break;
