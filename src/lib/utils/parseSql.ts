@@ -7,6 +7,7 @@ type FromNode = {
   type: 'table' | 'identifier'
   variant: 'table'
   name: string
+  alias?: string
 }
 type ExpressionNode = {
   type: 'expression'
@@ -20,6 +21,7 @@ type ResultNode = {
   type: 'identifier'
   name: string
   alias?: string
+  variant: string
 }
 type LimitNode = {
   type: 'expression'
