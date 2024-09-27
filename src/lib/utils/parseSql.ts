@@ -109,8 +109,6 @@ export const parseSql = (sql: string) => {
 
       if (t !== 0)
         switch (section) {
-          case "select":
-            break;
           case "result":
             if (c.includes(',')) {
               c.split(',').forEach((r) => {
