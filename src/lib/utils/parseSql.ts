@@ -1,6 +1,6 @@
 type LiteralNode = {
   type: 'literal'
-  variant: 'decimal'
+  variant: 'decimal' | 'text'
   value: string
 }
 type FromNode = {
@@ -44,7 +44,7 @@ type SelectNode = {
   distinct?: boolean
   result: ResultNode[]
   from: FromNode
-  where?: (ColumnNode | ExpressionNode)[]
+  where?: ExpressionNode[]
   limit?: LimitNode
   order?: (OrderNode | ColumnNode)[]
 }
@@ -121,11 +121,7 @@ export const parseSql = (sql: string) => {
             } else if (last(a.result)?.alias === null) {
               last(a.result).alias = c
             } else {
-              a.result.push({
-                name: c,
-                type: 'identifier',
-                variant: 'column'
-              })
+              parseExpr(a.result, c)
             }
             break;
           case "from":
@@ -138,7 +134,7 @@ export const parseSql = (sql: string) => {
             }
             break;
           case "where":
-            a.where
+            parseExpr(a.where, c)
             //string = `${a.where.string ?? ''}` + c
             break;
           case "order":
@@ -159,6 +155,55 @@ export const parseSql = (sql: string) => {
       result: [],
       from: {}
     } as SelectNode)
+}
+
+const OPERATORS = ['<', '=', '>', '-', '+', '/', '*']
+function parseExpr(n: (ColumnNode | ResultNode | ExpressionNode)[], c: string) {
+  let op: ExpressionNode['operation'] = OPERATORS.find((v) => c.includes(v))
+  const ln = last(n)
+  if (op) {
+    if (c.length === 1) {
+      n[n.length - 1] = {
+        left: ln,
+        operation: op,
+        type: 'expression',
+        variant: 'operation',
+        format: 'binary',
+      }
+    } else if (c.length > 1) {
+      console.log(c.split(op))
+      const split = c.split(op);
+      [split[0], op, split[1]].forEach((x) => parseExpr(n, x))
+    }
+  } else if (ln?.type === 'expression' && typeof ln.operation === 'string') {
+    // process right
+    const match = c.match(/\'([^\']*)\'/);
+    if (match) {
+      ln.right = {
+        value: match[1],
+        type: 'literal',
+        variant: 'text'
+      }
+    } else if (isNaN(Number.parseFloat(c))) {
+      ln.right = {
+        name: c,
+        type: 'identifier',
+        variant: 'column'
+      }
+    } else {
+      ln.right = {
+        value: c,
+        type: 'literal',
+        variant: 'decimal'
+      }
+    }
+  } else {
+    n.push({
+      name: c,
+      type: 'identifier',
+      variant: 'column'
+    })
+  }
 }
 
 function parseOrder(a: SelectNode, c: string) {
