@@ -69,10 +69,7 @@ export const parseSql = (sql: string) => {
   /** token tracker. resets at the start of each section */
   let t = 0
   return sql
-    .trim()
-    .toLowerCase()
-    .replace('\n', ' ')
-    .split(' ')
+    .split(/\s+/g)
     .reduce((a, c, i, s) => {
       switch (c) {
         case 'select':
