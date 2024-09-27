@@ -1,6 +1,6 @@
 import { expect, it } from 'vitest'
 import { parseSql } from './parseSql'
-
+// AST Tests based on: https://codeschool.github.io/sqlite-parser/demo/
 const sDistinct = `select distinct parent_id FROM Connnections`
 
 it('parse basic select', () => {
