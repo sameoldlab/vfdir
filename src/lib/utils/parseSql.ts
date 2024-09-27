@@ -156,12 +156,12 @@ export const parseSql = (sql: string) => {
     } as SelectNode)
 }
 
-const OPERATORS = ['<', '=', '>', '-', '+', '/', '*']
+const BINARY_OPERATORS = ['and', '<', '=', ' in ', 'like', ' <= ', ' >= ', ' <> ', ' > ', ' != ', '-', ' + ', ' / ', ' * ']
 function parseExpr(n: (ColumnNode | ResultNode | ExpressionNode)[], c: string) {
-  let op: ExpressionNode['operation'] = OPERATORS.find((v) => c.includes(v))
+  let op: ExpressionNode['operation'] = BINARY_OPERATORS.find((v) => c.includes(v))
   const ln = last(n)
   if (op) {
-    if (c.length === 1) {
+    if (c === op) {
       n[n.length - 1] = {
         left: ln,
         operation: op,
