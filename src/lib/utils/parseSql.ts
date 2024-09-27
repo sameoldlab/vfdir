@@ -1,25 +1,53 @@
 interface BaseNode {
   type: string
-  variant: 'column' | string
+  variant: 'column' | 'text' | 'operation' | 'select' | string
   alias?: string
+  name?: string
 }
 interface FromNode extends BaseNode {
   type: 'table' | 'identifier'
+  variant: 'table'
   name: string
 }
-interface WhereNode extends BaseNode {
+interface WhereOperationNode extends BaseNode {
   type: 'expression' | 'identifier'
-  format: 'binary'
   variant: 'operation'
-  operation: string
-  name?: string
-  left?: WhereNode
-  right?: WhereNode
+  format: 'binary'
+  operation: 'text' | string
+  left: BaseNode
+  right: BaseNode
+}
+interface ColumnNode extends BaseNode {
+  type: 'identifier'
+  variant: 'column'
+  name: string
 }
 interface ResultNode extends BaseNode {
   type: 'identifier'
   name: string
   alias?: string
+}
+interface StartNode extends BaseNode {
+  type: 'literal'
+  variant: 'decimal'
+  value: string
+}
+interface LimitNode extends BaseNode {
+  type: 'expression'
+  variant: 'limit'
+  start: StartNode
+}
+interface ColumnNode extends BaseNode {
+  type: 'identifier'
+  variant: 'column'
+  name: string
+}
+interface OrderNode extends BaseNode {
+  type: 'expression'
+  variant: 'order'
+  direction: 'desc' | 'asc'
+  expression: ColumnNode
+  // TODO: Collate
 }
 interface SelectNode extends BaseNode {
   type: 'statement'
@@ -27,7 +55,9 @@ interface SelectNode extends BaseNode {
   distinct?: boolean
   result: ResultNode[]
   from: FromNode
-  where?: WhereNode[]
+  where?: (ColumnNode | WhereOperationNode)[]
+  limit?: LimitNode
+  order?: (OrderNode | ColumnNode)[]
 }
 
 export const parseSql = (sql: string) => {
