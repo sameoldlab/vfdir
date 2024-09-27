@@ -80,8 +80,8 @@ export const parseSql = (sql: string) => {
           section = 'from'
           break
         case 'where':
-          a.where = [{ format: {}, left: {}, right: {} }]
           t = 0
+          a.where = []
           section = 'where'
           break
         case 'order':
