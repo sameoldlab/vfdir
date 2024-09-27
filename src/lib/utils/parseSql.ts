@@ -1,61 +1,50 @@
-interface BaseNode {
-  type: string
-  variant: 'column' | 'text' | 'operation' | 'select' | string
-  alias?: string
-  name?: string
-}
-interface FromNode extends BaseNode {
-  type: 'table' | 'identifier'
-  variant: 'table'
-  name: string
-}
-interface WhereOperationNode extends BaseNode {
-  type: 'expression' | 'identifier'
-  variant: 'operation'
-  format: 'binary'
-  operation: 'text' | string
-  left: BaseNode
-  right: BaseNode
-}
-interface ColumnNode extends BaseNode {
-  type: 'identifier'
-  variant: 'column'
-  name: string
-}
-interface ResultNode extends BaseNode {
-  type: 'identifier'
-  name: string
-  alias?: string
-}
-interface StartNode extends BaseNode {
+type LiteralNode = {
   type: 'literal'
   variant: 'decimal'
   value: string
 }
-interface LimitNode extends BaseNode {
+type FromNode = {
+  type: 'table' | 'identifier'
+  variant: 'table'
+  name: string
+}
+type ExpressionNode = {
+  type: 'expression'
+  variant: 'operation'
+  format: 'binary'
+  operation: string
+  left: ExpressionNode | ColumnNode
+  right: ExpressionNode | ColumnNode | LiteralNode
+}
+type ResultNode = {
+  type: 'identifier'
+  name: string
+  alias?: string
+}
+type LimitNode = {
   type: 'expression'
   variant: 'limit'
-  start: StartNode
+  start: LiteralNode
 }
-interface ColumnNode extends BaseNode {
+type ColumnNode = {
   type: 'identifier'
   variant: 'column'
   name: string
 }
-interface OrderNode extends BaseNode {
+type OrderNode = {
   type: 'expression'
   variant: 'order'
   direction: 'desc' | 'asc'
   expression: ColumnNode
   // TODO: Collate
 }
-interface SelectNode extends BaseNode {
+type SelectNode = {
   type: 'statement'
   variant: 'select'
   distinct?: boolean
   result: ResultNode[]
   from: FromNode
-  where?: (ColumnNode | WhereOperationNode)[]
+  where?: (ColumnNode | ExpressionNode)[]
   limit?: LimitNode
   order?: (OrderNode | ColumnNode)[]
 }
