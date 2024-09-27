@@ -125,13 +125,13 @@ it('parse math as alias ordered by with limit', () => {
   })
 })
 
+// -- group by
+// -- window
 it('parse kitchen sink', () => {
   expect(parseSql(`
   select distinct head as hd 
   FROM Users u 
   WHERE u.id='dfadfdfds3432' AND b.legs = 6
-  -- group by
-  -- window
   order by u.id desc
   limit 1;
 `)).toEqual({
