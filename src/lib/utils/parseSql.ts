@@ -65,19 +65,20 @@ export const parseSql = (sql: string) => {
   if (!sql.includes('select')) throw Error('only select statements supported')
   if (sql.endsWith(';')) sql = sql.split(';')[0]
 
-  let section: 'select' | 'from' | 'result' | 'where' = 'select'
+  let section: 'select' | 'from' | 'result' | 'where' | 'limit' | 'order' = 'select'
   /** token tracker. resets at the start of each section */
   let t = 0
   return sql
     .split(/\s+/g)
     .reduce((a, c, i, s) => {
+      /** next token */
+      const n = s[Math.min(i + 1, s.length - 1)]
       switch (c) {
         case 'select':
           a.variant = 'select'
           a.type = 'statement'
           t = 0
-          section = s[i + 1] && ['distinct', 'all'].includes(s[i + 1]) ? 'select'
-            : 'result'
+          section = 'result'
           break
         case 'distinct':
           a.distinct = true
@@ -89,9 +90,20 @@ export const parseSql = (sql: string) => {
           section = 'from'
           break
         case 'where':
-          a.where = {}
+          a.where = [{ format: {}, left: {}, right: {} }]
           t = 0
           section = 'where'
+          break
+        case 'order':
+        case 'by':
+          t = 0
+          a.order = [({ name: '', type: 'identifier', variant: 'column' })]
+          section = 'order'
+          break
+        case 'limit':
+          a.limit = { start: {} }
+          t = 0
+          section = 'limit'
           break
       }
 
