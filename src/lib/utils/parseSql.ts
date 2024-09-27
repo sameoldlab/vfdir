@@ -66,14 +66,11 @@ export const parseSql = (sql: string) => {
       /** next token */
       const n = s[Math.min(i + 1, s.length - 1)]
       switch (c) {
+        case 'distinct':
+          a.distinct = true
         case 'select':
           a.variant = 'select'
           a.type = 'statement'
-          t = 0
-          section = 'result'
-          break
-        case 'distinct':
-          a.distinct = true
           t = 0
           section = 'result'
           break
