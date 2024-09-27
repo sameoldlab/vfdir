@@ -149,6 +149,9 @@ export const parseSql = (sql: string) => {
             }
             break;
           case "where":
+            a.where
+            //string = `${a.where.string ?? ''}` + c
+            break;
           case "order":
             parseOrder(a, c)
             break;
