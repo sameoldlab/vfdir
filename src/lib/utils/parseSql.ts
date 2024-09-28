@@ -17,12 +17,6 @@ type ExpressionNode = {
   left: ExpressionNode | ColumnNode
   right: ExpressionNode | ColumnNode | LiteralNode
 }
-type ResultNode = {
-  type: 'identifier'
-  name: string
-  alias?: string
-  variant: string
-}
 type LimitNode = {
   type: 'expression'
   variant: 'limit'
@@ -30,7 +24,8 @@ type LimitNode = {
 }
 type ColumnNode = {
   type: 'identifier'
-  variant: 'column'
+  variant: 'column' | 'star'
+  alias?: string
   name: string
 }
 type OrderNode = {
@@ -44,7 +39,7 @@ type SelectNode = {
   type: 'statement'
   variant: 'select'
   distinct?: boolean
-  result: ResultNode[]
+  result: ColumnNode[]
   from: FromNode
   where?: ExpressionNode[]
   limit?: LimitNode
