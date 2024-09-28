@@ -3,12 +3,7 @@ type LiteralNode = {
   variant: 'decimal' | 'text'
   value: string
 }
-type FromNode = {
-  type: 'table' | 'identifier'
-  variant: 'table'
-  name: string
-  alias?: string
-}
+
 type ExpressionNode = {
   type: 'expression'
   variant: 'operation'
@@ -17,17 +12,6 @@ type ExpressionNode = {
   left: ExpressionNode | ColumnNode
   right: ExpressionNode | ColumnNode | LiteralNode
 }
-type LimitNode = {
-  type: 'expression'
-  variant: 'limit'
-  start: LiteralNode
-}
-type ColumnNode = {
-  type: 'identifier'
-  variant: 'column' | 'star'
-  alias?: string
-  name: string
-}
 type OrderNode = {
   type: 'expression'
   variant: 'order'
@@ -35,13 +19,26 @@ type OrderNode = {
   expression: ColumnNode
   // TODO: Collate
 }
+type LimitNode = {
+  type: 'expression'
+  variant: 'limit'
+  start: LiteralNode
+}
+type IdentifierNode<V extends string> = {
+  type: 'identifier'
+  variant: V
+  alias?: string
+  name: string
+}
+type ColumnNode = IdentifierNode<'column'>
+type TableNode = IdentifierNode<'table'>
 type SelectNode = {
   type: 'statement'
   variant: 'select'
   distinct?: boolean
-  result: ColumnNode[]
-  from: FromNode
-  where?: ExpressionNode[]
+  result: (IdentifierNode<'column' | 'star'> | ExpressionNode)[]
+  from: TableNode
+  where?: ExpressionNode
   limit?: LimitNode
   order?: (OrderNode | ColumnNode)[]
 }
