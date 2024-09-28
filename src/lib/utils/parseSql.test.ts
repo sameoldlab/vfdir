@@ -43,23 +43,22 @@ it('Args where slug', () => {
       "variant": "table",
       "name": "users"
     },
-    "where": [
-      {
-        "type": "expression",
-        "format": "binary",
-        "variant": "operation",
-        "operation": "=",
-        "left": {
-          "type": "identifier",
-          "variant": "column",
-          "name": "slug"
-        },
-        "right": {
-          "type": "literal",
-          "variant": "text",
-          "value": "sameoldlab"
-        }
-      }]
+    "where": {
+      "type": "expression",
+      "format": "binary",
+      "variant": "operation",
+      "operation": "=",
+      "left": {
+        "type": "identifier",
+        "variant": "column",
+        "name": "slug"
+      },
+      "right": {
+        "type": "literal",
+        "variant": "text",
+        "value": "sameoldlab"
+      }
+    }
   })
 })
 
@@ -152,46 +151,45 @@ it('parse kitchen sink', () => {
       "name": "users",
       "alias": "u"
     },
-    "where": [
-      {
+    "where": {
+      "type": "expression",
+      "format": "binary",
+      "variant": "operation",
+      "operation": "and",
+      "left": {
         "type": "expression",
         "format": "binary",
         "variant": "operation",
-        "operation": "and",
+        "operation": "=",
         "left": {
-          "type": "expression",
-          "format": "binary",
-          "variant": "operation",
-          "operation": "=",
-          "left": {
-            "type": "identifier",
-            "variant": "column",
-            "name": "u.id"
-          },
-          "right": {
-            "type": "literal",
-            "variant": "text",
-            "value": "dfadfdfds3432"
-          }
+          "type": "identifier",
+          "variant": "column",
+          "name": "u.id"
         },
         "right": {
-          "type": "expression",
-          "format": "binary",
-          "variant": "operation",
-          "operation": "=",
-          "left": {
-            "type": "identifier",
-            "variant": "column",
-            "name": "b.legs"
-          },
-          "right": {
-            "type": "literal",
-            "variant": "decimal",
-            "value": "6"
-          }
+          "type": "literal",
+          "variant": "text",
+          "value": "dfadfdfds3432"
+        }
+      },
+      "right": {
+        "type": "expression",
+        "format": "binary",
+        "variant": "operation",
+        "operation": "=",
+        "left": {
+          "type": "identifier",
+          "variant": "column",
+          "name": "b.legs"
+        },
+        "right": {
+          "type": "literal",
+          "variant": "decimal",
+          "value": "6"
         }
       }
-    ],
+    }
+    ,
     "order": [
       {
         "type": "expression",
