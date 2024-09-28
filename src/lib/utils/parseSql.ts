@@ -61,7 +61,7 @@ export const parseSql = (sql: string) => {
   /** token tracker. resets at the start of each section */
   let t = 0
   return sql
-    .split(/\s+/g)
+    .split(/\s+|(?=[,()])|(?<=[,()])/g)
     .reduce((a, c, i, s) => {
       /** next token */
       const n = s[Math.min(i + 1, s.length - 1)]
@@ -99,17 +99,7 @@ export const parseSql = (sql: string) => {
       if (t !== 0)
         switch (section) {
           case "result":
-            if (c.includes(',')) {
-              c.split(',').forEach((r) => {
-                r = r.trim()
-                if (r === '') return
-                a.result.push({
-                  name: r,
-                  type: 'identifier',
-                  variant: 'column'
-                })
-              })
-            } else if (c === '*') {
+            if (c === '*') {
               a.result.push({
                 name: '*',
                 type: 'identifier',
@@ -119,7 +109,7 @@ export const parseSql = (sql: string) => {
               a.result[a.result.length - 1].alias = null
             } else if (last(a.result)?.alias === null) {
               last(a.result).alias = c
-            } else {
+            } else if (c !== ',') {
               parseExpr(a.result, c)
             }
             break;
@@ -169,9 +159,9 @@ function parseExpr(n: (ColumnNode | ResultNode | ExpressionNode)[], c: string) {
         variant: 'operation',
         format: 'binary',
       }
-    } else if (c.length > 1) {
-      console.log(c.split(op))
+    } else {
       const split = c.split(op);
+      console.log([split[0], op, split[1]]);
       [split[0], op, split[1]].forEach((x) => parseExpr(n, x))
     }
   } else if (ln?.type === 'expression' && typeof ln.operation === 'string') {
@@ -206,13 +196,8 @@ function parseExpr(n: (ColumnNode | ResultNode | ExpressionNode)[], c: string) {
 }
 
 function parseOrder(a: SelectNode, c: string) {
-  c = c.trim()
-  if (c === '') return
-
   if (c === ',') {
     a.order.push({ name: '', type: 'identifier', variant: 'column' })
-  } else if (c.endsWith(',')) {
-    [c.split(',')[0], ','].forEach((x) => parseOrder(a, x))
   } else if (c === 'desc' || c === 'asc') {
     a.order[a.order.length - 1] = {
       direction: c,
