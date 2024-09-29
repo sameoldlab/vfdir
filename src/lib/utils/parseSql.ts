@@ -38,12 +38,14 @@ type SelectNode = {
   distinct?: boolean
   result: (IdentifierNode<'column' | 'star'> | ExpressionNode)[]
   from: TableNode
-  where?: ExpressionNode
+  where?: ExpressionNode | LiteralNode | ColumnNode
   limit?: LimitNode
   order?: (OrderNode | ColumnNode)[]
 }
 const last = <T>(arr: T[]) => arr[arr.length - 1]
-
+const ORDER = ['order', 'by']
+const LIMIT = ['limit']
+const WHERE_TERMINAL = [...ORDER, ...LIMIT]
 export const parseSql = (sql: string) => {
   sql = sql.trim().toLowerCase()
   if (!sql.includes('select')) throw Error('only select statements supported')
@@ -70,11 +72,16 @@ export const parseSql = (sql: string) => {
           t = 0
           section = 'from'
           break
-        case 'where':
-          t = 0
-          a.where = []
+        case 'where': {
           section = 'where'
-          break
+          const tokens: string[] = []
+          while (i + 1 < s.length && !WHERE_TERMINAL.includes(s[i + 1])) {
+            i++
+            tokens.push(s[i])
+          }
+          a.where = parseExpr(tokens)
+          return a
+        }
         case 'order':
         case 'by':
           t = 0
@@ -114,10 +121,6 @@ export const parseSql = (sql: string) => {
               a.from.variant = 'table'
             }
             break;
-          case "where":
-            parseExpr(a.where, c)
-            //string = `${a.where.string ?? ''}` + c
-            break;
           case "order":
             parseOrder(a, c)
             break;
@@ -138,52 +141,71 @@ export const parseSql = (sql: string) => {
     } as SelectNode)
 }
 
-const BINARY_OPERATORS = ['and', '<', '=', ' in ', 'like', ' <= ', ' >= ', ' <> ', ' > ', ' != ', '-', ' + ', ' / ', ' * ']
-function parseExpr(n: (ColumnNode | ResultNode | ExpressionNode)[], c: string) {
-  let op: ExpressionNode['operation'] = BINARY_OPERATORS.find((v) => c.includes(v))
-  const ln = last(n)
-  if (op) {
-    if (c === op) {
-      n[n.length - 1] = {
-        left: ln,
-        operation: op,
-        type: 'expression',
-        variant: 'operation',
-        format: 'binary',
-      }
-    } else {
+const BINARY_OPERATORS = ['<', '=', 'in', 'like', '<=', '>=', '<>', '>', '!=', '-', '+', '/', '*', 'and', 'or']
+const PRECEDENCE = {
+  'or': 1,
+  'and': 2,
+  '=': 3, '<>': 3, '!=': 3, '<': 3, '<=': 3, '>': 3, '>=': 3, 'in': 3, 'like': 3,
+  '+': 4, '-': 4,
+  '*': 5, '/': 5
+}
+
+function parseExpr(s: string[]): ColumnNode | ExpressionNode | LiteralNode {
+  let nodes: (ColumnNode | LiteralNode | ExpressionNode)[] = []
+  const ops: string[] = []
+
+  const applyOps = () => {
+    const operation = ops.pop()
+    const right = nodes.pop()
+    const left = nodes.pop()
+    nodes.push({
+      type: 'expression',
+      variant: 'operation',
+      format: "binary",
+      operation,
+      left,
+      right
+    } as ExpressionNode)
+  }
+
+  s.forEach((c) => {
+    let op: ExpressionNode['operation'] = BINARY_OPERATORS.find((v) => c.includes(v))
+    if (op && c === op) {
+      while (ops.length > 0 && PRECEDENCE[ops[ops.length - 1]] >= PRECEDENCE[c])
+        applyOps()
+      ops.push(c)
+    } else if (op) {
       const split = c.split(op);
-      console.log([split[0], op, split[1]]);
-      [split[0], op, split[1]].forEach((x) => parseExpr(n, x))
-    }
-  } else if (ln?.type === 'expression' && typeof ln.operation === 'string') {
-    // process right
-    const match = c.match(/\'([^\']*)\'/);
-    if (match) {
-      ln.right = {
-        value: match[1],
-        type: 'literal',
-        variant: 'text'
-      }
-    } else if (isNaN(Number.parseFloat(c))) {
-      ln.right = {
-        name: c,
-        type: 'identifier',
-        variant: 'column'
-      }
+      nodes.push(parseExpr([split[0], op, split[1]]))
     } else {
-      ln.right = {
-        value: c,
-        type: 'literal',
-        variant: 'decimal'
-      }
+      nodes.push(parseToken(c))
     }
-  } else {
-    n.push({
+  })
+  while (ops.length > 0) applyOps()
+
+  return nodes[0]
+}
+
+function parseToken(c: string): ColumnNode | LiteralNode {
+  const match = c.match(/\'([^\']*)\'/);
+  if (match) {
+    return {
+      value: match[1],
+      type: 'literal',
+      variant: 'text'
+    }
+  } else if (isNaN(Number.parseFloat(c))) {
+    return {
       name: c,
       type: 'identifier',
       variant: 'column'
-    })
+    }
+  } else {
+    return {
+      value: c,
+      type: 'literal',
+      variant: 'decimal'
+    }
   }
 }
 
