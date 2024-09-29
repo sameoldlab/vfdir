@@ -36,7 +36,7 @@ type SelectNode = {
   type: 'statement'
   variant: 'select'
   distinct?: boolean
-  result: (IdentifierNode<'column' | 'star'> | ExpressionNode)[]
+  result: (IdentifierNode<'column' | 'star'> | ExpressionNode | LiteralNode)[]
   from: TableNode
   where?: ExpressionNode | LiteralNode | ColumnNode
   limit?: LimitNode
@@ -109,7 +109,7 @@ export const parseSql = (sql: string) => {
             } else if (last(a.result)?.alias === null) {
               last(a.result).alias = c
             } else if (c !== ',') {
-              parseExpr(a.result, c)
+              a.result.push(parseExpr([c]))
             }
             break;
           case "from":
