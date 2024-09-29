@@ -105,7 +105,7 @@ export const parseSql = (sql: string) => {
                 variant: 'star'
               })
             } else if (c === 'as') {
-              a.result[a.result.length - 1].alias = null
+              last(a.result).alias = null
             } else if (last(a.result)?.alias === null) {
               last(a.result).alias = c
             } else if (c !== ',') {
