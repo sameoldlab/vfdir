@@ -22,6 +22,27 @@ it('parse basic select', () => {
   })
 })
 
+it('ignores comments', () => {
+  expect(parseSql(`select *
+    -- sql comment
+    from Users;`)).toEqual({
+    "type": "statement",
+    "variant": "select",
+    "result": [
+      {
+        "type": "identifier",
+        "variant": "star",
+        "name": "*"
+      }
+    ],
+    "from": {
+      "type": "identifier",
+      "variant": "table",
+      "name": "users"
+    }
+  })
+})
+
 it('Args where slug', () => {
   expect(parseSql(`select id, avatar from Users where slug='sameoldlab'`)).toEqual({
     "type": "statement",

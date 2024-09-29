@@ -55,6 +55,9 @@ export const parseSql = (sql: string) => {
   /** token tracker. resets at the start of each section */
   let t = 0
   return sql
+    .split('\n')
+    .filter((s) => !s.trim().startsWith('--'))
+    .join(' ')
     .split(/\s+|(?=[,()])|(?<=[,()])/g)
     .reduce((a, c, i, s) => {
       /** next token */
