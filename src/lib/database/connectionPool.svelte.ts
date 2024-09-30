@@ -7,10 +7,11 @@ type INSERT = 18
 type UPDATE = 23
 type UpdateType = DELETE | INSERT | UPDATE
 type UpdateEvent = [type: UpdateType, db: string, table: string, rowid: bigint]
-type Query = {
+type Data<V extends { rowid: bigint }, K = V['rowid']> = Map<K, V>
+type Query<V extends { rowid: bigint }> = {
 	sql: string
-	data: [[], () => void]
-};
+	data: [() => Data<V>, (k: bigint, v: V) => void]
+}
 
 export class DbPool {
 	#maxConnections: number
@@ -19,8 +20,7 @@ export class DbPool {
 	dbName: string
 	status = $state<'available' | 'loading' | 'error'>('loading')
 	error = $state()
-	#queries = $state(new SvelteMap<string, Query[]>())
-
+	#queries = $state(new SvelteMap<string, Query<object>[]>())
 	constructor(
 		args: { maxConnections: number | undefined, dbName: string | undefined }
 	) {
@@ -102,8 +102,8 @@ export class DbPool {
 		this.#connections.clear()
 	}
 
-	query<O extends object>(sql: string) {
-		let value = $state<O[]>([])
+	query<O extends object>(sql: string, process: (rows: Data<O>) => Data<O> = (r) => r) {
+		let value = $state<Data<O>>(new SvelteMap())
 		console.log(sql)
 		let db: DB
 		this.#connect()
@@ -120,7 +120,10 @@ export class DbPool {
 						q.push({ sql, data: [data, setData] })
 					}
 				})
-				value.push(...await db.execO<O>(sql))
+				const res = await db.execO<O>(sql)
+				res.forEach((v) => {
+					value.set(v.rowid, v)
+				})
 				// console.log(value)
 			})
 			.catch((err) => {
@@ -130,9 +133,11 @@ export class DbPool {
 			.finally(() => {
 				this.#close(db)
 			})
-		function data() { return value }
-		function setData(v) { value = v }
-		return data
+		function data() { return process(value) }
+		function setData(k: bigint, v: O) { value.set(k, v) }
+		return {
+			get data() { return value },
+		}
 	}
 
 	async exec<R>(fn: (d: DB) => R) {
