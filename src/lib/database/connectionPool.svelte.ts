@@ -1,3 +1,4 @@
+import { parseSql } from '$lib/utils/parseSql'
 import initWasm, { DB, SQLite3 } from '@vlcn.io/crsqlite-wasm'
 import wasmUrl from '@vlcn.io/crsqlite-wasm/crsqlite.wasm?url'
 import { SvelteMap, SvelteSet } from 'svelte/reactivity'
@@ -111,7 +112,11 @@ export class DbPool {
 		this.exec(async (db) => {
 			queries.forEach(async ({ data, sql }) => {
 				(await db.execO(sql)).map((v) => {
+					let ast = parseSql(sql)
+					console.log(ast.result)
+					console.log(ast.from)
 					process(data, v)
+				})
 			})
 		})
 	}
