@@ -22,7 +22,7 @@ export class DbPool {
 	error = $state()
 	#queries = $state(new SvelteMap<string, Query<object>[]>())
 	constructor(
-		args: { maxConnections: number | undefined, dbName: string | undefined }
+		args?: { maxConnections: number | undefined, dbName: string | undefined }
 	) {
 		this.#maxConnections = args?.maxConnections || 5
 		this.dbName = args?.dbName || 'vfdir.db'
