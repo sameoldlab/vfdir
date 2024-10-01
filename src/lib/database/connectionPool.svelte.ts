@@ -108,10 +108,14 @@ export class DbPool {
 
 	query<O extends object>(sql: string, process: (rows: Data<O>) => Data<O> = (r) => r) {
 		let value = $state<Data<O>>(new SvelteMap())
+		let loading = $state(true)
+		let error = $state(null)
+
 		console.log(sql)
 		let db: DB
 		this.#connect()
 			.then(async (_db) => {
+				loading = true
 				db = _db
 				let tables = (await db.tablesUsedStmt.all(null, sql))[0]
 				tables.forEach((t) => {
@@ -132,13 +136,17 @@ export class DbPool {
 			})
 			.catch((err) => {
 				console.log(err)
+				error = err
 				throw err
 			})
 			.finally(() => {
+				loading = false
 				this.#close(db)
 			})
 		return {
 			get data() { return value },
+			get error() { return error },
+			get loading() { return loading },
 		}
 	}
 
