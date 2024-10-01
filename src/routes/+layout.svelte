@@ -10,32 +10,17 @@
 	let { children } = $props()
 
 	let ready = $state(false)
-	let error = $derived(pool.status && pool.status !== 'available' ? pool.status : undefined)
-	$effect.pre(() => console.log('status: ', pool.status))
-
-	$effect(()=> {
-		if(pool.status === 'available') {
-			untrack(() => {
-				pool.exec(async (db) => {
-					await createTables(db)
-					// channels.init(db)
-					bootstrap(db)
-				})
-			})
-		}
-			// ready = true
 	pool.exec(async (db) => {
 		await createTables(db)
 		await bootstrap(db)
+		ready = true
 	})
-	// ready = true
 </script>
 
 <Header />
 
 {#if pool.status === 'error'}
-	{pool.error}
-	<pre><code>{error}</code></pre>
+	<pre><code>{pool.error}</code></pre>
 {:else if pool.status === 'loading' || !ready}
 	setting up sqlite
 {:else}
