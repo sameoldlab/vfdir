@@ -51,16 +51,6 @@ export class DbPool {
 		}
 		return [...this.#connections.values()][0]
 	}
-	async #initSql() {
-		try {
-			const sqlite = await initWasm(() => wasmUrl)
-			this.status = 'available'
-			return sqlite
-		} catch (e) {
-			this.status = 'error'
-			this.error = e
-		}
-	}
 	#subscribe(...[type, db, table, rowid]: UpdateEvent) {
 		console.log(type, rowid, db, table)
 		let queries = this.#queries.get(table)
@@ -122,18 +112,6 @@ export class DbPool {
 	}
 
 
-	async #close(connection: DB) {
-		const res = await connection.close()
-		this.#connections.delete(connection)
-		return res
-	}
-
-	async closeAll() {
-		for (const connection of this.#connections) {
-			await connection.close()
-		}
-		this.#connections.clear()
-	}
 
 	query<O extends object>(sql: string, process: (rows: Data<O>) => Data<O> = (r) => r) {
 		let value = $state<Data<O>>(new SvelteMap())
@@ -178,7 +156,6 @@ export class DbPool {
 			get loading() { return loading },
 		}
 	}
-
 	async exec<R>(fn: (d: DB) => R) {
 		try {
 			const db = await this.#connect()
@@ -189,6 +166,27 @@ export class DbPool {
 		} catch (err) {
 			console.error(err)
 			throw err
+		}
+	}
+	async #close(connection: DB) {
+		const res = await connection.close()
+		this.#connections.delete(connection)
+		return res
+	}
+	async closeAll() {
+		for (const connection of this.#connections) {
+			await connection.close()
+		}
+		this.#connections.clear()
+	}
+	async #initSql() {
+		try {
+			const sqlite = await initWasm(() => wasmUrl)
+			this.status = 'available'
+			return sqlite
+		} catch (e) {
+			this.status = 'error'
+			this.error = e
 		}
 	}
 }
