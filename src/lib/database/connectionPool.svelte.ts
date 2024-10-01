@@ -44,6 +44,7 @@ export class DbPool {
 			connection.onUpdate((...args) => {
 				this.#subscribe(...args)
 			})
+
 			this.#connections.add(connection)
 			return connection
 		}
@@ -60,11 +61,9 @@ export class DbPool {
 		}
 	}
 	#subscribe(...[type, db, table, rowid]: UpdateEvent) {
-		// console.log(type, rowid, db, table)
-		let q = this.#queries.get(table)
-		if (q) console.log(q)
-		else return
-		console.log('tracking insert...')
+		console.log(type, rowid, db, table)
+		let queries = this.#queries.get(table)
+		if (!queries) return
 		/*
 		Best to track values as Map<rowid, reults>()
 		Naive approach (query does not contain any expressions computing over the values from a table)
@@ -110,8 +109,7 @@ export class DbPool {
 			}
 		}
 		this.exec(async (db) => {
-			q.forEach(async ({ data, sql }) => {
-				console.log(newD)
+			queries.forEach(async ({ data, sql }) => {
 				(await db.execO(sql)).map((v) => {
 					process(data, v)
 			})
