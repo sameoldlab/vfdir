@@ -42,7 +42,7 @@ type SelectNode = {
   limit?: LimitNode
   order?: (OrderNode | ColumnNode)[]
 }
-const last = <T>(arr: T[]) => arr[arr.length - 1]
+const last = <T>(arr: T[]) => arr.at(-1)
 const ORDER = ['order', 'by']
 const LIMIT = ['limit']
 const WHERE_TERMINAL = [...ORDER, ...LIMIT]
@@ -60,8 +60,6 @@ export const parseSql = (sql: string) => {
     .join(' ')
     .split(/\s+|(?=[,()])|(?<=[,()])/g)
     .reduce((a, c, i, s) => {
-      /** next token */
-      const n = s[Math.min(i + 1, s.length - 1)]
       switch (c) {
         case 'distinct':
           a.distinct = true
@@ -78,10 +76,12 @@ export const parseSql = (sql: string) => {
         case 'where': {
           section = 'where'
           const tokens: string[] = []
+          console.log(c, i)
           while (i + 1 < s.length && !WHERE_TERMINAL.includes(s[i + 1])) {
             i++
             tokens.push(s[i])
           }
+          console.log(c, i)
           a.where = parseExpr(tokens)
           return a
         }
@@ -92,49 +92,50 @@ export const parseSql = (sql: string) => {
           section = 'order'
           break
         case 'limit':
-          a.limit = { start: {} }
           t = 0
           section = 'limit'
           break
       }
-
-      if (t !== 0)
-        switch (section) {
-          case "result":
-            if (c === '*') {
-              a.result.push({
-                name: '*',
-                type: 'identifier',
-                variant: 'star'
-              })
-            } else if (c === 'as') {
-              last(a.result).alias = null
-            } else if (last(a.result)?.alias === null) {
-              last(a.result).alias = c
-            } else if (c !== ',') {
-              a.result.push(parseExpr([c]))
+      if (t !== 0) switch (section) {
+        case "result":
+          if (c === '*') {
+            a.result.push({
+              name: '*',
+              type: 'identifier',
+              variant: 'star'
+            })
+          } else if (c === 'as') {
+            (last(a.result) as ColumnNode).alias = null
+          } else if ((last(a.result) as ColumnNode)?.alias === null) {
+            (last(a.result) as ColumnNode).alias = c
+          } else if (c !== ',') {
+            a.result.push(parseExpr([c]))
+          }
+          break;
+        case "from":
+          if (a.from.name !== undefined) {
+            a.from.alias = c
+          } else {
+            a.from.name = c
+            a.from.type = 'identifier'
+            a.from.variant = 'table'
+          }
+          break;
+        case "order":
+          parseOrder(a, c)
+          break;
+        case "limit":
+          a.limit = {
+            type: 'expression',
+            variant: 'limit',
+            start: {
+              type: 'literal',
+              value: c,
+              variant: 'decimal',
             }
-            break;
-          case "from":
-            if (a.from.name !== undefined) {
-              a.from.alias = c
-            } else {
-              a.from.name = c
-              a.from.type = 'identifier'
-              a.from.variant = 'table'
-            }
-            break;
-          case "order":
-            parseOrder(a, c)
-            break;
-          case "limit":
-            a.limit.type = 'expression'
-            a.limit.variant = 'limit'
-            a.limit.start.type = 'literal'
-            a.limit.start.value = c
-            a.limit.start.variant = 'decimal'
-            break;
-        }
+          }
+          break;
+      }
 
       t++
       return a
