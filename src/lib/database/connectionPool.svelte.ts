@@ -8,10 +8,10 @@ type INSERT = 18
 type UPDATE = 23
 type UpdateType = DELETE | INSERT | UPDATE
 type UpdateEvent = [type: UpdateType, db: string, table: string, rowid: bigint]
-type Data<V extends { rowid: bigint }, K = V['rowid']> = Map<K, V>
-type Query<V extends { rowid: bigint }> = {
+type Data<V> = V[]
+type Query<V> = {
 	sql: string
-	data: Data<V>
+	setData: Data<V>
 }
 
 export class DbPool {
@@ -32,6 +32,8 @@ export class DbPool {
 		})
 	}
 
+	#updateBuffer = new Map<`${string}:${UpdateType}`, Set<bigint>>()
+	#timeout = null
 	async #connect() {
 		this.#sqlite = this.#sqlite || await this.#initSql()
 
@@ -42,8 +44,17 @@ export class DbPool {
 			} catch (err) {
 				console.error(err)
 			}
-			connection.onUpdate((...args) => {
-				this.#subscribe(...args)
+			connection.onUpdate((type, db, table, row) => {
+				if (!this.#updateBuffer.has(`${table}:${type}`)) {
+					this.#updateBuffer.set(`${table}:${type}`, new Set())
+				}
+				this.#updateBuffer.get(`${table}:${type}`).add(row)
+
+				if (this.#timeout === null) this.#timeout = setTimeout(() =>
+					this.#batchSubscribe()
+					, 4)
+
+				// this.#subscribe(type, db, table, row)
 			})
 
 			this.#connections.add(connection)
@@ -51,62 +62,39 @@ export class DbPool {
 		}
 		return [...this.#connections.values()][0]
 	}
-	#subscribe(...[type, db, table, rowid]: UpdateEvent) {
-		console.log(type, rowid, db, table)
-		let queries = this.#queries.get(table)
-		if (!queries) return
-		/*
-		Best to track values as Map<rowid, reults>()
-		Naive approach (query does not contain any expressions computing over the values from a table)
-		## Delete:
-				map.has(rowid) === false ? return : delete item from map
-
-		## Update:
-			if map.has(rowid) === false ? {
-			return
-		} else {
-			update value
+	#batchSubscribe() {
+		this.#timeout = null
+		for (const [key, rowids] of this.#updateBuffer.entries()) {
+			const [table, type] = key.split(':');
+			this.#subscribe(parseInt(type), table, Array.from(rowids));
 		}
 
-		## Insert:
-			rerun the query
-			if map.size has changed update map
-
-
-			Non Naive:
-			Insertion of a new row does not by default mean
-			there is a new row in the query, i.e. `Count(*)`
-			will have a fixed number of rows as results change
-			Same thing for delete and update
-
-			OTOH: it is very unlikely that there will ever be wide ranging deletes or updates in the database not directly from user actions.
-	 */
-		let process = (map, newValue) => null
+		this.#updateBuffer.clear();
+	}
+	#subscribe(type: UpdateType, table: string, rowid: bigint[]) {
+		// console.log(type, rowid, table)
+		let queries = this.#queries.get(table)
+		if (!queries) return
 		switch (type) {
 			case 18: {
-				console.log(`Row ${rowid} inserted in ${db}:${table}`)
-				process = (map, nv) => {
-					if (!map.has(nv.rowid)) map.set(nv.rowid, nv)
-				}
+				console.log(`Row ${rowid} inserted in ${table}`)
 				break
 			}
 			case 9: {
-				console.log(`Row ${rowid} deleted in ${db}:${table}`)
+				console.log(`Row ${rowid} deleted in ${table}`)
 				break
 			}
 			case 23: {
-				console.log(`Row ${rowid} updated in ${db}:${table}`)
+				console.log(`Row ${rowid} updated in ${table}`)
 				break
 			}
 		}
 		this.exec(async (db) => {
-			queries.forEach(async ({ data, sql }) => {
-				(await db.execO(sql)).map((v) => {
-					let ast = parseSql(sql)
-					console.log(ast.result)
-					console.log(ast.from)
-					process(data, v)
-				})
+			queries.forEach(async (sub) => {
+				let ast = parseSql(sub.sql)
+				// console.log(ast.result)
+				// console.log(ast.from)
+				sub.setData((await db.execO(sub.sql)))
 			})
 		})
 	}
@@ -114,11 +102,10 @@ export class DbPool {
 
 
 	query<O extends object>(sql: string, process: (rows: Data<O>) => Data<O> = (r) => r) {
-		let value = $state<Data<O>>(new SvelteMap())
+		let value = $state.raw<Data<O>>([])
 		let loading = $state(true)
 		let error = $state(null)
 
-		console.log(sql)
 		let db: DB
 		this.#connect()
 			.then(async (_db) => {
@@ -130,15 +117,12 @@ export class DbPool {
 					if (q === undefined) {
 						this.#queries.set(t, [])
 						q = this.#queries.get(t)
-						q.push({ sql, data: value })
+						q.push({ sql, setData })
 					} else {
-						q.push({ sql, data: value })
+						q.push({ sql, setData })
 					}
 				})
-				const res = await db.execO<O>(sql)
-				res.forEach((v) => {
-					value.set(v.rowid, v)
-				})
+				value = await db.execO<O>(sql)
 				// console.log(value)
 			})
 			.catch((err) => {
@@ -150,6 +134,10 @@ export class DbPool {
 				loading = false
 				this.#close(db)
 			})
+		function setData(v) {
+			console.log(v)
+			value = v
+		}
 		return {
 			get data() { return value },
 			get error() { return error },
