@@ -10,7 +10,7 @@ type UpdateEvent = [type: UpdateType, db: string, table: string, rowid: bigint]
 type Data<V extends { rowid: bigint }, K = V['rowid']> = Map<K, V>
 type Query<V extends { rowid: bigint }> = {
 	sql: string
-	data: [() => Data<V>, (k: bigint, v: V) => void]
+	data: Data<V>
 }
 
 export class DbPool {
@@ -65,9 +65,13 @@ export class DbPool {
 		if (q) console.log(q)
 		else return
 		console.log('tracking insert...')
+		let process = (map, newValue) => null
 		switch (type) {
 			case 18: {
 				console.log(`Row ${rowid} inserted in ${db}:${table}`)
+				process = (map, nv) => {
+					if (!map.has(nv.rowid)) map.set(nv.rowid, nv)
+				}
 				break
 			}
 			case 9: {
@@ -81,9 +85,9 @@ export class DbPool {
 		}
 		this.exec(async (db) => {
 			q.forEach(async ({ data, sql }) => {
-				const newD = await db.execO(sql)
 				console.log(newD)
-				data[1](newD);
+				(await db.execO(sql)).map((v) => {
+					process(data, v)
 			})
 		})
 	}
@@ -115,9 +119,9 @@ export class DbPool {
 					if (q === undefined) {
 						this.#queries.set(t, [])
 						q = this.#queries.get(t)
-						q.push({ sql, data: [data, setData] })
+						q.push({ sql, data: value })
 					} else {
-						q.push({ sql, data: [data, setData] })
+						q.push({ sql, data: value })
 					}
 				})
 				const res = await db.execO<O>(sql)
@@ -133,8 +137,6 @@ export class DbPool {
 			.finally(() => {
 				this.#close(db)
 			})
-		function data() { return process(value) }
-		function setData(k: bigint, v: O) { value.set(k, v) }
 		return {
 			get data() { return value },
 		}
