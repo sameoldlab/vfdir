@@ -65,6 +65,32 @@ export class DbPool {
 		if (q) console.log(q)
 		else return
 		console.log('tracking insert...')
+		/*
+		Best to track values as Map<rowid, reults>()
+		Naive approach (query does not contain any expressions computing over the values from a table)
+		## Delete:
+				map.has(rowid) === false ? return : delete item from map
+
+		## Update:
+			if map.has(rowid) === false ? {
+			return
+		} else {
+			update value
+		}
+
+		## Insert:
+			rerun the query
+			if map.size has changed update map
+
+
+			Non Naive:
+			Insertion of a new row does not by default mean
+			there is a new row in the query, i.e. `Count(*)`
+			will have a fixed number of rows as results change
+			Same thing for delete and update
+
+			OTOH: it is very unlikely that there will ever be wide ranging deletes or updates in the database not directly from user actions.
+	 */
 		let process = (map, newValue) => null
 		switch (type) {
 			case 18: {
