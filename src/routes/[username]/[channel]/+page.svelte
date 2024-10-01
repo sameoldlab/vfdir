@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { page } from '$app/stores'
-	import { channels } from '$lib/store/data.svelte.js'
+	// import { channels } from '$lib/store/data.svelte.js'
+	let channels
 	const { channel: slug, username } = $page.params
 
 	// const channels = getChannels(db.promiser)
