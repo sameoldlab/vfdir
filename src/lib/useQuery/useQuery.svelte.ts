@@ -24,7 +24,6 @@ import type {
   DB
 } from "@vlcn.io/xplat-api";
 import { UPDATE_TYPE } from '@vlcn.io/xplat-api'
-import { untrack } from "svelte";
 export { first, firstPick, pick } from '@vlcn.io/xplat-api'
 
 export type CtxAsync = {
@@ -83,16 +82,6 @@ export function useQuery<R, M = R[]>(
     );
   } */
 
-  // run on unmount
-  $effect(() =>
-    () => {
-      untrack(() => {
-        stateMachine?.dispose();
-        stateMachine = null;
-      })
-    }
-  )
-
   let lastBindings = $state<unknown[] | undefined>();
   let lastQuery = $state<string | undefined>();
   if (!arraysShallowEqual(bindings, lastBindings)) {
@@ -104,7 +93,13 @@ export function useQuery<R, M = R[]>(
     lastQuery = (query);
   }
 
-  return stateMachine.getSnapshot()
+  return {
+    get data() { return stateMachine.getSnapshot() },
+    destroy() {
+      stateMachine?.dispose();
+      stateMachine = null;
+    }
+  }
 }
 
 let pendingQuery: number | null = null;
@@ -269,6 +264,7 @@ class AsyncResultStateMachine<T, M = readonly T[]> {
    * - underlying db state
    */
   getSnapshot = (rebind: boolean = false): QueryData<M> => {
+    log('rebind', rebind)
     log("get snapshot");
     if (this.#disposed) {
       log("disposed");
