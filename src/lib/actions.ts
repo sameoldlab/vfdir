@@ -44,8 +44,8 @@ export const key: Action<HTMLAnchorElement> = (a) => {
 	const prev = a.previousElementSibling as HTMLAnchorElement | null
 	const next = a.nextElementSibling as HTMLAnchorElement | null
 	function keydown(e: KeyboardEvent) {
-		console.log(e);
-		console.log(next);
+		// console.log(e);
+		// console.log(next);
 		if (e.key === "ArrowDown") {
 			next.focus()
 			return
