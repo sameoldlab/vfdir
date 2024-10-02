@@ -1,13 +1,11 @@
 <script lang="ts">
-	import BlockDetails from '$lib/components/BlockDetails.svelte'
 	// import GridView from '$lib/components/GridView.svelte'
 	import { resizer, key } from '$lib/actions'
-	// import type { Channel } from "$lib/sync/data.svelte";
 	import { pushState } from '$app/navigation'
-	import { page } from '$app/stores'
-	// import { db } from "$lib/store/sqlite.svelte";
-	// import { channels } from "$lib/store/data.svelte";
-	let channels, db
+	// import { page } from '$app/stores'
+	import { pool } from '$lib/database/connectionPool.svelte'
+	import { Block } from '$lib/database/schema'
+	import BlockDetail from '$lib/components/BlockDetails.svelte'
 
 	// let channels = {list: []}
 	const addItem = (e: MouseEvent) => {
@@ -16,66 +14,67 @@
 		})
 	}
 
-	const addChannel = (channel: Partial<Channel>) => {
-		if (!channels) return
-		const { title, status, author_slug, flags } = {
-			...channel,
-			status: 'private',
-			author_slug: 'local',
-			flags: []
-		} as Channel
-		console.log('channel', title, status, author_slug, flags)
-		const sanitize = (str: string): string => str.replaceAll(' ', '-')
-
-		channels.push(db.db, [
-			{
-				slug: sanitize(title) + new Date().getMilliseconds().toString(),
-				title,
-				created_at: new Date(),
-				status,
-				author_slug,
-				flags
-			}
-		])
-	}
+	const col1 = pool.query<Block>(`
+		select id,slug,title from blocks where type='channel' 
+		order by updated_at desc
+	`)
+	let col1Hover = $state('01J942ANKYCD2NXZ0TDCXXH5C7')
+	let col2 = $derived(
+		pool.query<Block>(
+			`
+			SELECT b.id, b.title, b.type
+			FROM Connections conn
+			JOIN Blocks b ON conn.child_id = b.id
+			WHERE conn.parent_id = ?
+			ORDER BY conn.position;
+		`,
+			[col1Hover]
+		)
+	)
+	let col2Hover: string | undefined = $state(col2[0]?.data?.id)
 </script>
 
 <div class="pane left">
-	{#each channels.list as [key, { slug, title }]}
-		<a href={slug} class="item">{title}</a>
+	{#each col1.data as { id, slug, title }}
+		<a
+			onmouseover={() => (col1Hover = id)}
+			onfocus={() => (col1Hover = id)}
+			href={slug}
+			class="item"
+			use:key>{title}</a
+		>
 	{:else}
 		<div class="item">empty</div>
 	{/each}
-	<a href="/df/adsaf" class="item" tabindex="0">Convivially Situated</a>
-	<a href="/gf/adsdsafdsf" class="item"
-		>yet another UI Metachanel on are dot na</a
-	>
-	<a href="/rtf/fsdsaf" class="item">link</a>
-	<a href="/dhf/adsdsf" class="item">link</a>
-	<a href="/dh/adsaf" class="item">link</a>
-	<a href="/nf/adfsaf" class="item">link</a>
-	<a href="/erwf/adsdaf" class="item">link</a>
 </div>
 <div class="handle" draggable use:resizer>
 	<div></div>
 </div>
 <div class="pane right">
-	<button onclick={addItem}>New Channel</button>
+	<!--
+	<p class="item" use:key>{col1Hover}</p>
+	<button onclick={addItem}>New Channel</button>-->
 
-	<a href="/df/adsaf" class="item" use:key> link</a>
-	<a href="/gf/adsdsafdsf" class="item" use:key> link</a>
-	<a href="/rtf/fsdsaf" class="item" use:key> link</a>
-	<a href="/dhf/adsdsf" class="item" use:key> link</a>
-	<a href="/dh/adsaf" class="item" use:key> link</a>
-	<a href="/nf/adfsaf" class="item" use:key> link</a>
-	<a href="/erwf/adsdaf" class="item" use:key> link</a>
+	{#each col2.data as { id, title }}
+		<a
+			onmouseover={() => (col2Hover = id)}
+			onfocus={() => (col2Hover = id)}
+			href={id}
+			class="item"
+			use:key>{title}</a
+		>
+	{:else}
+		<div class="item">empty</div>
+	{/each}
 </div>
 <div class="handle" draggable use:resizer>
 	<div></div>
 </div>
 
 <div class="pane detail">
-	<BlockDetails />
+	{#if col2Hover}
+		<BlockDetail id={col2Hover} />
+	{/if}
 </div>
 
 <style>
