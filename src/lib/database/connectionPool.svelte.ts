@@ -1,6 +1,7 @@
 import { parseSql } from '$lib/utils/parseSql'
 import initWasm, { DB, SQLite3 } from '@vlcn.io/crsqlite-wasm'
 import wasmUrl from '@vlcn.io/crsqlite-wasm/crsqlite.wasm?url'
+import { untrack } from 'svelte'
 import { SvelteMap, SvelteSet } from 'svelte/reactivity'
 
 type DELETE = 9
@@ -107,33 +108,33 @@ export class DbPool {
 		let error = $state(null)
 
 		let db: DB
-		this.#connect()
-			.then(async (_db) => {
-				loading = true
-				db = _db
-				let tables = (await db.tablesUsedStmt.all(null, sql))[0]
-				tables.forEach((t) => {
-					let q = this.#queries.get(t)
-					if (q === undefined) {
-						this.#queries.set(t, [])
-						q = this.#queries.get(t)
-						q.push({ sql, setData })
-					} else {
-						q.push({ sql, setData })
-					}
+		untrack(() => {
+			this.#connect()
+				.then(async (_db) => {
+					loading = true
+					db = _db
+					let tables = (await db.tablesUsedStmt.all(null, sql))[0]
+					tables.forEach((t) => {
+						let q = this.#queries.get(t)
+						if (q === undefined) {
+							this.#queries.set(t, [])
+							q = this.#queries.get(t)
+						}
+							q.push({ sql, setData })
+					})
+					value = await db.execO<R>(sql, bind)
+					// console.log(value)
 				})
-				value = await db.execO<O>(sql)
-				// console.log(value)
-			})
-			.catch((err) => {
-				console.log(err)
-				error = err
-				throw err
-			})
-			.finally(() => {
-				loading = false
-				this.#close(db)
-			})
+				.catch((err) => {
+					console.log(err)
+					error = err
+					throw err
+				})
+				.finally(() => {
+					loading = false
+					// this.#close(db)
+				})
+		})
 		function setData(v) {
 			console.log(v)
 			value = v
