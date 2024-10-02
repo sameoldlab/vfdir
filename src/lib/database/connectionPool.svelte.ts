@@ -15,6 +15,12 @@ type Query<V> = {
 	setData: Data<V>
 }
 
+export type QueryData<T> = {
+  readonly loading: boolean;
+  readonly error?: Error;
+  readonly data: T;
+}
+
 export class DbPool {
 	#maxConnections: number
 	#connections = new SvelteSet<DB>()
@@ -102,10 +108,16 @@ export class DbPool {
 
 
 
-	query<O extends object>(sql: string, process: (rows: Data<O>) => Data<O> = (r) => r) {
-		let value = $state.raw<Data<O>>([])
-		let loading = $state(true)
-		let error = $state(null)
+	query<R extends object, M = R[]>(
+		sql: string,
+		bind: (string | number)[] = null,
+		process?: (rows: R[]) => M
+	): QueryData<M> {
+
+		let value = $state.raw<R[]>([])
+		let loading = $state<boolean>(true)
+		let error = $state<Error>(null)
+		console.log(sql)
 
 		let db: DB
 		untrack(() => {
@@ -140,11 +152,14 @@ export class DbPool {
 			value = v
 		}
 		return {
-			get data() { return value },
+			get data()  {
+			 return process(value)
+			},
 			get error() { return error },
 			get loading() { return loading },
 		}
 	}
+
 	async exec<R>(fn: (d: DB) => R) {
 		try {
 			const db = await this.#connect()
