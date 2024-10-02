@@ -16,9 +16,9 @@ type Query<V> = {
 }
 
 export type QueryData<T> = {
-  readonly loading: boolean;
-  readonly error?: Error;
-  readonly data: T;
+	readonly loading: boolean;
+	readonly error?: Error;
+	readonly data: T;
 }
 
 export class DbPool {
@@ -132,7 +132,7 @@ export class DbPool {
 							this.#queries.set(t, [])
 							q = this.#queries.get(t)
 						}
-							q.push({ sql, setData })
+						q.push({ sql, setData })
 					})
 					value = await db.execO<R>(sql, bind)
 					// console.log(value)
@@ -152,8 +152,8 @@ export class DbPool {
 			value = v
 		}
 		return {
-			get data()  {
-			 return process(value)
+			get data() {
+				return process(value)
 			},
 			get error() { return error },
 			get loading() { return loading },
