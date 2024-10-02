@@ -1,6 +1,5 @@
 // MIT License
 // Copyright (c) 2023 One Law LLC
-//
 // https://github.com/vlcn-io/js/blob/main/packages/react/src/queryHooks.ts
 
 //-------------------------------------------------------------
@@ -14,13 +13,19 @@ namespace Symbols {
   export declare const brand: unique symbol;
 }
 export type RowID<T> = Opaque<bigint, T>;
-
 //-------------------------------------------------------------
 
-// import { CtxAsync } from "./context.js";
-import { TblRx } from "@vlcn.io/rx-tbl";
-import { DBAsync, DB } from "@vlcn.io/xplat-api";
-import { createContext, useContext } from "react";
+import type { TblRx } from "@vlcn.io/rx-tbl";
+import type {
+  DBAsync,
+  StmtAsync,
+  UpdateType,
+  TXAsync,
+  DB
+} from "@vlcn.io/xplat-api";
+import { UPDATE_TYPE } from '@vlcn.io/xplat-api'
+import { untrack } from "svelte";
+export { first, firstPick, pick } from '@vlcn.io/xplat-api'
 
 export type CtxAsync = {
   readonly db: DBAsync;
@@ -31,26 +36,6 @@ export type Ctx = {
   readonly db: DB;
   readonly rx: TblRx;
 };
-
-export function createReactContext() {
-  return createContext<CtxAsync | null>(null);
-}
-
-export const VlcnAsyncCtx = createReactContext();
-
-// -------------------------------------------------------------
-
-import {
-  DBAsync,
-  StmtAsync,
-  UPDATE_TYPE,
-  UpdateType,
-  TXAsync,
-  first,
-} from "@vlcn.io/xplat-api";
-export { first, firstPick, pick } from "@vlcn.io/xplat-api";
-import { Query } from "@vlcn.io/typed-sql";
-
 export type QueryData<T> = {
   readonly loading: boolean;
   readonly error?: Error;
@@ -58,47 +43,12 @@ export type QueryData<T> = {
 };
 
 const EMPTY_ARRAY: readonly any[] = Object.freeze([]);
-
-// TODO: two useQuery variants?
-// one for async db and one for sync db?
-
-// const log = console.log.bind(console);
-const log = (...args: any) => { };
-
+const log = (...args: any) => { console.log(args) };
 const allUpdateTypes = [
   UPDATE_TYPE.INSERT,
   UPDATE_TYPE.UPDATE,
   UPDATE_TYPE.DELETE,
 ];
-
-// export function usePointQuery<R, M = R>(
-//   ctx: CtxAsync,
-//   _rowid_: RowID<R>,
-//   query: string,
-//   bindings?: any[],
-//   postProcess?: (rows: R[]) => M
-// ): QueryData<M> {
-//   return useQuery(
-//     ctx,
-//     query,
-//     bindings,
-//     postProcess,
-//     [UPDATE_TYPE.UPDATE, UPDATE_TYPE.DELETE],
-//     _rowid_
-//   );
-// }
-
-// export function useRangeQuery<R, M = R[]>(
-//   ctx: CtxAsync,
-//   query: string,
-//   bindings?: any[],
-//   postProcess?: (rows: R[]) => M
-// ) {
-//   return useQuery(ctx, query, bindings, postProcess, [
-//     UPDATE_TYPE.INSERT,
-//     UPDATE_TYPE.DELETE,
-//   ]);
-// }
 
 export function useQuery<R, M = R[]>(
   ctx: CtxAsync,
@@ -108,15 +58,22 @@ export function useQuery<R, M = R[]>(
   updateTypes: UpdateType[] = allUpdateTypes,
   _rowid_?: RowID<R>
 ): QueryData<M> {
-  const stateMachine = useRef<AsyncResultStateMachine<R, M> | null>(null);
-  const lastCtx = useRef<CtxAsync | null>(ctx);
+  let stateMachine = $state<AsyncResultStateMachine<R, M> | null>(new AsyncResultStateMachine(
+    ctx,
+    query,
+    bindings,
+    postProcess,
+    updateTypes,
+    _rowid_
+  ))
+  /* const lastCtx = $state<CtxAsync | null>(ctx);
   // A bunch of hoops to jump through to appease react strict mode
-  if (stateMachine.current == null || lastCtx.current !== ctx) {
-    lastCtx.current = ctx;
-    if (stateMachine.current != null) {
-      stateMachine.current.dispose();
+  if (stateMachine == null || lastCtx !== ctx) {
+    lastCtx = ctx;
+    if (stateMachine != null) {
+      stateMachine.dispose();
     }
-    stateMachine.current = new AsyncResultStateMachine(
+    stateMachine = new AsyncResultStateMachine(
       ctx,
       query,
       bindings,
@@ -124,60 +81,31 @@ export function useQuery<R, M = R[]>(
       updateTypes,
       _rowid_
     );
-  }
+  } */
 
-  useEffect(() => {
-    return () => {
-      stateMachine.current?.dispose();
-      stateMachine.current = null;
-    };
-  }, []);
+  // run on unmount
+  $effect(() =>
+    () => {
+      untrack(() => {
+        stateMachine?.dispose();
+        stateMachine = null;
+      })
+    }
+  )
 
-  const [lastBindings, setLastBindings] = useState<unknown[] | undefined>();
-  const [lastQuery, setLastQuery] = useState<string | undefined>();
+  let lastBindings = $state<unknown[] | undefined>();
+  let lastQuery = $state<string | undefined>();
   if (!arraysShallowEqual(bindings, lastBindings)) {
-    stateMachine.current?.respondToBindingsChange(bindings || EMPTY_ARRAY);
-    setLastBindings(bindings);
+    stateMachine?.respondToBindingsChange(bindings || EMPTY_ARRAY);
+    lastBindings = bindings;
   }
   if (query !== lastQuery) {
-    stateMachine.current?.respondToQueryChange(query);
-    setLastQuery(query);
+    stateMachine?.respondToQueryChange(query);
+    lastQuery = (query);
   }
 
-  return useSyncExternalStore<QueryData<M>>(
-    stateMachine.current.subscribeReactInternals,
-    stateMachine.current.getSnapshot
-  );
+  return stateMachine.getSnapshot()
 }
-
-// TODO: finish rx cache so we don't need the user to differentiate btwn point queries and not
-// export function usePointQuery2<R>(
-//   ctx: CtxAsync,
-//   _rowid_: RowID<R>,
-//   query: Query<R>,
-//   bindings?: any[]
-// ): QueryData<R | undefined> {
-//   return useQuery(
-//     ctx,
-//     query,
-//     bindings,
-//     first<R>,
-//     [UPDATE_TYPE.UPDATE, UPDATE_TYPE.DELETE],
-//     _rowid_
-//   );
-// }
-
-// export function useRangeQuery2<R, M = R[]>(
-//   ctx: CtxAsync,
-//   query: Query<R>,
-//   bindings?: any[],
-//   postProcess?: (rows: R[]) => M
-// ) {
-//   return useQuery(ctx, query, bindings, postProcess, [
-//     UPDATE_TYPE.INSERT,
-//     UPDATE_TYPE.DELETE,
-//   ]);
-// }
 
 let pendingQuery: number | null = null;
 let queryTxHolder: number | null = null;
@@ -185,140 +113,148 @@ let queryId = 0;
 let txAcquisition: Promise<[() => void, TXAsync]> | null = null;
 
 class AsyncResultStateMachine<T, M = readonly T[]> {
-  private pendingFetchPromise: Promise<any> | null = null;
-  private pendingPreparePromise: Promise<StmtAsync | null> | null = null;
-  private stmt: StmtAsync | null = null;
-  private queriedTables: string[] | null = null;
-  private data: QueryData<M> | null = null;
-  private reactInternals: null | (() => void) = null;
-  private error?: QueryData<M>;
-  private disposed: boolean = false;
-  private readonly disposedState;
-  private fetchingState;
-  private dbSubscriptionDisposer: (() => void) | null;
+  #pendingFetchPromise: Promise<any> | null = null;
+  #pendingPreparePromise: Promise<StmtAsync | null> | null = null;
+  #stmt: StmtAsync | null = null;
+  #queriedTables: string[] | null = null;
+  #data: QueryData<M> | null = $state(null);
+  #error?: QueryData<M> = $state();
+  #disposed: boolean = false;
+  #disposedState;
+  get disposedState() { return this.#disposedState }
+  #fetchingState;
+  #dbSubscriptionDisposer: (() => void) | null;
   // So a query hook cannot overwhelm the DB, we fold all the queries
   // down and only execute the last one.
-  private queuedFetch = false;
-  private queuedFetchRebind = false;
+  #queuedFetch = false;
+  #queuedFetchRebind = false;
+  #ctx: CtxAsync
+  #query: string
+  #bindings: readonly any[] | undefined
+  get bindings() { return this.#bindings }
+  #postProcess?: (rows: T[]) => M
+  #updateTypes: UpdateType[] = allUpdateTypes
+  #_rowid_?: bigint
 
   constructor(
-    private ctx: CtxAsync,
-    private query: string,
-    private bindings: readonly any[] | undefined,
-    private postProcess?: (rows: T[]) => M,
-    private updateTypes: UpdateType[] = allUpdateTypes,
-    private _rowid_?: bigint
+    ctx: CtxAsync,
+    query: string,
+    bindings: readonly any[] | undefined,
+    postProcess?: (rows: T[]) => M,
+    updateTypes: UpdateType[] = allUpdateTypes,
+    _rowid_?: bigint
   ) {
-    this.dbSubscriptionDisposer = null;
-    this.disposedState = {
+    this.#ctx = ctx
+    this.#query = query
+    this.#bindings = bindings
+    this.#postProcess = postProcess
+    this.#updateTypes = updateTypes
+    this.#_rowid_ = _rowid_
+    this.#dbSubscriptionDisposer = null;
+    this.#disposedState = {
       loading: false,
-      data: this.postProcess
-        ? this.postProcess(EMPTY_ARRAY as any)
+      data: this.#postProcess
+        ? this.#postProcess(EMPTY_ARRAY as any)
         : (EMPTY_ARRAY as any),
       error: new Error("useAsyncQuery was disposed"),
     } as const;
-    this.fetchingState = {
-      ...this.disposedState,
+    this.#fetchingState = {
+      ...this.#disposedState,
       rawData: [] as any[],
       loading: true,
       error: undefined,
     };
   }
 
-  subscribeReactInternals = (internals: () => void): (() => void) => {
-    this.reactInternals = internals;
-    return this.disposeDbSubscription;
-  };
-
   disposeDbSubscription = () => {
-    if (this.dbSubscriptionDisposer) {
-      this.dbSubscriptionDisposer();
-      this.dbSubscriptionDisposer = null;
+    if (this.#dbSubscriptionDisposer) {
+      this.#dbSubscriptionDisposer();
+      this.#dbSubscriptionDisposer = null;
     }
   };
 
   // TODO: warn the user if query changes too much
   respondToQueryChange = (query: string): void => {
-    if (this.disposed) {
+    if (this.#disposed) {
       return;
     }
-    if (this.query === query) {
+    if (this.#query === query) {
       return;
     }
-    this.query = query;
+    this.#query = query;
     // cancel prep and fetch if in-flight
-    this.queuedFetch = this.queuedFetch || this.pendingFetchPromise != null;
-    this.pendingPreparePromise = null;
-    this.pendingFetchPromise = null;
-    this.queriedTables = null;
-    this.error = undefined;
-    if (this.data != null) {
-      this.fetchingState = {
-        ...this.data,
+    this.#queuedFetch = this.#queuedFetch || this.#pendingFetchPromise != null;
+    this.#pendingPreparePromise = null;
+    this.#pendingFetchPromise = null;
+    this.#queriedTables = null;
+    this.#error = undefined;
+    if (this.#data != null) {
+      this.#fetchingState = {
+        ...this.#data,
         loading: true,
       } as any;
     }
-    this.data = null;
-    this.pullData(true);
+    this.#data = null;
+    this.#pullData(true);
   };
 
   // TODO: warn the user if bindings change too much
   respondToBindingsChange = (bindings: readonly any[]): void => {
-    if (this.disposed) {
+    if (this.#disposed) {
       return;
     }
     let i = 0;
     for (i = 0; i < bindings.length; ++i) {
-      if (bindings[i] !== this.bindings?.[i]) {
+      if (bindings[i] !== this.#bindings?.[i]) {
         break;
       }
     }
-    if (i === bindings.length && i === this.bindings?.length) {
+    if (i === bindings.length && i === this.#bindings?.length) {
       // no actual change
       return;
     }
-    this.bindings = bindings;
+    this.#bindings = bindings;
     // cancel fetch if in-flight. We do not need to re-prepare for binding changes.
-    this.queuedFetch = this.queuedFetch || this.pendingFetchPromise != null;
-    if (this.queuedFetch) {
-      this.queuedFetchRebind = true;
+    this.#queuedFetch = this.#queuedFetch || this.#pendingFetchPromise != null;
+    if (this.#queuedFetch) {
+      this.#queuedFetchRebind = true;
     }
 
-    this.pendingFetchPromise = null;
-    this.error = undefined;
-    if (this.data != null) {
-      this.fetchingState = {
-        ...this.data,
+    this.#pendingFetchPromise = null;
+    this.#error = undefined;
+    if (this.#data != null) {
+      this.#fetchingState = {
+        ...this.#data,
         loading: true,
       } as any;
     }
-    this.data = null;
-    this.pullData(true);
+    this.#data = null;
+    this.#pullData(true);
   };
 
   // TODO: the change event should be forwarded too.
   // So we can subscribe to adds vs deletes vs updates vs all
-  private respondToDatabaseChange = (updates: UpdateType[]) => {
-    if (this.disposed) {
+  #respondToDatabaseChange = (updates: UpdateType[]) => {
+    if (this.#disposed) {
       this.disposeDbSubscription();
       return;
     }
 
-    if (!updates.some((u) => this.updateTypes.includes(u))) {
+    if (!updates.some((u) => this.#updateTypes.includes(u))) {
       return;
     }
 
-    this.queuedFetch = this.queuedFetch || this.pendingFetchPromise != null;
-    this.pendingFetchPromise = null;
-    this.error = undefined;
-    if (this.data != null) {
-      this.fetchingState = {
-        ...this.data,
+    this.#queuedFetch = this.#queuedFetch || this.#pendingFetchPromise != null;
+    this.#pendingFetchPromise = null;
+    this.#error = undefined;
+    if (this.#data != null) {
+      this.#fetchingState = {
+        ...this.#data,
         loading: true,
       } as any;
     }
-    this.data = null;
-    this.pullData(false);
+    this.#data = null;
+    this.#pullData(false);
   };
 
   /**
@@ -334,114 +270,114 @@ class AsyncResultStateMachine<T, M = readonly T[]> {
    */
   getSnapshot = (rebind: boolean = false): QueryData<M> => {
     log("get snapshot");
-    if (this.disposed) {
+    if (this.#disposed) {
       log("disposed");
-      return this.disposedState;
+      return this.#disposedState;
     }
-    if (this.data != null) {
+    if (this.#data != null) {
       log("data");
-      return this.data;
+      return this.#data;
     }
-    if (this.error != null) {
+    if (this.#error != null) {
       log("error");
-      return this.error;
+      return this.#error;
     }
 
-    this.pullData(rebind);
+    this.#pullData(rebind);
 
     log("fetching");
-    return this.fetchingState;
+    return this.#fetchingState;
   };
 
-  private pullData(rebind: boolean) {
-    if (this.disposed) {
+  #pullData(rebind: boolean) {
+    if (this.#disposed) {
       return;
     }
 
-    if (this.queuedFetch) {
+    if (this.#queuedFetch) {
       return;
     }
 
-    if (this.pendingPreparePromise == null) {
+    if (this.#pendingPreparePromise == null) {
       // start preparing the statement
-      this.prepare();
+      this.#prepare();
     }
-    if (this.pendingFetchPromise == null) {
+    if (this.#pendingFetchPromise == null) {
       // start fetching the data
-      this.fetch(rebind);
+      this.#fetch(rebind);
     }
   }
 
-  private prepare() {
+  #prepare() {
     log("hooks - Preparing");
-    this.queriedTables = null;
-    this.error = undefined;
-    this.data = null;
-    this.pendingFetchPromise = null;
-    if (this.stmt) {
-      this.stmt.finalize(null);
+    this.#queriedTables = null;
+    this.#error = undefined;
+    this.#data = null;
+    this.#pendingFetchPromise = null;
+    if (this.#stmt) {
+      this.#stmt.finalize(null);
     }
-    this.stmt = null;
+    this.#stmt = null;
 
-    const preparePromise = this.prepareAndGetUsedTables().then(
+    const preparePromise = this.#prepareAndGetUsedTables().then(
       ([stmt, queriedTables]) => {
         // Someone called in with a new query before we finished preparing the original query
-        if (this.pendingPreparePromise !== preparePromise) {
+        if (this.#pendingPreparePromise !== preparePromise) {
           stmt.finalize(null);
           return null;
         }
 
-        this.stmt = stmt;
-        this.queriedTables = queriedTables;
+        this.#stmt = stmt;
+        this.#queriedTables = queriedTables;
         this.disposeDbSubscription();
-        if (this._rowid_ != null) {
-          if (this.queriedTables.length > 1) {
+        if (this.#_rowid_ != null) {
+          if (this.#queriedTables.length > 1) {
             console.warn("usePointQuery should only be used on a single table");
           }
-          this.dbSubscriptionDisposer = this.ctx.rx.onPoint(
-            this.queriedTables[0],
-            this._rowid_,
-            this.respondToDatabaseChange
+          this.#dbSubscriptionDisposer = this.#ctx.rx.onPoint(
+            this.#queriedTables[0],
+            this.#_rowid_,
+            this.#respondToDatabaseChange
           );
         } else {
-          this.dbSubscriptionDisposer = this.ctx.rx.onRange(
+          this.#dbSubscriptionDisposer = this.#ctx.rx.onRange(
             queriedTables,
-            this.respondToDatabaseChange
+            this.#respondToDatabaseChange
           );
         }
         return stmt;
       }
     );
-    this.pendingPreparePromise = preparePromise;
+    this.#pendingPreparePromise = preparePromise;
   }
 
-  private fetch(rebind: boolean) {
+  #fetch(rebind: boolean) {
     log("hooks - Fetching");
-    if (this.stmt == null) {
+    if (this.#stmt == null) {
       rebind = true;
     }
-    this.error = undefined;
-    this.data = null;
+    this.#error = undefined;
+    this.#data = null;
 
     let fetchPromise: Promise<any> | null = null;
 
     const fetchInternal = () => {
       log("hooks - Fetching (internal)");
-      if (fetchPromise != null && this.pendingFetchPromise !== fetchPromise) {
-        if (this.queuedFetch) {
-          this.queuedFetch = false;
-          this.pullData(false);
+      if (fetchPromise != null && this.#pendingFetchPromise !== fetchPromise) {
+        if (this.#queuedFetch) {
+          this.#queuedFetch = false;
+          this.#pullData(false);
         }
         return;
       }
-      const stmt = this.stmt;
+      const stmt = this.#stmt;
       if (stmt == null) {
         return;
       }
 
-      if (rebind || this.queuedFetchRebind) {
-        stmt.bind(this.bindings || []);
-        this.queuedFetchRebind = false;
+      if (rebind || this.#queuedFetchRebind) {
+        stmt.bind(this.#bindings || []);
+        this.#queuedFetchRebind = false;
       }
 
       const doFetch = (releaser: () => void, tx: TXAsync) => {
@@ -459,39 +395,37 @@ class AsyncResultStateMachine<T, M = readonly T[]> {
                 );
               }
 
-              if (this.pendingFetchPromise !== fetchPromise) {
-                this.queuedFetch = false;
-                if (this.pendingFetchPromise == null) {
-                  this.pullData(false);
+              if (this.#pendingFetchPromise !== fetchPromise) {
+                this.#queuedFetch = false;
+                if (this.#pendingFetchPromise == null) {
+                  this.#pullData(false);
                 }
                 return;
               }
 
               let newRawData = data;
               let newData;
-              const oldRawData = this.fetchingState?.rawData;
+              const oldRawData = this.#fetchingState?.rawData;
               if (dataShallowlyEqual(newRawData, oldRawData)) {
                 newRawData = oldRawData;
-                newData = this.fetchingState?.data;
+                newData = this.#fetchingState?.data;
               } else {
-                newData = this.postProcess
-                  ? this.postProcess(newRawData)
+                newData = this.#postProcess
+                  ? this.#postProcess(newRawData)
                   : newRawData;
               }
-              this.data = {
+              this.#data = {
                 loading: false,
                 data: newData,
                 // @ts-ignore
                 rawData: newRawData,
                 error: undefined,
               };
-              this.pendingFetchPromise = null;
+              this.#pendingFetchPromise = null;
 
-              if (this.queuedFetch) {
-                this.queuedFetch = false;
-                this.pullData(false);
-              } else {
-                this.reactInternals && this.reactInternals();
+              if (this.#queuedFetch) {
+                this.#queuedFetch = false;
+                this.#pullData(false);
               }
             },
             (error: Error) => {
@@ -500,21 +434,19 @@ class AsyncResultStateMachine<T, M = readonly T[]> {
                 // rollback tx
                 tx.exec("ROLLBACK").then(releaser, releaser);
               }
-              this.error = {
+              this.#error = {
                 loading: false,
                 data:
-                  this.data?.data ||
-                  ((this.postProcess
-                    ? this.postProcess(EMPTY_ARRAY as any)
+                  this.#data?.data ||
+                  ((this.#postProcess
+                    ? this.#postProcess(EMPTY_ARRAY as any)
                     : EMPTY_ARRAY) as any),
                 error,
               };
-              this.pendingFetchPromise = null;
-              if (this.queuedFetch) {
-                this.queuedFetch = false;
-                this.pullData(false);
-              } else {
-                this.reactInternals && this.reactInternals!();
+              this.#pendingFetchPromise = null;
+              if (this.#queuedFetch) {
+                this.#queuedFetch = false;
+                this.#pullData(false);
               }
             }
           );
@@ -526,7 +458,7 @@ class AsyncResultStateMachine<T, M = readonly T[]> {
       if (prevPending == null) {
         queryTxHolder = myQueryId;
         // start tx
-        txAcquisition = this.ctx.db.imperativeTx().then((relAndTx) => {
+        txAcquisition = this.#ctx.db.imperativeTx().then((relAndTx) => {
           relAndTx[1].exec("SAVEPOINT use_query_" + queryTxHolder);
           return relAndTx;
         });
@@ -535,38 +467,38 @@ class AsyncResultStateMachine<T, M = readonly T[]> {
         doFetch(releaser, tx)
       );
 
-      this.pendingFetchPromise = fetchPromise;
+      this.#pendingFetchPromise = fetchPromise;
       return fetchPromise;
     };
 
-    if (this.stmt == null) {
+    if (this.#stmt == null) {
       // chain after prepare promise
-      fetchPromise = this.pendingPreparePromise!.then((stmt) => {
+      fetchPromise = this.#pendingPreparePromise!.then((stmt) => {
         if (stmt == null) {
           return;
         }
 
         return fetchInternal();
       });
-      this.pendingFetchPromise = fetchPromise;
+      this.#pendingFetchPromise = fetchPromise;
     } else {
       fetchInternal();
       return;
     }
   }
 
-  private prepareAndGetUsedTables(): Promise<[StmtAsync, string[]]> {
+  #prepareAndGetUsedTables(): Promise<[StmtAsync, string[]]> {
     return Promise.all([
-      this.ctx.db.prepare(this.query),
-      usedTables(this.ctx.db, this.query),
+      this.#ctx.db.prepare(this.#query),
+      usedTables(this.#ctx.db, this.#query),
     ]);
   }
 
   dispose() {
-    this.stmt?.finalize(null);
-    this.stmt = null;
+    this.#stmt?.finalize(null);
+    this.#stmt = null;
     this.disposeDbSubscription();
-    this.disposed = true;
+    this.#disposed = true;
   }
 }
 
