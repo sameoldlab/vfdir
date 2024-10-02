@@ -32,6 +32,12 @@ importers:
       '@vlcn.io/rx-tbl':
         specifier: ^0.15.0
         version: 0.15.0
+      '@vlcn.io/typed-sql':
+        specifier: ^0.3.0
+        version: 0.3.0
+      '@vlcn.io/xplat-api':
+        specifier: ^0.15.0
+        version: 0.15.0
       arena-ts:
         specifier: ^1.0.2
         version: 1.0.2
@@ -504,6 +510,9 @@ packages:
 
   '@vlcn.io/rx-tbl@0.15.0':
     resolution: {integrity: sha512-6P5R8E5EJ6oASDyT7TbuV18Af4P/YobGEI3+uGUoquQi0GVl+NLdtbYA/sR4PkXsjQ1zBcs0oAi5TmYGe+Cd6A==}
+
+  '@vlcn.io/typed-sql@0.3.0':
+    resolution: {integrity: sha512-cKRh2RNzTNIv6NJs5Q2Nda8c4VQ1kEDhR6ERJEyFkmBEHnY/dBFWtZFN2ku35zfDjwVQxFqsr9GiJh0KpvtcXw==}
 
   '@vlcn.io/wa-sqlite@0.22.0':
     resolution: {integrity: sha512-OujKro0mAqP7/efUeCGB6zBiyMoSCFVe7jQKPF0n47U9ZhOaIW3kQUVCwF+CmzvzQfN1Vl4PrFQRNNxlSwTCNQ==}
@@ -1768,6 +1777,8 @@ snapshots:
   '@vlcn.io/rx-tbl@0.15.0':
     dependencies:
       '@vlcn.io/xplat-api': 0.15.0
+
+  '@vlcn.io/typed-sql@0.3.0': {}
 
   '@vlcn.io/wa-sqlite@0.22.0': {}
 
