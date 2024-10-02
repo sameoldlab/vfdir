@@ -23,6 +23,8 @@
 		"@vitest/browser": "^2.1.1",
 		"@vlcn.io/crsqlite-wasm": "^0.16.0",
 		"@vlcn.io/rx-tbl": "^0.15.0",
+		"@vlcn.io/typed-sql": "^0.3.0",
+		"@vlcn.io/xplat-api": "^0.15.0",
 		"arena-ts": "^1.0.2",
 		"happy-dom": "^15.7.4",
 		"prettier": "^3.3.3",
