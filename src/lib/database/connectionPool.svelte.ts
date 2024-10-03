@@ -111,7 +111,7 @@ export class DbPool {
 	query<R extends object, M = R[]>(
 		sql: string,
 		bind: (string | number)[] = null,
-		process?: (rows: R[]) => M
+		process: (rows: R[]) => M = (r) => r
 	): QueryData<M> {
 
 		let value = $state.raw<R[]>([])
