@@ -8,8 +8,15 @@
 
 	const channel = pool.query(
 		`
-		select id,slug,title,created_at,status 
-		from blocks
+		select 
+			b.id,b.slug,b.title,b.created_at,b.status,b.type,
+			coalesce(c.conn_count, 0) as size 
+		from blocks b
+		left join (
+			select parent_id,count(*) as conn_count
+			from connections
+			group by parent_id
+		) c on b.id = c.parent_id
 	  where slug=?
 	`,
 		[slug],
