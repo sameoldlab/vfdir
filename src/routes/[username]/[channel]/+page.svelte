@@ -1,28 +1,40 @@
 <script lang="ts">
 	import { page } from '$app/stores'
-	// import { channels } from '$lib/store/data.svelte.js'
-	let channels
+	import GridView from '$lib/components/GridView.svelte'
+	import { pool } from '$lib/database/connectionPool.svelte'
+	import { first } from '$lib/utils/queryProcess'
 	const { channel: slug, username } = $page.params
 
-	// const channels = getChannels(db.promiser)
-
-	// console.log('fetching "channels"')
-	// getArenaChannels().then(async res => {
-	// 	console.log("res", res)
-	// 	await channels.push(res.channels)
-	// 	console.log('Filled', channels.list)
-	// })
-
-	const metadata = $derived(channels.list.get(slug))
-	$effect(() => console.log(metadata))
+	const channel = pool.query(
+		`
+		select id,slug,title,created_at,status 
+		from blocks
+	  where slug=?
+	`,
+		[slug],
+		first
+	)
+	const contents = $derived(
+		pool.query(
+			`
+		SELECT b.id, b.title, b.type
+		FROM Connections conn
+		JOIN Blocks b ON conn.child_id = b.id
+		WHERE conn.parent_id = ?
+		ORDER BY conn.position;
+	`,
+			[channel.data?.id]
+		)
+	)
+	$inspect(contents)
 </script>
 
-<h1>{slug}</h1>
-<!-- <GridView content={contents.list} /> -->
-Data:
-{#if metadata}
-	<li>{metadata.created_at}</li>
-	<li>{metadata.slug}</li>
-	<li>{metadata.status}</li>
-	<li>{metadata.title}</li>
+{#if channel.data}
+	<h1>{channel.data.title}</h1>
+
+	<li>{new Date(channel.data.created_at).toUTCString()}</li>
+	<li>{channel.data.status}</li>
 {/if}
+<GridView content={contents.data} />
+
+<!--  -->
