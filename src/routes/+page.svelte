@@ -35,7 +35,7 @@
 </script>
 
 <div class="pane left">
-	{#each col1.data as { id, slug, title }}
+	{#each col1.data as { id, slug, title }, i (id)}
 		<a
 			onmouseover={() => (col1Hover = id)}
 			onfocus={() => (col1Hover = id)}
@@ -55,7 +55,7 @@
 	<p class="item" use:key>{col1Hover}</p>
 	<button onclick={addItem}>New Channel</button>-->
 
-	{#each col2.data as { id, title }}
+	{#each col2.data as { id, title }, i (id)}
 		<a
 			onmouseover={() => (col2Hover = id)}
 			onfocus={() => (col2Hover = id)}
