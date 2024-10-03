@@ -25,7 +25,7 @@
 	const contents = $derived(
 		pool.query(
 			`
-		SELECT b.id, b.title, b.type
+		SELECT b.*
 		FROM Connections conn
 		JOIN Blocks b ON conn.child_id = b.id
 		WHERE conn.parent_id = ?
