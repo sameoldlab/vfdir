@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { page } from '$app/stores'
 	import GridView from '$lib/components/GridView.svelte'
+	import Pill from '$lib/components/Pill.svelte'
 	import { pool } from '$lib/database/connectionPool.svelte'
 	import { first } from '$lib/utils/queryProcess'
 	const { channel: slug, username } = $page.params
@@ -29,12 +30,21 @@
 	$inspect(contents)
 </script>
 
-{#if channel.data}
-	<h1>{channel.data.title}</h1>
+<div>
+	{#if channel.data}
+		<Pill {...channel.data} />
+	{/if}
+	<spacer></spacer>
 
-	<li>{new Date(channel.data.created_at).toUTCString()}</li>
-	<li>{channel.data.status}</li>
-{/if}
-<GridView content={contents.data} />
+	<GridView content={contents.data} />
+</div>
 
-<!--  -->
+<style>
+	div {
+		padding: 2rem;
+	}
+	spacer {
+		height: 2rem;
+		display: block;
+	}
+</style>
