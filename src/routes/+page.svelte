@@ -15,7 +15,9 @@
 	}
 
 	const col1 = pool.query<Block>(`
-		select id,slug,title from blocks where type='channel' 
+		select id,slug,title, author_id as user
+		from blocks
+	  where type='channel'
 		order by updated_at desc
 	`)
 	let col1Hover = $state('01J942ANKYCD2NXZ0TDCXXH5C7')
@@ -31,56 +33,67 @@
 			[col1Hover]
 		)
 	)
+	// svelte-ignore state_referenced_locally
 	let col2Hover: string | undefined = $state(col2[0]?.data?.id)
 </script>
 
-<div class="pane left">
-	{#each col1.data as { id, slug, title }, i (id)}
-		<a
-			onmouseover={() => (col1Hover = id)}
-			onfocus={() => (col1Hover = id)}
-			href={slug}
-			class="item"
-			use:key>{title}</a
-		>
-	{:else}
-		<div class="item">empty</div>
-	{/each}
-</div>
-<div class="handle" draggable use:resizer>
-	<div></div>
-</div>
-<div class="pane right">
-	<!--
+<main>
+	<div class="pane left">
+		{#each col1.data as { id, user, slug, title }, i (id)}
+			<a
+				onmouseover={() => (col1Hover = id)}
+				onfocus={() => (col1Hover = id)}
+				href="{user}/{slug}"
+				class="item"
+				use:key>{title}</a
+			>
+		{:else}
+			<div class="item">empty</div>
+		{/each}
+	</div>
+	<div class="handle" draggable use:resizer>
+		<div></div>
+	</div>
+	<div class="pane right">
+		<!--
 	<p class="item" use:key>{col1Hover}</p>
 	<button onclick={addItem}>New Channel</button>-->
 
-	{#each col2.data as { id, title }, i (id)}
-		<a
-			onmouseover={() => (col2Hover = id)}
-			onfocus={() => (col2Hover = id)}
-			href={id}
-			class="item"
-			use:key>{title}</a
-		>
-	{:else}
-		<div class="item">empty</div>
-	{/each}
-</div>
-<div class="handle" draggable use:resizer>
-	<div></div>
-</div>
+		{#each col2.data as { id, title }, i (id)}
+			<a
+				onmouseover={() => (col2Hover = id)}
+				onfocus={() => (col2Hover = id)}
+				href={id}
+				class="item"
+				use:key>{title || '-'}</a
+			>
+		{:else}
+			<div class="item">empty</div>
+		{/each}
+	</div>
+	<div class="handle" draggable use:resizer>
+		<div></div>
+	</div>
 
-<div class="pane detail">
-	{#if col2Hover}
-		<BlockDetail id={col2Hover} />
-	{/if}
-</div>
+	<div class="pane detail">
+		{#if col2Hover}
+			<BlockDetail id={col2Hover} />
+		{/if}
+	</div>
+</main>
 
 <style>
+	main {
+		min-height: 100dvh;
+		max-width: 100svw;
+		overflow-x: auto;
+		display: grid;
+		grid-template-rows: repeat(auto-fill, 2.5rem);
+		grid-template-columns: [full-start] minmax(15ch, min-content) [chan-end] 0.5rem auto 0.5rem 4fr [full-end];
+	}
 	.handle {
 		width: 0.5rem;
-		grid-row: 2 /-1;
+		grid-row: 1 / -1;
 		/* opacity: 0; */
 		outline: 4px solid transparent;
 		display: flex;
@@ -113,7 +126,7 @@
 	.pane {
 		display: grid;
 		grid-template-rows: subgrid;
-		grid-row: 2 / -1;
+		grid-row: 1 / -1;
 		align-items: center;
 		/* border-inline-end: 1px solid hsl(0 0% 24%); */
 		/* padding: .5em; */
