@@ -14,6 +14,15 @@
 				<Type {...c} />
 			</div>
 		</a>
+		<div class="overlay">
+			<button class="">Connect</button>
+			<div class="tl">
+				<div>drga</div>
+			</div>
+			<div class="tr"></div>
+			<div class="bl"></div>
+			<div class="br">{c.type}</div>
+			<div class="actions"></div>
 		</div>
 	</div>
 	<p class="title">{c.title || c.type}</p>
