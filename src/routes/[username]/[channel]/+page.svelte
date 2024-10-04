@@ -43,7 +43,7 @@
 	{/if}
 	<spacer></spacer>
 
-	<GridView content={contents.data} />
+	<GridView {...contents.data} />
 </div>
 
 <style>

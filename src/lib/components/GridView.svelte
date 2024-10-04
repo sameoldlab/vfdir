@@ -1,7 +1,7 @@
 <script lang="ts">
 	import BlockTypeCard from './BlockTypeCard.svelte'
 
-	let { content } = $props()
+	let { ...content } = $props()
 	console.log(content)
 </script>
 
