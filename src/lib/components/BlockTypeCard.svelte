@@ -15,14 +15,13 @@
 			</div>
 		</a>
 		<div class="overlay">
-			<button class="">Connect</button>
-			<div class="tl">
-				<div>drga</div>
+			<div class="start">
+				<div class="start">**</div>
+				<button class="end">...</button>
 			</div>
-			<div class="tr"></div>
-			<div class="bl"></div>
-			<div class="br">{c.type}</div>
-			<div class="actions"></div>
+			<div class="end">
+				<button onclick={connect} class="btn">Connect</button>
+			</div>
 		</div>
 	</div>
 	<p class="title">{c.title || c.type}</p>
