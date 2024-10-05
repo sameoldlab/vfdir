@@ -22,11 +22,14 @@
 </script>
 
 <div class="block-item {status}">
-	<div class="stack">
-		<a href={c.type === 'channel' ? `${c.user}/${c.slug}` : `/block/${c.id}`}>
-			<div class="contain {c.type}">
-				<Type {...c} />
-			</div>
+	<div class="box">
+		<a
+			class={c.type}
+			href={c.type === 'channel'
+				? `/${c.author_id}/${c.slug}`
+				: `/block/${c.id}`}
+		>
+			<Type {...c} />
 		</a>
 		<div class="overlay">
 			<div class="start">
