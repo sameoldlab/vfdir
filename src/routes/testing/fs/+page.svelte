@@ -1,9 +1,9 @@
 <script lang="ts">
-	import { arenaCsvToObj } from '$lib/utils/parseArenaCsv'
 	import { parseWebloc } from '$lib/utils/webloc'
 	import BlockTypeCard from '$lib/components/BlockTypeCard.svelte'
 	let folder: (FileSystemDirectoryHandle | FileSystemFileHandle)[] = $state([])
 	let selected: FileSystemDirectoryHandle | FileSystemFileHandle = $state()
+	import { parse } from 'papaparse'
 	let available = 'showOpenFilePicker' in self
 	let error = $state()
 	const init = async () => {
@@ -42,7 +42,11 @@
 				case 'webloc':
 					return parseWebloc(text)
 				case 'csv':
-					return arenaCsvToObj(text)
+					const data = parse(text, {
+						delimiter: ',',
+						header: true
+					})
+					return data
 				default:
 					return text
 			}
@@ -83,6 +87,7 @@
 	{#if selected}
 		{@const contents =
 			selected.kind === 'file' && selected.getFile().then(read)}
+		<!-- prettier-ignore -->
 		<div class="data">
 			<h2>{selected.name}</h2>
 			{#await contents then c}
@@ -90,13 +95,13 @@
 					{c}
 				{:else if 'hash' in c}
 					<a href={c.toString()}> {selected.name}</a>
-				{:else if 'length' in c}
-					{#each c as block}
-						<pre><code
-								>{#each Object.entries(block) as [k, v]}{#if v}{k}: {v}<br
-										/>{/if}{/each}</code
-							></pre>
-					{/each}
+				{:else if 'data' in c}
+<pre
+><code
+>{#each c.data as block}{#each Object.entries(block) as [k, v]
+		}{#if v}{k}: {v}<br
+/>{/if}{/each}
+{/each}<hr /></code></pre>
 				{:else if isBlob(selected.name)}
 					<img src={URL.createObjectURL(c)} alt={selected.name} />
 				{:else}
@@ -110,6 +115,22 @@
 <style>
 	main {
 		display: grid;
-		grid-template-columns: repeat(2, 1fr);
+		grid-template-columns: 2fr 3fr;
+		button {
+			width: 100%;
+			text-align: left;
+		}
+	}
+	.data {
+		max-height: 80svh;
+		overflow-y: auto;
+	}
+	pre {
+		overflow: auto;
+		margin: 0.25rem;
+	}
+	code {
+		text-wrap: wrap;
+		line-break: strict;
 	}
 </style>

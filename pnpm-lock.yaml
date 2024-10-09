@@ -23,6 +23,9 @@ importers:
       '@tsconfig/svelte':
         specifier: ^5.0.4
         version: 5.0.4
+      '@types/wicg-file-system-access':
+        specifier: ^2023.10.5
+        version: 2023.10.5
       '@vitest/browser':
         specifier: ^2.1.1
         version: 2.1.1(@vitest/spy@2.1.1)(typescript@5.6.2)(vite@5.4.8(@types/node@22.7.2))(vitest@2.1.1)
@@ -44,6 +47,9 @@ importers:
       happy-dom:
         specifier: ^15.7.4
         version: 15.7.4
+      papaparse:
+        specifier: ^5.4.1
+        version: 5.4.1
       prettier:
         specifier: ^3.3.3
         version: 3.3.3
@@ -456,6 +462,9 @@ packages:
 
   '@types/tough-cookie@4.0.5':
     resolution: {integrity: sha512-/Ad8+nIOV7Rl++6f1BdKxFSMgmoqEoYbHRpPcx3JEfv8VRsQe9Z4mCXeJBzxs7mbHY/XOZZuXlRNfhpVPbs6ZA==}
+
+  '@types/wicg-file-system-access@2023.10.5':
+    resolution: {integrity: sha512-e9kZO9kCdLqT2h9Tw38oGv9UNzBBWaR1MzuAavxPcsV/7FJ3tWbU6RI3uB+yKIDPGLkGVbplS52ub0AcRLvrhA==}
 
   '@types/wrap-ansi@3.0.0':
     resolution: {integrity: sha512-ltIpx+kM7g/MLRZfkbL7EsCEjfzCcScLpkg37eXEtx5kmrAKBkTJwd1GIAjDSL8wTpM6Hzn5YO4pSb91BEwu1g==}
@@ -994,6 +1003,9 @@ packages:
 
   outvariant@1.4.3:
     resolution: {integrity: sha512-+Sl2UErvtsoajRDKCE5/dBz4DIvHXQQnAxtQTF04OJxY0+DyZXSo5P5Bb7XYWOh81syohlYL24hbDwxedPUJCA==}
+
+  papaparse@5.4.1:
+    resolution: {integrity: sha512-HipMsgJkZu8br23pW15uvo6sib6wne/4woLZPlFf3rpDyMe9ywEXUsuD7+6K9PRkJlVT51j/sCOYDKGGS3ZJrw==}
 
   path-to-regexp@6.3.0:
     resolution: {integrity: sha512-Yhpw4T9C6hPpgPeA28us07OJeqZ5EzQTkbfwuhsUg0c237RomFoETJgmp2sa3F/41gfLE6G5cqcYwznmeEeOlQ==}
@@ -1706,6 +1718,8 @@ snapshots:
 
   '@types/tough-cookie@4.0.5': {}
 
+  '@types/wicg-file-system-access@2023.10.5': {}
+
   '@types/wrap-ansi@3.0.0': {}
 
   '@vitest/browser@2.1.1(@vitest/spy@2.1.1)(typescript@5.6.2)(vite@5.4.8(@types/node@22.7.2))(vitest@2.1.1)':
@@ -2256,6 +2270,8 @@ snapshots:
       object-keys: 1.1.1
 
   outvariant@1.4.3: {}
+
+  papaparse@5.4.1: {}
 
   path-to-regexp@6.3.0: {}
 
