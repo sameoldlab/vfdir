@@ -1,30 +1,22 @@
 <script lang="ts">
 	import { parseWebloc } from '$lib/utils/webloc'
-	import BlockTypeCard from '$lib/components/BlockTypeCard.svelte'
-	let folder: (FileSystemDirectoryHandle | FileSystemFileHandle)[] = $state([])
-	let selected: FileSystemDirectoryHandle | FileSystemFileHandle = $state()
 	import { parse } from 'papaparse'
+
+	let folder: FileSystemFileHandle[] = $state([])
+	let selected: FileSystemFileHandle = $state()
 	let available = 'showOpenFilePicker' in self
 	let error = $state()
 	const init = async () => {
 		try {
 			const handle = await window.showDirectoryPicker()
-			console.log(handle.entries())
-			const promises = []
 			for await (const entry of handle.values()) {
-				folder.push(entry)
 				if (entry.kind !== 'file') continue
-				promises.push(
-					entry.getFile().then((file) => `${file.name} (${file.size})`)
-				)
-				// console.log(entry)
+				folder.push(entry)
 			}
-			console.log(await Promise.all(promises))
 		} catch (e) {
 			error = e
 		}
 	}
-	$inspect(folder)
 
 	const getExtension = (name: string): string => name.split('.').at(-1)
 	const isText = (name: string): string | boolean => {
