@@ -30,12 +30,13 @@
 		background: none;
 		padding: 0;
 	}
-	pre,
-	code {
-		margin: 1rem;
-		text-wrap: wrap;
-		line-break: strict;
+	pre {
 		height: 12rem;
 		overflow: auto;
+		margin: 0.25rem;
+	}
+	code {
+		text-wrap: wrap;
+		line-break: strict;
 	}
 </style>
