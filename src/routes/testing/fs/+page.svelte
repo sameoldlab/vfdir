@@ -1,9 +1,15 @@
 <script lang="ts">
 	import { parseWebloc } from '$lib/utils/webloc'
 	import { parse } from 'papaparse'
+	import GridView from '$lib/components/GridView.svelte'
+	import type { Block, BlocksRow } from '$lib/database/schema'
+	import * as s from 'superstruct'
+	import { SvelteMap } from 'svelte/reactivity'
 
-	let folder: FileSystemFileHandle[] = $state([])
-	let selected: FileSystemFileHandle = $state()
+	let folder: Map<string, File> = $state(new SvelteMap())
+	const processed: BlocksRow[] = $state([])
+
+	let selected: File = $state()
 	let available = 'showOpenFilePicker' in self
 	let error = $state()
 	const init = async () => {
@@ -11,8 +17,12 @@
 			const handle = await window.showDirectoryPicker()
 			for await (const entry of handle.values()) {
 				if (entry.kind !== 'file') continue
-				folder.push(entry)
+				folder.set(
+					entry.name.endsWith('csv') ? 'table' : entry.name,
+					await entry.getFile()
+				)
 			}
+			toBlocks(folder, processed)
 		} catch (e) {
 			error = e
 		}
@@ -32,25 +42,77 @@
 			const text = await file.text()
 			switch (is_text) {
 				case 'webloc':
-					return parseWebloc(text)
-				case 'csv':
-					const data = parse(text, {
-						delimiter: ',',
-						header: true
-					})
-					return data
+					return { type: 'link' as const, content: parseWebloc(text) }
+				case 'txt':
+					return { type: 'text' as const, content: text }
 				default:
-					return text
+					return { type: 'unknown' as const, content: text }
 			}
 		} else {
 			const blob = await file.arrayBuffer()
-			return new Blob([blob])
+			return { type: 'media' as const, content: new Blob([blob]) }
 		}
+	}
+
+	const date_int = s.coerce(
+		s.number(),
+		s.union([s.string(), s.date()]),
+		(value) =>
+			typeof value === 'string' ? new Date(value).valueOf() : value.valueOf()
+	)
+	const ChannelCsv = s.object({
+		id: s.coerce(s.number(), s.string(), (v) => parseInt(v)),
+		filename: s.string(),
+		title: s.string(),
+		description: s.string(),
+		created_at: date_int,
+		updated_at: date_int,
+		source: s.optional(s.string())
+	})
+
+	async function toBlocks(folder: Map<string, File>, blocks: BlocksRow[] = []) {
+		const tableContent = await folder.get('table').text()
+		let [h, ...rows] = tableContent.split('\n')
+		const headers = h.toLowerCase().replaceAll(' ', '_')
+		const table = parse(headers + '\n' + rows.join('\n'), {
+			delimiter: ',',
+			header: true
+		}).data as s.Infer<typeof ChannelCsv>[]
+		console.log(table)
+		table.forEach(async (v, i) => {
+			const file = folder.get(v.filename)
+			if (!file) return
+			const { type, content } = await read(file)
+			let block: BlocksRow = {
+				id: `${i}`,
+				title: v.title,
+				type,
+				updated_at: new Date(v.created_at).valueOf(),
+				created_at: new Date(v.updated_at).valueOf(),
+				author_id: 'local',
+				external_ref: `fs:${v.id}`,
+				provider_url: type === 'link' ? content.hostname : null,
+				description: v.description,
+				content:
+					type !== 'media'
+						? type === 'link'
+							? content.toString()
+							: content
+						: null,
+				image:
+					type === 'media' ? URL.createObjectURL(content).toString() : null,
+				filename: v.filename,
+				source: v?.source
+			}
+			console.log(block)
+			blocks.push(block)
+		})
+		return blocks
 	}
 </script>
 
 {#if available}
-	<button onclick={init}>Use Are.na Export</button>
+	<button onclick={init}>Import Local Directory</button>
 {:else}
 	Oops, local file access is currently only <a
 		href="https://developer.mozilla.org/en-US/docs/Web/API/Window/showOpenFilePicker#browser_compatibility"
@@ -61,43 +123,31 @@
 {#if error}
 	{error}
 {/if}
+<section>
+	<GridView {...processed} />
+</section>
 <main>
 	<div class="sidebar">
-		{#if folder.length > 0}
-			{#each folder as e}
-				<p>
-					<button
-						onclick={() => {
-							selected = e
-						}}
-						>{e.name}
-					</button>
-				</p>
-			{/each}
-		{/if}
+		{#each folder as [n, e]}
+			<div>
+				<button onclick={() => (selected = e)}>{e.name} </button>
+			</div>
+		{/each}
 	</div>
 	{#if selected}
-		{@const contents =
-			selected.kind === 'file' && selected.getFile().then(read)}
+		{@const contents = read(selected)}
 		<!-- prettier-ignore -->
 		<div class="data">
 			<h2>{selected.name}</h2>
-			{#await contents then c}
-				{#if typeof c === 'string'}
-					{c}
-				{:else if 'hash' in c}
-					<a href={c.toString()}> {selected.name}</a>
-				{:else if 'data' in c}
-<pre
-><code
->{#each c.data as block}{#each Object.entries(block) as [k, v]
-		}{#if v}{k}: {v}<br
-/>{/if}{/each}
-{/each}<hr /></code></pre>
-				{:else if isBlob(selected.name)}
-					<img src={URL.createObjectURL(c)} alt={selected.name} />
+			{#await contents then {type, content}}
+				{#if type === 'link'}
+					<a href={content.toString()}> {selected.name}</a>
+				{:else if type === 'text'}
+					<p> {content} </p>
+				{:else if type === 'media'}
+					<img src={URL.createObjectURL(content)} alt={selected.name} />
 				{:else}
-					{c}
+				<pre><code>{content}</code></pre>
 				{/if}
 			{/await}
 		</div>
@@ -124,5 +174,8 @@
 	code {
 		text-wrap: wrap;
 		line-break: strict;
+	}
+	section {
+		padding: 0.5rem;
 	}
 </style>
