@@ -8,6 +8,21 @@
 
 	let folder: Map<string, File> = $state(new SvelteMap())
 	const processed: BlocksRow[] = $state([])
+	const date_int = s.coerce(
+		s.number(),
+		s.union([s.string(), s.date()]),
+		(value) =>
+			typeof value === 'string' ? new Date(value).valueOf() : value.valueOf()
+	)
+	const ChannelCsv = s.object({
+		id: s.coerce(s.number(), s.string(), (v) => parseInt(v)),
+		filename: s.string(),
+		title: s.string(),
+		description: s.string(),
+		created_at: date_int,
+		updated_at: date_int,
+		source: s.optional(s.string())
+	})
 
 	let selected: File = $state()
 	let available = 'showOpenFilePicker' in self
@@ -42,7 +57,10 @@
 			const text = await file.text()
 			switch (is_text) {
 				case 'webloc':
-					return { type: 'link' as const, content: parseWebloc(text) }
+					const link = parseWebloc(text)
+					if (link.host.includes('are.na'))
+						return { type: 'channel' as const, content: link }
+					else return { type: 'link' as const, content: link }
 				case 'txt':
 					return { type: 'text' as const, content: text }
 				default:
@@ -53,22 +71,6 @@
 			return { type: 'media' as const, content: new Blob([blob]) }
 		}
 	}
-
-	const date_int = s.coerce(
-		s.number(),
-		s.union([s.string(), s.date()]),
-		(value) =>
-			typeof value === 'string' ? new Date(value).valueOf() : value.valueOf()
-	)
-	const ChannelCsv = s.object({
-		id: s.coerce(s.number(), s.string(), (v) => parseInt(v)),
-		filename: s.string(),
-		title: s.string(),
-		description: s.string(),
-		created_at: date_int,
-		updated_at: date_int,
-		source: s.optional(s.string())
-	})
 
 	async function toBlocks(folder: Map<string, File>, blocks: BlocksRow[] = []) {
 		const tableContent = await folder.get('table').text()
@@ -89,7 +91,7 @@
 				type,
 				updated_at: new Date(v.created_at).valueOf(),
 				created_at: new Date(v.updated_at).valueOf(),
-				author_id: 'local',
+				author_id: 'filesystem',
 				external_ref: `fs:${v.id}`,
 				provider_url: type === 'link' ? content.hostname : null,
 				description: v.description,
@@ -111,33 +113,34 @@
 	}
 </script>
 
-{#if available}
-	<button onclick={init}>Import Local Directory</button>
-{:else}
-	Oops, local file access is currently only <a
-		href="https://developer.mozilla.org/en-US/docs/Web/API/Window/showOpenFilePicker#browser_compatibility"
-		>available on some Chromium-based browsers</a
-	>. Please try a different browser or download vfdir as a desktop app to use
-	with local files.
-{/if}
-{#if error}
-	{error}
-{/if}
-<section>
-	<GridView {...processed} />
-</section>
 <main>
-	<div class="sidebar">
-		{#each folder as [n, e]}
-			<div>
-				<button onclick={() => (selected = e)}>{e.name} </button>
-			</div>
-		{/each}
-	</div>
-	{#if selected}
-		{@const contents = read(selected)}
-		<!-- prettier-ignore -->
-		<div class="data">
+	{#if available}
+		<button onclick={init}>Import Local Directory</button>
+	{:else}
+		Oops, local file access is currently only <a
+			href="https://developer.mozilla.org/en-US/docs/Web/API/Window/showOpenFilePicker#browser_compatibility"
+			>available on some Chromium-based browsers</a
+		>. Please try a different browser or download vfdir as a desktop app to use
+		with local files.
+	{/if}
+	{#if error}
+		{error}
+	{/if}
+	<section>
+		<GridView {...processed} />
+	</section>
+	<div class="raw">
+		<div class="sidebar">
+			{#each folder as [n, e]}
+				<div>
+					<button onclick={() => (selected = e)}>{e.name} </button>
+				</div>
+			{/each}
+		</div>
+		{#if selected}
+			{@const contents = read(selected)}
+			<!-- prettier-ignore -->
+			<div class="data">
 			<h2>{selected.name}</h2>
 			{#await contents then {type, content}}
 				{#if type === 'link'}
@@ -151,11 +154,24 @@
 				{/if}
 			{/await}
 		</div>
-	{/if}
+		{/if}
+	</div>
 </main>
 
 <style>
+	button {
+		padding: 0.75rem 1.5rem;
+	}
 	main {
+		display: flex;
+		flex-direction: column;
+		gap: 1rem;
+		min-height: 100vh;
+		justify-content: center;
+		align-items: center;
+		padding: 1rem;
+	}
+	.raw {
 		display: grid;
 		grid-template-columns: 2fr 3fr;
 		button {
@@ -174,8 +190,5 @@
 	code {
 		text-wrap: wrap;
 		line-break: strict;
-	}
-	section {
-		padding: 0.5rem;
 	}
 </style>
