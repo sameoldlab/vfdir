@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { parseWebloc } from '$lib/utils/webloc'
-	import { parse } from 'papaparse'
+	import Papa from 'papaparse'
 	import GridView from '$lib/components/GridView.svelte'
 	import type { Block, BlocksRow } from '$lib/database/schema'
 	import * as s from 'superstruct'
@@ -76,7 +76,7 @@
 		const tableContent = await folder.get('table').text()
 		let [h, ...rows] = tableContent.split('\n')
 		const headers = h.toLowerCase().replaceAll(' ', '_')
-		const table = parse(headers + '\n' + rows.join('\n'), {
+		const table = Papa.parse(headers + '\n' + rows.join('\n'), {
 			delimiter: ',',
 			header: true
 		}).data as s.Infer<typeof ChannelCsv>[]
