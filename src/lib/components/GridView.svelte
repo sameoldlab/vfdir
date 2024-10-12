@@ -1,7 +1,7 @@
 <script lang="ts">
+	import type { Block, Channel } from '$lib/database/schema'
 	import BlockTypeCard from './BlockTypeCard.svelte'
-
-	let { ...content } = $props()
+	let { ...content }: (Block | Channel)[] = $props()
 	console.log(content)
 </script>
 
