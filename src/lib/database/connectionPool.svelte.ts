@@ -99,8 +99,6 @@ export class DbPool {
 		this.exec(async (db) => {
 			queries.forEach(async (sub) => {
 				let ast = parseSql(sub.sql)
-				// console.log(ast.result)
-				// console.log(ast.from)
 				sub.setData((await db.execO(sub.sql)))
 			})
 		})
@@ -117,7 +115,6 @@ export class DbPool {
 		let value = $state.raw<R[]>([])
 		let loading = $state<boolean>(true)
 		let error = $state<Error>(null)
-		console.log(sql)
 
 		let db: DB
 		untrack(() => {
