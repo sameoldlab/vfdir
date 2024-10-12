@@ -4,6 +4,7 @@
 interface ImportMetaEnv {
   readonly VITE_ARENA_KEY: string
   readonly VITE_RAINDROP_KEY: string
+  readonly VITE_OMNIVORE_KEY: string
 }
 
 interface ImportMeta {
