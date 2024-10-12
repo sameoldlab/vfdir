@@ -45,7 +45,6 @@
 		join blocks b on c.child_id = b.id
 		`)
 	)
-	$inspect(connections.data)
 	let d = `
 		SELECT b.id, b.title, b.type
 		FROM Connections conn
