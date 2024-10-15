@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { parseWebloc } from '$lib/utils/webloc'
-	import Papa from 'papaparse'
+	import { parse } from 'csv-parse/browser/esm/sync'
 	import GridView from '$lib/components/GridView.svelte'
 	import type { Block, BlocksRow } from '$lib/database/schema'
 	import * as s from 'superstruct'
@@ -74,12 +74,12 @@
 
 	async function toBlocks(folder: Map<string, File>, blocks: BlocksRow[] = []) {
 		const tableContent = await folder.get('table').text()
-		let [h, ...rows] = tableContent.split('\n')
-		const headers = h.toLowerCase().replaceAll(' ', '_')
-		const table = Papa.parse(headers + '\n' + rows.join('\n'), {
+		const table = parse(tableContent, {
 			delimiter: ',',
-			header: true
-		}).data as s.Infer<typeof ChannelCsv>[]
+			cast_date: true,
+			columns: (header) =>
+				header.map((h) => h.toLowerCase().replaceAll(' ', '_'))
+		}) as s.Infer<typeof ChannelCsv>[]
 		console.log(table)
 		table.forEach(async (v, i) => {
 			const file = folder.get(v.filename)
@@ -89,8 +89,8 @@
 				id: `${i}`,
 				title: v.title,
 				type,
-				updated_at: new Date(v.created_at).valueOf(),
-				created_at: new Date(v.updated_at).valueOf(),
+				updated_at: v.created_at.valueOf(),
+				created_at: v.updated_at.valueOf(),
 				author_id: 'filesystem',
 				external_ref: `fs:${v.id}`,
 				provider_url: type === 'link' ? content.hostname : null,
