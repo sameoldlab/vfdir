@@ -44,5 +44,5 @@
 			</div>
 		</div>
 	</div>
-	<p class="title">{c.title || c.type}</p>
+	<p class="title">{c.title || ''}</p>
 </div>
