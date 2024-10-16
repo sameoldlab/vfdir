@@ -1,8 +1,15 @@
 <script lang="ts">
-	let { ...c } = $props()
+	import { micromark } from 'micromark'
+	type Props = {
+		/** Markdown string */
+		content: string
+	}
+	let { ...c }: Props = $props()
+
+	const content = micromark(c.content)
 </script>
 
-<div class="text"><p>{c.content}</p></div>
+<div class="text"><p>{@html content}</p></div>
 
 <style>
 	p {
