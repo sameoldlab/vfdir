@@ -117,11 +117,14 @@
 	{#if available}
 		<button onclick={init}>Import Local Directory</button>
 	{:else}
-		Oops, local file access is currently only <a
-			href="https://developer.mozilla.org/en-US/docs/Web/API/Window/showOpenFilePicker#browser_compatibility"
-			>available on some Chromium-based browsers</a
-		>. Please try a different browser or download vfdir as a desktop app to use
-		with local files.
+		<p>
+			File system access is currently only available in some <a
+				href="https://developer.mozilla.org/en-US/docs/Web/API/Window/showOpenFilePicker#browser_compatibility"
+			>
+				versions of chromium.</a
+			> Please use a different browser or (soon-ish, but no promises) download vfdir
+			as a desktop app to use with local files.
+		</p>
 	{/if}
 	{#if error}
 		{error}
