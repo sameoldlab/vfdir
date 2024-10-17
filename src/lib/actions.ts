@@ -46,11 +46,11 @@ export const key: Action<HTMLAnchorElement> = (a) => {
 	function keydown(e: KeyboardEvent) {
 		// console.log(e);
 		// console.log(next);
-		if (e.key === "ArrowDown") {
+		if (e.key === "ArrowDown" || e.key === "j") {
 			next.focus()
 			return
 		}
-		if (e.key === "ArrowUp") {
+		if (e.key === "ArrowUp" || e.key === "k") {
 			prev.focus()
 			return
 		}
