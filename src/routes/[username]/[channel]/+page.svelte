@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { page } from '$app/stores'
 	import GridView from '$lib/components/GridView.svelte'
-	import Pill from '$lib/components/Pill.svelte'
 	import { pool } from '$lib/database/connectionPool.svelte'
 	import { first } from '$lib/utils/queryProcess'
 	const { channel: slug, username } = $page.params
@@ -38,11 +37,6 @@
 </script>
 
 <div>
-	{#if channel.data}
-		<Pill {...channel.data} />
-	{/if}
-	<spacer></spacer>
-
 	<GridView {...contents.data} />
 </div>
 
