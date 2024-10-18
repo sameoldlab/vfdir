@@ -1,6 +1,11 @@
 <script lang="ts">
 	// import { onNavigate } from '$app/navigation'
 	import { page } from '$app/stores'
+	import { view, VIEWS } from '$lib/stores'
+	import block from './svg/block.svelte'
+	import miller from './svg/miller.svelte'
+	import table from './svg/table.svelte'
+	import canvas from './svg/canvas.svelte'
 
 	type Props = {
 		title: string
@@ -17,6 +22,9 @@
 		created_at: 0,
 		size: 99
 	})
+	let selected = $derived($view)
+	const viewIcons = [block, miller, table, canvas]
+	const setView = (e: MouseEvent) => ($view = e.currentTarget?.ariaLabel)
 </script>
 
 <header>
@@ -71,6 +79,19 @@
 			{/if}
 		</div>
 	</nav>
+	<div class="main">
+		{#each VIEWS as view, i}
+			{@const Icon = viewIcons[i]}
+			<button
+				class="view light"
+				class:selected={selected === view}
+				onclick={setView}
+				aria-label={view}
+			>
+				<Icon />
+			</button>
+		{/each}
+	</div>
 </header>
 
 <style>
@@ -91,6 +112,20 @@
 		z-index: 99;
 	}
 
+	button.view {
+		background: none;
+		height: 2rem;
+		width: 2rem;
+		padding: 0;
+		&:hover,
+		&.selected {
+			color: oklch(0.8 0 0);
+		}
+		:global(svg) {
+			height: 100%;
+			width: 100%;
+		}
+	}
 	nav {
 		display: flex;
 		gap: 0.5rem;
@@ -123,6 +158,6 @@
 		width: 1rem;
 	}
 	.light {
-		opacity: 0.5;
+		color: oklch(0.64 0 0);
 	}
 </style>
