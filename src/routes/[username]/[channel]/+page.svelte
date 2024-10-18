@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { page } from '$app/stores'
-	import GridView from '$lib/components/GridView.svelte'
+	import View from '$lib/components/view.svelte'
 	import { pool } from '$lib/database/connectionPool.svelte'
 	import { first } from '$lib/utils/queryProcess'
 	const { channel: slug, username } = $page.params
@@ -37,7 +37,7 @@
 </script>
 
 <div>
-	<GridView {...contents.data} />
+	<View {...contents.data} />
 </div>
 
 <style>
