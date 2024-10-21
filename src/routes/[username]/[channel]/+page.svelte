@@ -41,9 +41,6 @@
 </div>
 
 <style>
-	div {
-		padding: 2rem;
-	}
 	spacer {
 		height: 2rem;
 		display: block;
