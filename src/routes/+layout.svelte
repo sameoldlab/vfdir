@@ -5,7 +5,25 @@
 	import { pool } from '$lib/database/connectionPool.svelte'
 	import { bootstrap } from '$lib/services/sync.svelte'
 	import { onMount } from 'svelte'
+	import { beforeNavigate, pushState } from '$app/navigation'
+	import { getTree, setTree } from '$lib/stores'
+
 	let { children } = $props()
+	setTree()
+	const tree = getTree()
+	// let channels = {list: []}
+	beforeNavigate((nav) => {
+		switch (nav.type) {
+			case 'link':
+				if (nav.from.route.id === '/') $tree = [nav.from]
+				else $tree.push(nav.from)
+				break
+			case 'popstate':
+				if (nav.to.url.href === $tree.at(-1)?.url.href) $tree.pop()
+				else $tree.push(nav.from)
+		}
+	})
+
 
 	let ready = $state(false)
 	onMount(() => {

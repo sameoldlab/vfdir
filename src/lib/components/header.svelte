@@ -1,11 +1,12 @@
 <script lang="ts">
 	// import { onNavigate } from '$app/navigation'
 	import { page } from '$app/stores'
-	import { view, VIEWS } from '$lib/stores'
+	import { getTree, view, VIEWS } from '$lib/stores'
 	import block from './svg/block.svelte'
 	import miller from './svg/miller.svelte'
 	import table from './svg/table.svelte'
 	import canvas from './svg/canvas.svelte'
+	import type { NavigationTarget } from '@sveltejs/kit'
 
 	type Props = {
 		title: string
@@ -14,11 +15,10 @@
 		created_at: Date
 	}
 
+	const tree = getTree()
 	const inChannel = $page.params?.channel
 	const data = $derived({
-		title:
-			($page.params.username ? $page.params.username + ' / ' : '') +
-			($page.params?.channel ?? 'All'),
+		title: $page.params.id ? '' : ($page.params?.channel ?? 'All'),
 		created_at: 0,
 		status: 'public',
 		size: 99
@@ -53,7 +53,18 @@
 	-->
 		<div class="main">
 			<div class="section {data.status}">
-				<h1>{data.title}</h1>
+				<h1 class="tree">
+					{#snippet route(node: NavigationTarget)}
+						<a href={`/` + node.params.username}> {node.params.username}</a>
+						/ <a href={node.url.href}> {node.params.channel}</a>
+					{/snippet}
+					~/
+					{#if $tree.at(-1)?.params.channel}
+						{@render route($tree.at(-1))}
+					{:else if $page.params.channel}
+						{@render route($page)}
+					{/if}
+				</h1>
 				{#if data.status === 'public'}
 					<svg
 						viewBox="0 0 15 15"
@@ -152,6 +163,9 @@
 		display: inline;
 		font-weight: 600;
 		padding-inline-end: 0.5em;
+		a {
+			font-weight: inherit;
+		}
 	}
 	svg {
 		height: 1rem;
