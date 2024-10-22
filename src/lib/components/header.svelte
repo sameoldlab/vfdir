@@ -20,9 +20,11 @@
 			($page.params.username ? $page.params.username + ' / ' : '') +
 			($page.params?.channel ?? 'All'),
 		created_at: 0,
+		status: 'public',
 		size: 99
 	})
-	let selected = $derived($view)
+
+	let activeView = $derived($view)
 	const viewIcons = [block, miller, table, canvas]
 	const setView = (e: MouseEvent) => ($view = e.currentTarget?.ariaLabel)
 </script>
@@ -54,8 +56,6 @@
 				<h1>{data.title}</h1>
 				{#if data.status === 'public'}
 					<svg
-						width="15"
-						height="15"
 						viewBox="0 0 15 15"
 						fill="none"
 						xmlns="http://www.w3.org/2000/svg"
@@ -84,7 +84,7 @@
 			{@const Icon = viewIcons[i]}
 			<button
 				class="view light"
-				class:selected={selected === view}
+				class:selected={activeView === view}
 				onclick={setView}
 				aria-label={view}
 			>
