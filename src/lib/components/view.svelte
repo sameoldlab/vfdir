@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { view } from '$lib/stores'
-	import GridView from './GridView.svelte'
+	import GridView from './views/GridView.svelte'
+	import MillerView from './views/MillerView.svelte'
 	type Props = {}[]
 
 	let { ...data }: Props = $props()
@@ -9,5 +10,5 @@
 {#if $view === 'block'}
 	<GridView {...data} />
 {:else if $view === 'miller'}
-	miller
+	<MillerView {...data} />
 {/if}
