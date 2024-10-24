@@ -4,8 +4,9 @@
 	import MillerView from './views/MillerView.svelte'
 	import { pool } from '$lib/database/connectionPool.svelte'
 	import { VIEWS } from '$lib/stores'
+	import type { Block, Channel } from '$lib/database/schema'
 
-	let { ...data } = $props()
+	let { ...data }: (Block | Channel)[] = $props()
 	const view = pool.query<{ view: VIEWS }, VIEWS>(
 		`select view from state where route=?`,
 		[$page.url.href],
