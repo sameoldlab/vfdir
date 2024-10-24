@@ -8,22 +8,20 @@
 	// console.log(block);
 	let { id }: { id: string } = $props()
 
-	const pickTitle = pick('title')
 	let block = $derived(
-		pool.query<Block>(
+		pool.query<Block, Block>(
 			`
-			SELECT u.slug as username,b.title,b.type,b.description,b.image,b.created_at
+			SELECT u.slug as username,b.title,b.type,b.description,b.image,b.created_at,b.updated_at
 			FROM blocks b
 			JOIN users u
 			ON b.author_id = u.id
 			WHERE b.id = ?
 		`,
 			[id],
-			(first)
+			first
 		)
 	)
 
-	$inspect(block.data)
 	let {
 		title,
 		type: cl,
@@ -31,43 +29,43 @@
 		username,
 		image,
 		author_id: user_id,
-		created_at
-	} = $derived.by(() => {
-		if (block.loading === false) {
-			console.log(block)
-			return block.data
-		}
-	})
+		created_at,
+		updated_at
+	} = $derived(block.loading === false && block.data)
+
+	// TODO: calculate channel length
+	type Connection = Pick<Block,
 	let connections = $derived(
-		pool.query(`
-		select b.title, b.slug,id b.from
+		pool.query<{ title: string; slug: string; id: string; author_id: string }>(
+			`
+		select b.title, b.slug, b.id, b.author_id
 		from connections c
-		join blocks b on c.child_id = b.id
-		`)
+		join blocks b on c.parent_id = b.id
+		where c.child_id= ?
+		`,
+			[id]
+		)
 	)
-	let d = `
-		SELECT b.id, b.title, b.type
-		FROM Connections conn
-		JOIN Blocks b ON conn.child_id = b.id
-		WHERE conn.parent_id = ?
-		ORDER BY conn.position;
-	`
 </script>
 
 {#if block.loading === false}
 	<article>
-		<header>
-			<h1>{title}</h1>
-			<p class="description">{description}</p>
-		</header>
+		<div class="block">
+			<img src={image} crossorigin="anonymous" alt="failed" />
+		</div>
 		<div>
-			<div class="block">
-				<img src={image} crossorigin="anonymous" alt="failed" />
-			</div>
+			<header>
+				<h1>{title}</h1>
+				<p class="description">{description}</p>
+			</header>
 			<div class="metadata">
 				<div class="data-item">
 					<p>Type</p>
 					<p>{cl}</p>
+				</div>
+				<div class="data-item">
+					<p>Modified</p>
+					<p>{new Date(updated_at).toLocaleDateString()}</p>
 				</div>
 				<div class="data-item">
 					<p>Added</p>
@@ -77,20 +75,23 @@
 					<p>By</p>
 					<a href={username}> {username} </a>
 				</div>
-				<h2>Related</h2>
+			</div>
+
+			<div class="metadata">
+				<h2>Connections</h2>
 				<div class="connections">
-					{#each connections as conn}
+					{#each connections.data as conn}
 						<div class="connection">
 							<p>
 								<a href={conn.slug}>{conn.title}</a>
 							</p>
 							<p>{conn.length} blocks</p>
-							<p>{conn.user_id}</p>
+							<p>{conn.author_id}</p>
 						</div>
 					{/each}
 				</div>
-				<!--<pre>{JSON.stringify(block).replaceAll(/\{/g, '\n    ')}</pre>-->
 			</div>
+			<!--<pre>{JSON.stringify(block).replaceAll(/\{/g, '\n    ')}</pre>-->
 		</div>
 	</article>
 {/if}
@@ -122,17 +123,28 @@
 		padding-block-start: 0.75em;
 		padding-block-end: 0.25em;
 	}
+	header {
+		width: 100%;
+	}
 	.metadata {
 		margin-inline-start: auto;
 		margin-inline: auto;
+		width: 100%;
 		padding-inline-end: 1rem;
-		max-width: 28ch;
 	}
 	.data-item {
 		display: flex;
 		gap: 1rem;
 		justify-content: space-between;
 		border-block-end: 1px solid var(--line);
+		p:first-child {
+			opacity: 0.64;
+			font-weight: 500;
+			font-size: 0.95rem;
+		}
+		& > * {
+			padding-block: 0.25rem;
+		}
 	}
 	.connections {
 		display: grid;
@@ -142,6 +154,6 @@
 		display: flex;
 		justify-content: space-between;
 		padding: 0.5rem 0.75rem;
-		background: var(--line);
+		border: 1px solid var(--line);
 	}
 </style>
