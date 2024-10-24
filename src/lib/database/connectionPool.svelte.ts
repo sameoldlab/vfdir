@@ -98,8 +98,8 @@ export class DbPool {
 		}
 		this.exec(async (db) => {
 			queries.forEach(async (sub) => {
-				let ast = parseSql(sub.sql)
-				sub.setData((await db.execO(sub.sql)))
+				// let ast = parseSql(sub.sql)
+				sub.setData((await db.execO(sub.sql, sub.bind)))
 			})
 		})
 	}
@@ -129,7 +129,7 @@ export class DbPool {
 							this.#queries.set(t, [])
 							q = this.#queries.get(t)
 						}
-						q.push({ sql, setData })
+						q.push({ sql, bind, setData })
 					})
 					value = await db.execO<R>(sql, bind)
 					// console.log(value)
