@@ -68,12 +68,12 @@
 		<div class="main">
 			<div class="section {data.status}">
 				<h1 class="tree">
+					<a href="/">~/</a>
 					{#snippet route(node: NavigationTarget)}
 						<a href={`/` + node.params.username}> {node.params.username}</a>
 						/ <a href={node.url.href}> {node.params.channel}</a>
 					{/snippet}
-					~/
-					{#if $tree.at(-1)?.params.channel}
+					{#if 'channel' in ($tree.at(-1)?.params ?? {})}
 						{@render route($tree.at(-1))}
 					{:else if $page.params.channel}
 						{@render route($page)}
