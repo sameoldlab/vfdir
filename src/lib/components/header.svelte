@@ -1,12 +1,12 @@
 <script lang="ts">
-	// import { onNavigate } from '$app/navigation'
 	import { page } from '$app/stores'
-	import { getTree, view, VIEWS } from '$lib/stores'
+	import { getTree, VIEWS } from '$lib/stores'
 	import block from './svg/block.svelte'
 	import miller from './svg/miller.svelte'
 	import table from './svg/table.svelte'
 	import canvas from './svg/canvas.svelte'
 	import type { NavigationTarget } from '@sveltejs/kit'
+	import { pool } from '$lib/database/connectionPool.svelte'
 
 	type Props = {
 		title: string
@@ -24,9 +24,25 @@
 		size: 99
 	})
 
-	let activeView = $derived($view)
+	const view = $derived(
+		pool.query<{ view: VIEWS }, VIEWS>(
+			`select view from state where route=?`,
+			[$page.url.href],
+			(data) => (!data ? undefined : data[0]?.view || VIEWS[0])
+		)
+	)
+
+	let activeView = $derived(view.data)
 	const viewIcons = [block, miller, table, canvas]
-	const setView = (e: MouseEvent) => ($view = e.currentTarget?.ariaLabel)
+	const setView = (newView: string) => {
+		pool.exec(async (db) => {
+			await db.exec(
+				`INSERT INTO state(route,view) VALUES(?,?) 
+				ON CONFLICT DO UPDATE SET view = ? WHERE route = ?`,
+				[$page.url.href, newView, newView, $page.url.href]
+			)
+		})
+	}
 </script>
 
 <header>
@@ -94,7 +110,7 @@
 			<button
 				class="view light"
 				class:selected={activeView === view}
-				onclick={setView}
+				onclick={() => setView(view)}
 				aria-label={view}
 			>
 				<Icon />
