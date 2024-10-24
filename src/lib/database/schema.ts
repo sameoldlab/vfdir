@@ -168,6 +168,13 @@ CREATE TABLE IF NOT EXISTS Providers(
 `
 export type Provider = Infer<typeof Provider>
 
+const state = `
+CREATE TABLE IF NOT EXISTS state(
+	route TEXT PRIMARY KEY,
+	view TEXT DEFAULT 'grid'
+);
+`
+
 // schema
 export const schema = [
 	'pragma journal_mode = wal;',
@@ -175,6 +182,7 @@ export const schema = [
 	blocks,
 	connections,
 	providers,
+	state,
 	"INSERT INTO Users(id) VALUES ('local');",
 	'CREATE INDEX idx_blocks_type_author_id ON Blocks(type, author_id);',
 	'CREATE INDEX idx_blocks_author_id ON Blocks(author_id);',
