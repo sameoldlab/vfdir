@@ -4,7 +4,7 @@ import type { NavigationTarget } from "@sveltejs/kit";
 export const ssr = false
 
 export const VIEWS = ['block', 'miller', 'table', 'canvas'] as const
-export const view = writable<(typeof VIEWS)[number]>(VIEWS[0])
+export type VIEWS = typeof VIEWS[number]
 
 type TreeNode = NavigationTarget
 export const getTree = () => getContext<Writable<TreeNode[]>>('history')
