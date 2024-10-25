@@ -1,5 +1,5 @@
 <script lang="ts">
-	import GridView from '$lib/components/GridView.svelte'
+	import GridView from '$lib/components/views/GridView.svelte'
 	import { pool } from '$lib/database/connectionPool.svelte'
 
 	const types = pool.query(
