@@ -12,7 +12,7 @@
 	let block = $derived(
 		pool.query<Block, Block>(
 			`
-			SELECT u.slug as username,b.title,b.type,b.description,b.image,b.created_at,b.updated_at
+			SELECT u.slug as username,b.title,b.type,b.description,b.image,b.created_at,b.updated_at,b.source
 			FROM blocks b
 			JOIN users u
 			ON b.author_id = u.id
@@ -29,19 +29,23 @@
 		description,
 		username,
 		image,
+		source,
 		author_id: user_id,
 		created_at,
 		updated_at
 	} = $derived(block.loading === false && block.data)
 
 	// TODO: calculate channel length
-	type Connection = Pick<Block,
 	let connections = $derived(
-		pool.query<{ title: string; slug: string; id: string; author_id: string }>(
+		pool.query<
+			Pick<Block, 'title' | 'source' | 'id' | 'author_id'> & {
+				slug: string
+			}
+		>(
 			`
-		select b.title, b.slug, b.id, b.author_id
-		from connections c
-		join blocks b on c.parent_id = b.id
+		select b.title, b.slug, b.id, b.author_id, b.source
+		from blocks b
+		join connections c on c.parent_id = b.id
 		where c.child_id= ?
 		`,
 			[id]
