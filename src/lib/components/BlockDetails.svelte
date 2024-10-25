@@ -3,6 +3,7 @@
 	import { Block } from '$lib/database/schema'
 	import { first, pick } from '$lib/utils/queryProcess'
 	import { create } from 'superstruct'
+	import { untrack } from 'svelte'
 
 	// import block from '$lib/dummy/block.js'
 	// console.log(block);
@@ -46,12 +47,47 @@
 			[id]
 		)
 	)
+	let cacheDir: FileSystemDirectoryHandle
+	navigator.storage.getDirectory().then(async (fsdh) => {
+		cacheDir = await fsdh.getDirectoryHandle('cache', { create: true })
+	})
+
+	async function saveOrGet(url: string) {
+		const secureHash = await crypto.subtle.digest(
+			'SHA-256',
+			new TextEncoder().encode(url)
+		)
+		const filename = Array.from(new Uint8Array(secureHash))
+			.map((b) => b.toString(16).padStart(2, '0'))
+			.join('')
+		const cacheImg = await cacheDir.getFileHandle(filename, {
+			create: true
+		})
+
+		let file = await cacheImg.getFile()
+		if (file.size > 0) return URL.createObjectURL(file)
+
+		console.log('fetching asset')
+		const response = await fetch(url)
+		const writableStream = await cacheImg.createWritable()
+		await response.body.pipeTo(writableStream)
+
+		file = await cacheImg.getFile()
+		return URL.createObjectURL(file)
+
+		// console.log(img)
+	}
+	let img: string = $state()
+	$effect(() => {
+		if (typeof image === 'string')
+			untrack(() => saveOrGet(image).then((res) => (img = res)))
+	})
 </script>
 
 {#if block.loading === false}
 	<article>
 		<div class="block">
-			<img src={image} crossorigin="anonymous" alt="failed" />
+			<img src={img} crossorigin="anonymous" alt="failed" />
 		</div>
 		<div>
 			<header>
