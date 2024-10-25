@@ -51,6 +51,7 @@
 			[id]
 		)
 	)
+
 	let cacheDir: FileSystemDirectoryHandle
 	navigator.storage.getDirectory().then(async (fsdh) => {
 		cacheDir = await fsdh.getDirectoryHandle('cache', { create: true })
@@ -115,20 +116,23 @@
 					<p>By</p>
 					<a href={username}> {username} </a>
 				</div>
-			</div>
 
-			<div class="metadata">
-				<h2>Connections</h2>
-				<div class="connections">
-					{#each connections.data as conn}
-						<div class="connection">
-							<p>
-								<a href={conn.slug}>{conn.title}</a>
-							</p>
-							<p>{conn.length} blocks</p>
-							<p>{conn.author_id}</p>
-						</div>
-					{/each}
+				{#if source}
+					<div class="data-item">
+						<p>Source</p>
+						<a href={source}> {title} </a>
+					</div>
+				{/if}
+				<div class="data-item">
+					<p>Connections</p>
+					<div class="connections">
+						{#each connections.data as conn}
+							<a href={`/${conn.author_id}/${conn.slug}`} class="connection">
+								<span>{conn.title} by {conn.author_id}</span>
+								<!--<p>{conn.length} blocks</p>-->
+							</a>
+						{/each}
+					</div>
 				</div>
 			</div>
 			<!--<pre>{JSON.stringify(block).replaceAll(/\{/g, '\n    ')}</pre>-->
@@ -173,10 +177,14 @@
 		padding-inline-end: 1rem;
 	}
 	.data-item {
-		display: flex;
-		gap: 1rem;
+		display: grid;
+		grid-template-columns: 1fr 2fr;
 		justify-content: space-between;
+		padding-block: 0.25rem;
 		border-block-end: 1px solid var(--line);
+		&:first-child {
+			border-block-start: 1px solid var(--line);
+		}
 		p:first-child {
 			opacity: 0.64;
 			font-weight: 500;
@@ -193,7 +201,7 @@
 	.connection {
 		display: flex;
 		justify-content: space-between;
-		padding: 0.5rem 0.75rem;
-		border: 1px solid var(--line);
+		/* padding-block: 0.5rem; */
+		/* border-block: 1px solid var(--line); */
 	}
 </style>
