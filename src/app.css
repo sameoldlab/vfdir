@@ -32,7 +32,7 @@ body {
   /* overflow: clip; */
   overflow-x: hidden;
   width: 100svw;
-  overscroll-behavior: contain;
+  overscroll-behavior-y: contain;
 }
 
 
