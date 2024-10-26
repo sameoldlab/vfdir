@@ -57,9 +57,7 @@
 	let img: string = $state()
 	$effect(() => {
 		if (typeof image === 'string')
-			untrack(() =>
-				getFile(image).then((res) => (img = URL.createObjectURL(res)))
-			)
+			untrack(() => getFile(image).then((res) => (img = res)))
 	})
 </script>
 

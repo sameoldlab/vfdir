@@ -2,6 +2,8 @@
 	import './blockType.css'
 	import { Block, Channel } from '$lib/database/schema'
 	import * as T from './types'
+	import { onMount } from 'svelte'
+	import { getFile } from '$lib/utils/getFile'
 
 	let { ...c }: Block | Channel = $props()
 	const Type = T[c.type]
@@ -19,6 +21,10 @@
 		return 'https://' + link
 	}
 	const source = !c.source ? null : c.type !== 'channel' ? c.source : makeLink()
+	let src: string = $state()
+	onMount(() => {
+		getFile(c.image).then((file) => (src = file))
+	})
 </script>
 
 <div class="block-item {status}">
@@ -29,7 +35,11 @@
 				? `/${c.author_id}/${c.slug}`
 				: `/block/${c.id}`}
 		>
-			<Type {...c} />
+			{#if c.image}
+				<img {src} alt={c.image} />
+			{:else}
+				<Type {...c} />
+			{/if}
 		</a>
 		<div class="overlay">
 			<div class="start">
