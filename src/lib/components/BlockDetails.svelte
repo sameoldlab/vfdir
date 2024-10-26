@@ -4,6 +4,7 @@
 	import { first, pick } from '$lib/utils/queryProcess'
 	import { create } from 'superstruct'
 	import { untrack } from 'svelte'
+	import { naturalDate } from '$lib/utils/naturalDate'
 	import { getFile } from '$lib/utils/getFile'
 
 	// import block from '$lib/dummy/block.js'
@@ -79,11 +80,15 @@
 				</div>
 				<div class="data-item">
 					<p>Modified</p>
-					<p>{new Date(updated_at).toLocaleDateString()}</p>
+					<time datetime={new Date(updated_at).toLocaleString()}
+						>{naturalDate(updated_at)}</time
+					>
 				</div>
 				<div class="data-item">
 					<p>Added</p>
-					<p>{new Date(created_at).toLocaleDateString()}</p>
+					<time datetime={new Date(created_at).toLocaleString()}
+						>{naturalDate(created_at)}</time
+					>
 				</div>
 				<div class="data-item">
 					<p>By</p>
