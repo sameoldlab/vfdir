@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { pool } from '$lib/database/connectionPool.svelte'
 	import { Block } from '$lib/database/schema'
-	import { first, pick } from '$lib/utils/queryProcess'
+	import { first } from '$lib/utils/queryProcess'
 	import { create } from 'superstruct'
 	import { untrack } from 'svelte'
 	import { naturalDate } from '$lib/utils/naturalDate'
