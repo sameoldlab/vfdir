@@ -3,7 +3,7 @@
 	import GridView from './views/GridView.svelte'
 	import MillerView from './views/MillerView.svelte'
 	import { pool } from '$lib/database/connectionPool.svelte'
-	import { VIEWS } from '$lib/stores'
+	import { VIEWS } from '$lib/stores.svelte'
 	import type { Block, Channel } from '$lib/database/schema'
 
 	let { ...data }: (Block | Channel)[] = $props()

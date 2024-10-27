@@ -6,7 +6,7 @@
 	import { bootstrap } from '$lib/services/sync.svelte'
 	import { onMount } from 'svelte'
 	import { beforeNavigate, pushState } from '$app/navigation'
-	import { getTree, setTree } from '$lib/stores'
+	import { getTree, setTree } from '$lib/stores.svelte'
 
 	let { children } = $props()
 	setTree()
