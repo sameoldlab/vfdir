@@ -23,7 +23,7 @@
 	const source = !c.source ? null : c.type !== 'channel' ? c.source : makeLink()
 	let src: string = $state()
 	onMount(() => {
-		getFile(c.image).then((file) => (src = file))
+		c.image && getFile(c.image).then((file) => (src = file))
 	})
 </script>
 
