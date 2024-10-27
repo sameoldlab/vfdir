@@ -56,6 +56,9 @@ importers:
       micromark:
         specifier: ^4.0.0
         version: 4.0.0
+      multiformats:
+        specifier: ^13.3.0
+        version: 13.3.0
       prettier:
         specifier: ^3.3.3
         version: 3.3.3
@@ -1052,6 +1055,9 @@ packages:
     peerDependenciesMeta:
       typescript:
         optional: true
+
+  multiformats@13.3.0:
+    resolution: {integrity: sha512-CBiqvsufgmpo01VT5ze94O+uc+Pbf6f/sThlvWss0sBZmAOu6GQn5usrYV2sf2mr17FWYc0rO8c/CNe2T90QAA==}
 
   mute-stream@2.0.0:
     resolution: {integrity: sha512-WWdIxpyjEn+FhQJQQv9aQAYlHoNVdzIzUySNV1gHUPDSdZJ3yZn7pAAbQcV7B56Mvu881q9FZV+0Vx2xC44VWA==}
@@ -2464,6 +2470,8 @@ snapshots:
       typescript: 5.6.3
     transitivePeerDependencies:
       - '@types/node'
+
+  multiformats@13.3.0: {}
 
   mute-stream@2.0.0: {}
 
