@@ -7,6 +7,7 @@ const sw = self as unknown as ServiceWorkerGlobalScope
 import { build, files, version } from '$service-worker'
 // Create a unique cache name for this deployment
 const CACHE = `cache-${version}`
+const ORIGIN = 'https://localhost:5461'
 const ASSETS = [
   ...build, // the app itself
   ...files  // everything in `static`
@@ -38,11 +39,13 @@ sw.onactivate = (event) => {
 
 // Intercept requests 
 sw.onfetch = (event) => {
+  if (event.request.method !== 'GET') return
+  if (event.request.url.startsWith('chrome-extension')) return
 
   async function respond() {
-    console.log({ msg: 'responding to fetch event', event })
     const url = new URL(event.request.url)
     const cache = await caches.open(CACHE)
+    let sameOrigin = url.origin === ORIGIN
 
     // `build`/`files` can always be served from the cache
     if (ASSETS.includes(url.pathname)) {
@@ -64,7 +67,8 @@ sw.onfetch = (event) => {
       }
 
       if (response.status === 200) {
-        cache.put(event.request, response.clone());
+        // I can handle extrernal blob cache in opfs so there is no need to duplicate it here
+        if (sameOrigin) cache.put(event.request, response.clone())
       }
 
       return response
