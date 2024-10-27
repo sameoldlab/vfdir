@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { page } from '$app/stores'
-	import { getTree, VIEWS } from '$lib/stores'
+	import { getTree, VIEWS } from '$lib/stores.svelte'
 	import block from './svg/block.svelte'
 	import miller from './svg/miller.svelte'
 	import table from './svg/table.svelte'
