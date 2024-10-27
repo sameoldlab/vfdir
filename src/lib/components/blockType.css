@@ -121,15 +121,3 @@ img {
   max-height: 100%;
   object-fit: scale-down;
 }
-
-.public {
-  border: 1px solid green;
-}
-
-.private {
-  border: 1px solid #666;
-}
-
-.closed {
-  border: 1px solid red;
-}
