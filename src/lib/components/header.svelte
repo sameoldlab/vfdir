@@ -43,6 +43,7 @@
 			)
 		})
 	}
+	$inspect($page)
 </script>
 
 <header>
@@ -73,10 +74,10 @@
 						<a href={`/` + node.params.username}> {node.params.username}</a>
 						/ <a href={node.url.href}> {node.params.channel}</a>
 					{/snippet}
-					{#if 'channel' in ($tree.at(-1)?.params ?? {})}
-						{@render route($tree.at(-1))}
-					{:else if $page.params.channel}
+					{#if $page.params.channel}
 						{@render route($page)}
+					{:else if 'channel' in ($tree.at(-1)?.params ?? {})}
+						{@render route($tree.at(-1))}
 					{/if}
 				</h1>
 				{#if data.status === 'public'}
