@@ -1,11 +1,11 @@
 <script lang="ts">
 	import './blockType.css'
-	import { Block, Channel } from '$lib/database/schema'
+	import type { BlocksRow } from '$lib/database/schema'
 	import * as T from './types'
 	import { onMount } from 'svelte'
 	import { getFile } from '$lib/utils/getFile'
 
-	let { ...c }: Block | Channel = $props()
+	let { ...c }: BlocksRow = $props()
 	const Type = T[c.type]
 	const connect = (e: MouseEvent) => {
 		e.preventDefault()
