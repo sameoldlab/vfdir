@@ -3,10 +3,10 @@
 	import View from '$lib/components/view.svelte'
 	import { pool } from '$lib/database/connectionPool.svelte'
 	import { first } from '$lib/utils/queryProcess'
-	const { channel: slug, username } = $page.params
 
-	const channel = pool.query(
-		`
+	const channel = $derived(
+		pool.query(
+			`
 		select 
 			b.id,b.slug,b.title,b.created_at,b.status,b.type,
 			coalesce(c.conn_count, 0) as size 
@@ -18,8 +18,9 @@
 		) c on b.id = c.parent_id
 	  where slug=?
 	`,
-		[slug],
-		first
+			[$page.params.channel],
+			first
+		)
 	)
 	const contents = $derived(
 		pool.query(
@@ -33,7 +34,6 @@
 			[channel.data?.id]
 		)
 	)
-	$inspect(contents)
 </script>
 
 <div>
