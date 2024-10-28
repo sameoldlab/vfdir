@@ -37,7 +37,9 @@
 </script>
 
 <div>
-	<View {...contents.data} />
+	{#if contents.loading === false}
+		<View {...contents.data} />
+	{/if}
 </div>
 
 <style>
