@@ -1,74 +1,86 @@
 <script lang="ts">
-	import { Block, Channel } from '$lib/database/schema'
+	import { Block, Channel, type BlocksRow } from '$lib/database/schema'
 	import { resizer, key } from '$lib/actions'
 	import { pushState } from '$app/navigation'
 	// import { page } from '$app/stores'
 	import { pool } from '$lib/database/connectionPool.svelte'
 	import BlockDetail from '$lib/components/BlockDetails.svelte'
+	import { getTree } from '$lib/stores.svelte'
+	import { first } from '$lib/utils/queryProcess'
 
-	let { ...data }: (Block | Channel)[] = $props()
+	let { ...data }: BlocksRow[] = $props()
+	$inspect(data)
+	const tree = getTree()
 
 	const addItem = (e: MouseEvent) => {
 		pushState('', {
-			show: true
+			show: 'add'
 		})
 	}
 
-	let col1Hover = $state('01J942ANKYCD2NXZ0TDCXXH5C7')
-	$inspect(col1Hover)
-	let col2 = $derived(
-		pool.query<Block>(
-			`
-			SELECT b.id, b.title, b.type
-			FROM Connections conn
-			JOIN Blocks b ON conn.child_id = b.id
-			WHERE conn.parent_id = ?
-			ORDER BY conn.position;
-		`,
-			[col1Hover]
-		)
-	)
+	let previous = $derived.by(() => {
+		if ($tree.at(-1)?.route.id === '/')
+			return pool.query<BlocksRow>(
+				`select * from Blocks where type='channel' order by updated_at desc`
+			)
 
-	let col2Hover: string | undefined = $state(col2[0]?.data?.id)
+		// if nested in a channel show the content of the parent channel
+		// select all blocks with a connection (child id to the given channel
+		if ($tree.at(-1) && 'channel' in $tree.at(-1)?.params)
+			return pool.query<BlocksRow>(
+				`
+				SELECT b.* from Blocks b 
+				JOIN Connections conn ON conn.child_id = b.id 
+				JOIN Blocks ch ON conn.parent_id = ch.id
+				WHERE ch.slug = ?
+				ORDER by conn.position DESC, conn.connected_at
+				`,
+				[$tree.at(-1).params.channel]
+			)
+
+		return
+	})
+	// $inspect(previous)
+
+	/**
+	 * id of currently hovered item
+	 */
+	let col2Hover: string | undefined = $state(data[0]?.id)
 </script>
 
 <main>
 	<div class="pane left">
-		{#each data as { id, user, slug, title }, i (id)}
-			<a
-				onmouseover={() => (col1Hover = id)}
-				onfocus={() => (col1Hover = id)}
-				href="{user}/{slug}"
-				class="item"
-				use:key>{title}</a
-			>
+		{#if previous && previous.data.length > 1}
+			{#each previous.data as { id, user, slug, title }, i (id)}
+				<a tabindex="-1" href="{user}/{slug}" class="item">{title}</a>
+			{/each}
 		{:else}
-			<div class="item">empty</div>
-		{/each}
+			<div class="item">///</div>
+		{/if}
 	</div>
-	<div class="handle" draggable use:resizer>
-		<div></div>
-	</div>
-	<div class="pane right">
-		<!--
-	<p class="item" use:key>{col1Hover}</p>
-	<button onclick={addItem}>New Channel</button>-->
 
-		{#each col2.data as { id, title }, i (id)}
+	<div class="handle" draggable use:resizer><div></div></div>
+
+	<div class="pane right">
+		<button class="item" use:key={{ right: 'add' }} onclick={addItem}
+			>+ Add Block</button
+		>
+		{#each data as { id, title, type, ...b }, i (id)}
 			<a
 				onmouseover={() => (col2Hover = id)}
 				onfocus={() => (col2Hover = id)}
-				href={id}
+				href={type === 'channel' ? `/${b.author_id}/${b.slug}` : id}
 				class="item"
 				use:key>{title || '-'}</a
 			>
 		{:else}
-			<div class="item">empty</div>
+			<button class="item" use:key={{ left: 'back' }} onclick={addItem}
+				>..</button
+			>
 		{/each}
 	</div>
-	<div class="handle" draggable use:resizer>
-		<div></div>
-	</div>
+
+	<div class="handle" draggable use:resizer><div></div></div>
 
 	<div class="pane detail">
 		{#if col2Hover}
@@ -129,6 +141,8 @@
 		padding: 0.75rem 0.15rem;
 		.item {
 			/* border-block: 1px solid ; */
+			background: none;
+			text-align: inherit;
 			width: 100%;
 			font-size: 0.85rem;
 			padding: 0.5em 0.5em;
