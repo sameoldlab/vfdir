@@ -1,17 +1,17 @@
 <script lang="ts">
 	import { pool } from '$lib/database/connectionPool.svelte'
-	import { Block } from '$lib/database/schema'
-	import { first } from '$lib/utils/queryProcess'
-	import { create } from 'superstruct'
+	import { Block, User } from '$lib/database/schema'
+	import { firstPick, first } from '@vlcn.io/xplat-api'
 	import { untrack } from 'svelte'
 	import { naturalDate } from '$lib/utils/naturalDate'
 	import { getFile } from '$lib/utils/getFile'
+	import { fade } from 'svelte/transition'
 
 	// import block from '$lib/dummy/block.js'
 	// console.log(block);
 	let { id }: { id: string } = $props()
 
-	let block = $derived(
+	let b = $derived(
 		pool.query<Block, Block>(
 			`
 			SELECT u.slug as username,b.title,b.type,b.description,b.image,b.created_at,b.updated_at,b.source
@@ -24,18 +24,13 @@
 			first
 		)
 	)
-
-	let {
-		title,
-		type: cl,
-		description,
-		username,
-		image,
-		source,
-		author_id: user_id,
-		created_at,
-		updated_at
-	} = $derived(block.loading === false && block.data)
+	const author_id = $derived(
+		pool.query<User, User['slug']>(
+			`select slug from Users where id = ?`,
+			[b.data?.author_id],
+			firstPick
+		)
+	)
 
 	// TODO: calculate channel length
 	let connections = $derived(
@@ -45,8 +40,9 @@
 			}
 		>(
 			`
-		select b.title, b.slug, b.id, b.author_id, b.source
+		select b.title, b.slug, b.id, b.author_id, b.source, u.slug as username
 		from blocks b
+		join users u on u.id = b.author_id
 		join connections c on c.parent_id = b.id
 		where c.child_id= ?
 		`,
@@ -56,55 +52,57 @@
 
 	let img: string = $state()
 	$effect(() => {
-		if (typeof image === 'string')
-			untrack(() => getFile(image).then((res) => (img = res)))
+		if (!b.loading && typeof b.data.image === 'string')
+			untrack(() => getFile(b.data.image).then((res) => (img = res)))
 	})
 </script>
 
-{#if block.loading === false}
+{#if !b.loading}
 	<article>
 		<div class="block">
-			<img src={img} crossorigin="anonymous" alt="failed" />
+			{#if b.data.image}
+				<img src={img} transition:fade crossorigin="anonymous" alt="failed" />
+			{/if}
 		</div>
 		<div>
 			<header>
-				<h1>{title}</h1>
-				<p class="description">{description}</p>
+				<h1>{b.data.title}</h1>
+				<p class="description">{b.data.description}</p>
 			</header>
 			<div class="metadata">
 				<div class="data-item">
 					<p>Type</p>
-					<p>{cl}</p>
+					<p>{b.data.type}</p>
 				</div>
 				<div class="data-item">
 					<p>Modified</p>
-					<time datetime={new Date(updated_at).toLocaleString()}
-						>{naturalDate(updated_at)}</time
+					<time datetime={new Date(b.data.updated_at).toLocaleString()}
+						>{naturalDate(b.data.updated_at)}</time
 					>
 				</div>
 				<div class="data-item">
 					<p>Added</p>
-					<time datetime={new Date(created_at).toLocaleString()}
-						>{naturalDate(created_at)}</time
+					<time datetime={new Date(b.data.created_at).toLocaleString()}
+						>{naturalDate(b.data.created_at)}</time
 					>
 				</div>
 				<div class="data-item">
 					<p>By</p>
-					<a href={username}> {username} </a>
+					<a href={b.data.username}> {b.data.username} </a>
 				</div>
 
-				{#if source}
+				{#if b.data.source}
 					<div class="data-item">
 						<p>Source</p>
-						<a href={source}> {title} </a>
+						<a href={b.data.source}> {b.data.title} </a>
 					</div>
 				{/if}
 				<div class="data-item">
 					<p>Connections</p>
 					<div class="connections">
 						{#each connections.data as conn}
-							<a href={`/${conn.author_id}/${conn.slug}`} class="connection">
-								<span>{conn.title} by {conn.author_id}</span>
+							<a href={`/${conn.username}/${conn.slug}`} class="connection">
+								<span>{conn.title} by {conn.username}</span>
 								<!--<p>{conn.length} blocks</p>-->
 							</a>
 						{/each}
@@ -137,8 +135,7 @@
 	img {
 		width: min(100%, 700px);
 	}
-	h1,
-	h2 {
+	h1 {
 		font-size: 1rem;
 		padding-block-start: 0.75em;
 		padding-block-end: 0.25em;
