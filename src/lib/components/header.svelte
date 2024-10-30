@@ -7,6 +7,7 @@
 	import canvas from './svg/canvas.svelte'
 	import type { NavigationTarget } from '@sveltejs/kit'
 	import { pool } from '$lib/database/connectionPool.svelte'
+	import AddChannel from './addChannel.svelte'
 
 	type Props = {
 		title: string
@@ -37,14 +38,17 @@
 	const setView = (newView: string) => {
 		pool.exec(async (db) => {
 			await db.exec(
-				`INSERT INTO state(route,view) VALUES(?,?) 
+				`INSERT INTO state(route,view) VALUES(?,?)
 				ON CONFLICT DO UPDATE SET view = ? WHERE route = ?`,
 				[$page.url.href, newView, newView, $page.url.href]
 			)
 		})
 	}
 	$inspect($page)
+	let addChannelId: string = $state('addChannel')
 </script>
+
+<AddChannel bind:id={addChannelId} />
 
 <header>
 	<nav>
@@ -66,6 +70,9 @@
 				>
 			</div>
 		</a> -->
+		<button popovertarget={addChannelId} onclick={() => {}}
+			>+ New Channel <kbd>A</kbd></button
+		>
 		<div class="main">
 			<div class="section {data.status}">
 				<h1 class="tree">
