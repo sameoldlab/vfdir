@@ -5,9 +5,13 @@
 
   color-scheme: light dark;
   color: oklch(0.81 0 89.88);
+  --b2: oklch(0.16 0 0);
+  --b3: oklch(.3 0 0);
+  --b4: oklch(.36 0 0);
+  --b5: oklch(.42 0 0);
 
   --line: oklch(0.28 0 0);
-  background-color: oklch(0.16 0 0);
+  background-color: var(--b2);
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
