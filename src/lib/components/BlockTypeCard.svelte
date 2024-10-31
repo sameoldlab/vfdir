@@ -2,8 +2,7 @@
 	import './blockType.css'
 	import type { BlocksRow } from '$lib/database/schema'
 	import * as T from './types'
-	import { onMount } from 'svelte'
-	import { getFile } from '$lib/utils/getFile'
+	import { handleFile } from '$lib/utils/getFile'
 
 	let { ...c }: BlocksRow = $props()
 	const Type = T[c.type]
@@ -21,10 +20,6 @@
 		return 'https://' + link
 	}
 	const source = !c.source ? null : c.type !== 'channel' ? c.source : makeLink()
-	let src: string = $state()
-	onMount(() => {
-		c.image && getFile(c.image).then((file) => (src = file))
-	})
 </script>
 
 <div class="block-item {status}">
@@ -36,7 +31,7 @@
 				: `/block/${c.id}`}
 		>
 			{#if c.image}
-				<img {src} alt={c.image} />
+				<img use:handleFile={{ src: c.image }} src={c.image} alt={c.image} />
 			{:else}
 				<Type {...c} />
 			{/if}

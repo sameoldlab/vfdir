@@ -2,9 +2,8 @@
 	import { pool } from '$lib/database/connectionPool.svelte'
 	import { Block, User } from '$lib/database/schema'
 	import { firstPick, first } from '@vlcn.io/xplat-api'
-	import { untrack } from 'svelte'
 	import { naturalDate } from '$lib/utils/naturalDate'
-	import { getFile } from '$lib/utils/getFile'
+	import { handleFile } from '$lib/utils/getFile'
 	import { fade } from 'svelte/transition'
 
 	// import block from '$lib/dummy/block.js'
@@ -49,19 +48,19 @@
 			[id]
 		)
 	)
-
-	let img: string = $state()
-	$effect(() => {
-		if (!b.loading && typeof b.data.image === 'string')
-			untrack(() => getFile(b.data.image).then((res) => (img = res)))
-	})
 </script>
 
 {#if !b.loading}
 	<article>
 		<div class="block">
 			{#if b.data.image}
-				<img src={img} transition:fade crossorigin="anonymous" alt="failed" />
+				<img
+					use:handleFile={{ src: b.data.image }}
+					src={b.data.image}
+					transition:fade
+					crossorigin="anonymous"
+					alt={b.data.image}
+				/>
 			{/if}
 		</div>
 		<div>
