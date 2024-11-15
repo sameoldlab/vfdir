@@ -36,7 +36,7 @@
   width: 100%;
   overflow: hidden;
   aspect-ratio: 1 / 1;
-  border: 1px solid #444;
+  border: var(--border);
 
   &>* {
     grid-area: 1 / 1;
@@ -53,13 +53,7 @@
     font-weight: inherit;
 
     &.text {
-      mask-image: linear-gradient(to bottom, #000 75%, #0000 98%);
-    }
-
-    &::after {
-      content: dd;
-      background: red;
-      position: absolute;
+      mask-image: linear-gradient(to bottom, var(--b1) 75%, #0000 98%);
     }
 
     &>div {

@@ -103,11 +103,11 @@
 			</div>
 			{#if inChannel}
 				<div class="section">
-					<span class="light">updated: </span>
+					<span class="label">updated: </span>
 					{new Date(data.created_at).toLocaleDateString()}
 				</div>
 				<div class="section">
-					{data.size} <span class="light">items</span>
+					{data.size} <span class="label">items</span>
 				</div>
 			{/if}
 		</div>
@@ -116,7 +116,7 @@
 		{#each VIEWS as view, i}
 			{@const Icon = viewIcons[i]}
 			<button
-				class="view light"
+				class="view btn label"
 				class:selected={activeView === view}
 				onclick={() => setView(view)}
 				aria-label={view}
@@ -138,8 +138,8 @@
 		padding-inline: 1em;
 		grid-row: header-start / header-end;
 		grid-column: full-start / full-end;
-		border-bottom: 1px solid var(--line);
-		background: oklch(0.25 0 0);
+		border-bottom: var(--border);
+		background: var(--b1);
 
 		font-weight: 400;
 		z-index: 99;
@@ -149,10 +149,11 @@
 		background: none;
 		height: 2rem;
 		width: 2rem;
+		color: var(--b5);
 		padding: 0;
 		&:hover,
 		&.selected {
-			color: oklch(0.8 0 0);
+			color: var(--b7);
 		}
 		:global(svg) {
 			height: 100%;
@@ -177,7 +178,6 @@
 		display: flex;
 		gap: 0.25rem;
 		align-items: center;
-		/* background: oklch(0.2 0 0); */
 		padding: 0.75rem 1rem;
 		border-radius: 0.75rem;
 	}
@@ -192,8 +192,5 @@
 	svg {
 		height: 1rem;
 		width: 1rem;
-	}
-	.light {
-		color: oklch(0.64 0 0);
 	}
 </style>

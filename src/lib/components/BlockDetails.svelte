@@ -66,7 +66,7 @@
 		<div>
 			<header>
 				<h1>{b.data.title}</h1>
-				<p class="description">{b.data.description}</p>
+				<p class="description text-6">{b.data.description}</p>
 			</header>
 			<div class="metadata">
 				<div class="data-item">
@@ -153,12 +153,12 @@
 		grid-template-columns: 1fr 2fr;
 		justify-content: space-between;
 		padding-block: 0.25rem;
-		border-block-end: 1px solid var(--line);
+		border-block-end: var(--border);
 		&:first-child {
-			border-block-start: 1px solid var(--line);
+			border-block-start: var(--border);
 		}
 		p:first-child {
-			opacity: 0.64;
+			color: var(--b6);
 			font-weight: 500;
 			font-size: 0.95rem;
 		}
