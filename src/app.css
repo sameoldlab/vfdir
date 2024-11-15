@@ -6,15 +6,14 @@
   color-scheme: light dark;
   --h: 80;
   --c: .005;
-  --b0: oklch(0.08 var(--c) var(--h)); /* just in case */
+  --b0: oklch(0.00 var(--c) var(--h)); /* just in case */
   --b1: oklch(0.16 var(--c) var(--h)); /* base color */
   --b2: oklch(0.24 var(--c) var(--h));
-  --b3: oklch(0.32 var(--c) var(--h));
-  --b4: oklch(0.40 var(--c) var(--h)); /* borders, dividers, lines */
-  --b5: oklch(0.56 var(--c) var(--h)); /* icons, symbols */
+  --b3: oklch(0.36 var(--c) var(--h));
+  --b4: oklch(0.48 var(--c) var(--h)); /* borders, dividers, lines */
+  --b5: oklch(0.60 var(--c) var(--h)); /* icons, symbols */
   --b6: oklch(0.72 var(--c) var(--h));
-  --b7: oklch(0.88 var(--c) var(--h)); /* primary text, selected icon */
-  
+  --b7: oklch(0.84 var(--c) var(--h)); /* primary text, selected icon */
 
   --line: var(--b4);
   --border: 1px solid var(--b4);
