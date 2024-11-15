@@ -4,14 +4,22 @@
   font-weight: 400;
 
   color-scheme: light dark;
-  color: oklch(0.81 0 89.88);
-  --b2: oklch(0.16 0 0);
-  --b3: oklch(.3 0 0);
-  --b4: oklch(.36 0 0);
-  --b5: oklch(.42 0 0);
+  --h: 80;
+  --c: .005;
+  --b0: oklch(0.08 var(--c) var(--h)); /* just in case */
+  --b1: oklch(0.16 var(--c) var(--h)); /* base color */
+  --b2: oklch(0.24 var(--c) var(--h));
+  --b3: oklch(0.32 var(--c) var(--h));
+  --b4: oklch(0.40 var(--c) var(--h)); /* borders, dividers, lines */
+  --b5: oklch(0.56 var(--c) var(--h)); /* icons, symbols */
+  --b6: oklch(0.72 var(--c) var(--h));
+  --b7: oklch(0.88 var(--c) var(--h)); /* primary text, selected icon */
+  
 
-  --line: oklch(0.28 0 0);
-  background-color: var(--b2);
+  --line: var(--b4);
+  --border: 1px solid var(--b4);
+  background-color: var(--b1);
+  color: var(--b7);
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -21,6 +29,15 @@
   --private: rgb(209, 77, 65);
   --closed: rgb(87, 86, 83);
 }
+
+.text-0 { color: var(--b0); }
+.text-1 { color: var(--b1); }
+.text-2 { color: var(--b2); }
+.text-3 { color: var(--b3); }
+.text-4 { color: var(--b4); }
+.text-5 { color: var(--b5); }
+.text-6 { color: var(--b6); }
+.text-7 { color: var(--b7); }
 
 * {
   box-sizing: border-box;
@@ -63,12 +80,13 @@ button {
 
 .btn {
   padding: 0.6em 1.2em;
-  background-color: #1a1a1a;
+  background-color: var(--b2);
   text-align: center;
   color: white;
 
   :hover {
-    border-color: #bbb;
+    border-color: var(--b3);
+		background-color: var(--b3);
   }
 }
 
@@ -81,6 +99,17 @@ button:focus-visible {
   outline: 4px auto -webkit-focus-ring-color;
 }
 
+kbd {
+  background: var(--b2); 
+  padding: .25rem .5rem;
+  margin-inline-start: .5rem;
+  border-radius: .25rem;
+}
+
+.label, kbd {
+	color: var(--b6);
+}
+
 @media (prefers-color-scheme: light) {
   :root {
     color: #213547;
@@ -90,10 +119,4 @@ button:focus-visible {
   button {
     background-color: #f9f9f9;
   }
-}
-kbd {
-  background: var(--b4); 
-  padding: .25rem .5rem;
-  margin-inline-start: .5rem;
-  border-radius: .25rem;
 }
