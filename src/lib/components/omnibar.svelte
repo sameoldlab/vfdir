@@ -2,14 +2,32 @@
 	import { page } from '$app/stores'
 	import { getTree } from '$lib/stores.svelte'
 	import type { NavigationTarget } from '@sveltejs/kit'
+	import type { Action } from 'svelte/action'
 
 	const tree = getTree()
-	const data = $derived({
-		title: $page.params.id ? '' : ($page.params?.channel ?? 'All'),
-		created_at: 0,
-		status: 'public',
-		size: 99
-	})
+
+	const trigger: Action<HTMLDivElement> = (el) => {
+		const input = el.querySelector('input')
+		const onToggle = (e: ToggleEvent) => {
+			const invoker: HTMLButtonElement = document.querySelector(
+				`[popovertarget="${el.id}"]`
+			)
+
+			if (e.newState === 'open') {
+				const clientRect = invoker.getBoundingClientRect()
+				input.focus()
+				console.log(clientRect)
+			} else {
+				input.value = ''
+			}
+		}
+		el.addEventListener('toggle', onToggle)
+		return {
+			destroy() {
+				el.removeEventListener('toggle', onToggle)
+			}
+		}
+	}
 </script>
 
 <!--
@@ -27,47 +45,94 @@
 	>
 </path></svg
 -->
+{#snippet route(node: NavigationTarget)}
+	<a href={`/` + node.params.username}> {node.params.username} /</a>
+	<button popovertarget="omninput" class="current" popovertargetaction="toggle"
+		>{node.params.channel}</button
+	>
+{/snippet}
 
-<div class="main">
-	<div class="section {data.status}">
+<div id="omnibar" class="section">
+	<div id="route">
+		<a href="/" aria-label="home"> ~/ </a>
+		{#if $page.params.channel}
+			{@render route($page)}
+		{:else if 'channel' in ($tree.at(-1)?.params ?? {})}
+			{@render route($tree.at(-1))}
+		{/if}
+	</div>
+	<div id="omninput" popover="auto" use:trigger>
+		<input placeholder="hello world" />
 		<div>
-			<a href="/" aria-label="home"> / home / </a>
-			{#snippet route(node: NavigationTarget)}
-				<a href={`/` + node.params.username}> {node.params.username}</a>
-				/ <a href={node.url.href}> {node.params.channel}</a>
-			{/snippet}
-			{#if $page.params.channel}
-				{@render route($page)}
-			{:else if 'channel' in ($tree.at(-1)?.params ?? {})}
-				{@render route($tree.at(-1))}
-			{/if}
+			<ul>
+				<li>Create Item</li>
+				<li>Create Item</li>
+				<li>Create Item</li>
+				<li>Create Item</li>
+				<li>Create Item</li>
+			</ul>
 		</div>
 	</div>
 </div>
 
 <style>
-	.main {
-		display: flex;
-		gap: 0.375rem;
-		align-items: center;
-		border-radius: 1rem;
-		& * {
-			font-size: 0.85rem;
-			line-height: 100%;
+	#omnibar {
+		display: inline-flex;
+		color: var(--b5);
+		/* background: var(--b2); */
+		border-radius: 0.25rem;
+		margin-block: 0.2rem;
+		line-height: 100%;
+		justify-self: stretch;
+		padding-inline: 1.25rem;
+
+		&:has(#omninput[popover]:popover-open) {
+			#route {
+				opacity: 0;
+			}
 		}
 	}
-	.section {
-		display: flex;
-		gap: 0.25rem;
+	#route {
+		display: inline-flex;
 		align-items: center;
-		padding: 0.75rem 1rem;
-		border-radius: 0.75rem;
+		& > * {
+			padding-inline: 0.5ch;
+			padding-block: 0.25rem;
+			&:focus,
+			&:hover {
+				text-decoration: underline;
+				outline: none;
+				background: var(--b3);
+				border-radius: 0.25rem;
+				color: var(--b7);
+			}
+		}
 	}
-	div {
-		display: inline;
-		padding-inline-end: 0.5em;
-		a {
+	a {
+		transition: color 100ms ease-in;
+		font-weight: inherit;
+	}
+	.current {
+		color: var(--highlight);
+		cursor: text;
+	}
+	#omninput {
+		left: 50%;
+		translate: -50% 0;
+		background: var(--b1);
+		border: none;
+		width: 50vw;
+		outline: none;
+		&:focus-within {
+			border-bottom: 1px solid var(--highlight);
+		}
+		input {
+			width: 100%;
+			background: inherit;
+			border: none;
 			font-weight: inherit;
+			padding-block: 0.25rem;
+			outline: none;
 		}
 	}
 </style>

@@ -15,6 +15,7 @@
   --b6: oklch(0.72 var(--c) var(--h));
   --b7: oklch(0.84 var(--c) var(--h)); /* primary text, selected icon */
 
+  --highlight: var(--b7);
   --line: var(--b4);
   --border: 1px solid var(--b4);
   background-color: var(--b1);
@@ -106,7 +107,11 @@ kbd {
 }
 
 .label, kbd {
-	color: var(--b6);
+	color: var(--b5);
+		&:hover,
+		&.selected {
+			color: var(--b7);
+		}
 }
 
 @media (prefers-color-scheme: light) {
