@@ -5,7 +5,7 @@
 	import { pool } from '$lib/database/connectionPool.svelte'
 	import { bootstrap } from '$lib/services/sync.svelte'
 	import { onMount } from 'svelte'
-	import { beforeNavigate, pushState } from '$app/navigation'
+	import { beforeNavigate } from '$app/navigation'
 	import { getTree, setTree } from '$lib/stores.svelte'
 
 	let { children } = $props()
@@ -23,7 +23,6 @@
 				else $tree.push(nav.from)
 		}
 	})
-
 
 	let ready = $state(false)
 	onMount(() => {
