@@ -48,7 +48,14 @@ a {
   font-weight: 500;
   text-decoration: inherit;
 }
-
+a:focus, button:focus {
+	text-decoration: underline;
+	outline: none;
+	background: var(--b3);
+	border-radius: 0.25rem;
+	color: var(--b7);
+  
+}
 html,
 body {
   height: 100%;

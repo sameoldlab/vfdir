@@ -54,7 +54,7 @@
 		{#each VIEWS as view, i}
 			{@const Icon = viewIcons[i]}
 			<button
-				class="view btn label"
+				class="label"
 				class:selected={activeView === view}
 				onclick={() => setView(view)}
 				aria-label={view}
@@ -65,9 +65,6 @@
 	</div>
 	<nav>
 		<!-- 
-		<button popovertarget={addChannelId} onclick={() => {}}
-			>+ New Channel <kbd>A</kbd></button
-		>
 		{#if inChannel}
 			<div class="section">
 				<span class="label">updated: </span>
@@ -106,6 +103,14 @@
 		 -->
 		<Omnibar />
 	</nav>
+	<div class="main">
+		<button class="" popovertarget={addChannelId} onclick={() => {}}
+			>+ New<kbd>N</kbd></button
+		>
+		<button class="" popovertarget={addChannelId} onclick={() => {}}
+			>Menu
+		</button>
+	</div>
 </header>
 
 <style>
@@ -127,16 +132,10 @@
 		z-index: 99;
 	}
 
-	button.view {
-		background: none;
+	.label {
 		height: 2rem;
 		width: 2rem;
-		color: var(--b5);
 		padding: 0;
-		&:hover,
-		&.selected {
-			color: var(--b7);
-		}
 		:global(svg) {
 			height: 100%;
 			width: 100%;
