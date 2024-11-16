@@ -110,12 +110,13 @@
 
 <style>
 	header {
-		display: flex;
+		display: grid;
+		grid-template-columns: auto 1fr auto;
+		gap: 2ch;
 		position: sticky;
 		top: 0;
 		left: 0;
 		right: 0;
-		justify-content: space-between;
 		padding-inline: 1em;
 		grid-row: header-start / header-end;
 		grid-column: full-start / full-end;
