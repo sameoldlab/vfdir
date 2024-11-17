@@ -46,7 +46,7 @@
 </path></svg
 -->
 {#snippet route(node: NavigationTarget)}
-	<a href={`/` + node.params.username}> {node.params.username} /</a>
+	<a href={`/` + node.params.username}> {node.params.username} </a>/
 	<button popovertarget="omninput" class="current" popovertargetaction="toggle"
 		>{node.params.channel}</button
 	>
@@ -54,7 +54,7 @@
 
 <div id="omnibar" class="section">
 	<div id="route">
-		<a href="/" aria-label="home"> ~/ </a>
+		<a href="/" aria-label="home"> ~ </a>/
 		{#if $page.params.channel}
 			{@render route($page)}
 		{:else if 'channel' in ($tree.at(-1)?.params ?? {})}
@@ -79,6 +79,7 @@
 	#omnibar {
 		display: inline-flex;
 		color: var(--b5);
+		width: 100%;
 		/* background: var(--b2); */
 		border-radius: 0.25rem;
 		margin-block: 0.2rem;
