@@ -3,7 +3,7 @@ import { ulid, type ULID } from "ulidx"
 import { Block, Channel, Connection } from "./schema"
 import type { ArenaBlock, ArenaChannel, ArenaChannelContents, ArenaChannelWithDetails } from "arena-ts"
 import type { DB } from "@vlcn.io/crsqlite-wasm"
-import { deviceId } from "./hlc"
+import { deviceId, hlc, type HLC } from "./hlc"
 
 const EVENT_DB_NAME = 'log'
 const VERSION = 1
@@ -31,16 +31,12 @@ export const watchEvents = () => eventDb.query<EventSchema[]>(`select *,rowid fr
 
 type EventData = object
 
-/** Unix timestamp */
-type Timestamp = number
-type SOURCE_ID = 'are.na' | 'filesystem'
-
 type EventSchema = {
   version: number
   /** Unique id on event reception */
-  localId: `${Timestamp}:${ULID}`
+  localId: HLC
   /** Unique id from event source */
-  originId: `${Timestamp}:${ULID | SOURCE_ID}`
+  originId: HLC
   data: EventData
   /**
    * add|mod|delete-column|row
