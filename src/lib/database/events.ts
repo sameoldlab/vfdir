@@ -164,14 +164,37 @@ export const extern_user_sync = (data, userId: ULID | undefined = undefined) => 
 export const lcl_user_mod = (data) => { }
 
 /* 
+# Function
 - pull from are.na
+- pull from filesystem
+
+# Action
 - push to are.na
+
+# Event
 - add channel, block
-- connect block/channel
+- create connection
+-
+- remove connection
+- 
 - modify block
 - delete block
 - delete channel
+
+
 - i think uhat might be it?
 
+open vfdir
+  create instance uuid (distinct between devices and browsers)
+connect to external account
+  import data from source
+add new block to channel
+  add local image reference  
+move block to new position
+  set position for block-channel (TODO: need to think about this more) 
+publish channel
+  set channel visibility public
+create collaborative channel
+  
 
 */
