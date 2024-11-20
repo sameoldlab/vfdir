@@ -10,11 +10,9 @@ const VERSION = 1
 let eventDb: DbPool
 if (!eventDb) {
   console.warn('new event db')
-
   eventDb = new DbPool({ maxConnections: 1, dbName: `${EVENT_DB_NAME}.db` })
 }
-
-const now = () => new Date().valueOf()
+const now = () => Date.now()
 
 export const record = async (
   { originId, data, objectId, type }:
