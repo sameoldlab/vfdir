@@ -1,4 +1,3 @@
-import type { DELETE, UPDATE, UpdateType } from "@vlcn.io/xplat-api"
 import { DbPool } from "./connectionPool.svelte"
 
 const EVENT_DB_NAME = 'log'
@@ -26,29 +25,34 @@ export const record = async (
 
 export const watchEvents = () => eventDb.query<EventSchema[]>(`select *,rowid from ${EVENT_DB_NAME} order by rowid`)
 
-type EventData = {
-  version: number
-  table: string
-} & ({
-  type: 'update'
-  payload: {
-    changed: string[]
-    value: any[]
-  }
-} | {
-  type: 'delete'
-  payload: {
-    identifier: string
-    value: any
-  }
-})
+type EventData = object
 
-type EventDbSchema = {
-  localId: string
-  originId: string
-  /** Unix timestamp */
-  timestamp: number
+/** Unix timestamp */
+type Timestamp = number
+type SOURCE_ID = 'are.na' | 'filesystem'
+
+type EventSchema = {
+  version: number
+  /** Unique id on event reception */
+  localId: `${Timestamp}:${ULID}`
+  /** Unique id from event source */
+  originId: `${Timestamp}:${ULID | SOURCE_ID}`
   data: EventData
+  /**
+   * add|mod|delete-column|row
+   * @example mod:title
+   */
+  type: string
+  /** 
+   * field to which the event is related 
+   * @example block:0L239vsDajfdse...
+   */
+  objectId: string
+}
+
+  }
+  }
+
 }
 
 let d: EventData
