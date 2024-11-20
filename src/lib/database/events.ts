@@ -3,6 +3,7 @@ import { ulid, type ULID } from "ulidx"
 import { Block, Channel, Connection } from "./schema"
 import type { ArenaBlock, ArenaChannel, ArenaChannelContents, ArenaChannelWithDetails } from "arena-ts"
 import type { DB } from "@vlcn.io/crsqlite-wasm"
+import { deviceId } from "./hlc"
 
 const EVENT_DB_NAME = 'log'
 const VERSION = 1
@@ -14,7 +15,6 @@ if (!eventDb) {
 }
 
 const now = () => new Date().valueOf()
-let deviceId: string = null
 
 export const record = async (
   { originId, data, objectId, type }:
