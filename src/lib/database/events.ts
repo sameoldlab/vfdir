@@ -49,27 +49,93 @@ type EventSchema = {
   objectId: string
 }
 
-export const arena_block_sync = async (db: DB, data: ArenaBlock, current?: Block,) => {
-  const objectId = `block:${data.id}`
-  const updated_at = new Date(data.updated_at).valueOf()
-  const originId: EventSchema['originId'] = `${updated_at}:arena`
 
-  const last = await db.execA(`select *,rowid from ${EVENT_DB_NAME} where originId = ? order by rowid DESC limit 1`, [originId])
-  console.log(last)
+
+export const diffItem = (
+  { data, current, objectId, originId }:
+    {
+      data: ArenaChannel | ArenaBlock,
+      current?: Channel | Block,
+      originId: () => EventSchema['originId'],
+      objectId: EventSchema['objectId']
+    }
+) => {
+  if (data.title && current.title !== data.title)
+    record({
+      objectId, type: 'mod:title', originId: originId(), data: {
+        title: data.title
+      }
+    })
+  if (data.class === 'Channel' && current.type === 'channel') {
+    if (data.status && current.status !== data.status)
+      record({
+        objectId, type: 'mod:status', originId: originId(), data: {
+          status: data.status
+        }
+      })
+    if (data.metadata?.description && current.description !== data.metadata.description)
+      record({
+        objectId, type: 'mod:description', originId: originId(), data: {
+          description: data.metadata.description
+        }
+      })
+  } else if (data.class !== 'Channel' && current.type === 'block') {
+    if (data.content && current.content !== data.content)
+      record({
+        objectId, type: 'mod:content', originId: originId(), data: {
+          content: data.content
+        }
+      })
+    if (data.description && current.description !== data.description)
+      record({
+        objectId, type: 'mod:description', originId: originId(), data: {
+          description: data.description
+        }
+      })
+  }
+}
+export const arena_item_sync = async (db: DB, data: ArenaChannel | ArenaBlock, current?: Channel | Block) => {
+  const classType = data.class === 'Channel' ? 'channel' : 'block'
+  const objectId = `${classType}:${data.id}`
+  const updated_at = new Date(data.updated_at).valueOf()
+  let c = -1
+  const originId = (): EventSchema['originId'] => hlc.receive(`${updated_at}:${c++}:arena`)
+
+  const sql = `
+  SELECT * FROM ${EVENT_DB_NAME} 
+  WHERE originId LIKE ?
+  ORDER BY CAST(
+    SUBSTR(
+      originId, 
+      LENGTH(? || ':') + 1,
+      INSTR(SUBSTR(originId, LENGTH(? || ':') + 1), ':')
+    ) AS INTEGER
+  ) DESC 
+  LIMIT 1
+`;
+  const params = [
+    `${updated_at}:%:arena`,
+    updated_at,
+    updated_at
+  ];
+
+  const last = await db.execA(sql, params);
+  console.log({ last })
   if (last) return
+
   if (!current) {
-    const seedTime = data.created_at ? new Date(data.created_at).valueOf() : now()
-    record({ objectId, type: `add:block`, originId, data: { ...data, id: ulid(seedTime) } })
+    record({
+      objectId, type: `add:${classType}`, originId: originId(),
+      data: { ...data, id: ulid(new Date(data.created_at).valueOf()) }
+    })
     return
   }
-  if (current.updated_at === updated_at) return
 
-  if (current.title !== data.title)
-    record({ objectId, type: `mod:title`, originId, data: { value: data.title } })
-  if (current.content !== data.content)
-    record({ objectId, type: `mod:content`, originId, data: { value: data.content } })
-  if (current.description !== data.description)
-    record({ objectId, type: `mod:description`, originId, data: { value: data.description } })
+  if (current.updated_at === updated_at) return
+  diffItem({ data, current, objectId, originId })
+}
+
+
 }
 
 export const block_del = (data) => {
@@ -84,33 +150,7 @@ export const channel_add = (data) => {
 
   const type = `add:block`
 }
-export const arena_channel_sync = async (db: DB, data: ArenaChannelWithDetails | ArenaChannel, current?: Channel) => {
-  //consider changing to slug which is predominantly used in the api
-  const objectId = `channel:${data.id}`
-  const updated_at = new Date(data.updated_at).valueOf()
-  const originId: EventSchema['originId'] = `${updated_at}:arena`
 
-  const last = await db.execA(`select *,rowid from ${EVENT_DB_NAME} where originId = ? order by rowid DESC limit 1`, [originId])
-  console.log(last)
-  if (last) return
-
-  if (!current) {
-    const seedTime = data.created_at ? new Date(data.created_at).valueOf() : now()
-    record({ objectId, type: `add:channel`, originId, data: { ...data, id: ulid(seedTime) } })
-    return
-  }
-  if (current.updated_at === updated_at) return
-  // TODO: this will repeat recorded changes on every check unless I do something to bookmark the latest sync 
-
-  if (current.title !== data.title)
-    record({ objectId, type: `mod:title`, originId, data: { value: data.title } })
-  if (current.status !== data.status)
-    record({ objectId, type: `mod:status`, originId, data: { value: data.status } })
-  if (current.description !== data.metadata?.description)
-    record({ objectId, type: `mod:description`, originId, data: { value: data.metadata?.description } })
-
-  // title, order of blocks, status, add block, block's selected status, collaborators 
-}
 export const channel_del = (data) => {
   const objectId = `channel:${data.slug}`
 
