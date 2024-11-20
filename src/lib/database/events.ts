@@ -2,9 +2,12 @@ import type { DELETE, UPDATE, UpdateType } from "@vlcn.io/xplat-api"
 import { DbPool } from "./connectionPool.svelte"
 
 const EVENT_DB_NAME = 'log'
-const eventDb = new DbPool({ maxConnections: 1, dbName: `${EVENT_DB_NAME}.db` })
+let eventDb: DbPool
+if (!eventDb) {
+  console.warn('new event db')
 
-export const append = async (data: EventData) => {
+  eventDb = new DbPool({ maxConnections: 1, dbName: `${EVENT_DB_NAME}.db` })
+}
   await eventDb.exec(async (db) => {
     await db.exec(`insert into ${EVENT_DB_NAME} values(?,?,?,?)`, [JSON.stringify(data)])
   })
