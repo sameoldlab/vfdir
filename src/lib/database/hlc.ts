@@ -1,6 +1,8 @@
 import { ulid, type ULID } from "ulidx"
+/** Unix timestamp */
 type Timestamp = number
-type HLC = `${Timestamp}:${number}:${ULID}`
+type SOURCE_ID = 'are.na' | 'filesystem' | ULID
+export type HLC = `${Timestamp}:${number}:${SOURCE_ID}`
 
 class Hlc {
   #c = 0
@@ -37,7 +39,7 @@ class Hlc {
   }
 
   /** When receiving an external event*/
-  receive(recv: HLC) {
+  receive(recv: HLC): HLC {
     const now = Date.now()
     const [_rTime, rC, rD] = recv.split(':')
     const rTime = Number(_rTime)
@@ -56,6 +58,7 @@ class Hlc {
       rTime,
       this.#time
     );
+    return `${this.#time}:${this.#c}:${this.#deviceId}`
   }
 }
 export const deviceId: string = localStorage.getItem('deviceId') ?? ulid()
