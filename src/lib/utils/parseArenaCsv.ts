@@ -9,6 +9,7 @@ import {
   union,
   coerce
 } from 'superstruct';
+import { parse } from 'csv-parse/browser/esm/sync'
 
 const date_int = coerce(number(), union([string(), date()]), (value) => typeof value === 'string' ? new Date(value).valueOf() : value.valueOf())
 // Define the structure for each item
@@ -27,6 +28,11 @@ type Channel = Infer<typeof Channel>;
 export function arenaCsvToObj(csv: string): Channel[] {
   const lines = csv.split('\n');
   const headers = lines[0].split(',');
+  const res = parse(csv, {
+    delimiter: ',',
+    columns: true,
+  })
+  return res
 
   // Validate headers
   if (headers.join(',') !== 'ID,Filename,Title,Description,Created At,Updated At,Source') {
