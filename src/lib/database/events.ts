@@ -1,34 +1,35 @@
 import { DbPool } from "./connectionPool.svelte"
 import { ulid, type ULID } from "ulidx"
-import { Block, Channel, Connection } from "./schema"
 import type { ArenaBlock, ArenaChannel, ArenaChannelContents, ArenaChannelWithDetails } from "arena-ts"
+import { Block, Channel, EVENT_DB_NAME } from "./schema"
 import type { DB } from "@vlcn.io/crsqlite-wasm"
-import { deviceId, hlc, type HLC } from "./hlc"
+import { hlc, type HLC } from "./hlc"
 
-const EVENT_DB_NAME = 'log'
 const VERSION = 1
 let eventDb: DbPool
 if (!eventDb) {
   console.warn('new event db')
   eventDb = new DbPool({ maxConnections: 1, dbName: `${EVENT_DB_NAME}.db` })
 }
-const now = () => Date.now()
 
 export const record = async (
   { originId, data, objectId, type }:
-    Pick<EventSchema, 'objectId' | 'data' | 'originId' | 'type'>
+    Pick<EventSchema, 'objectId' | 'data' | 'type'> & { originId?: EventSchema['originId'] }
 ) => {
-  if (deviceId === null) throw new Error('initialize deviceID before storing events')
 
+  const localId = hlc.inc()
+  originId = originId ?? localId
+  const props = [VERSION, localId, originId, JSON.stringify(data), type, objectId]
   await eventDb.exec(async (db) => {
-    await db.exec(`insert into ${EVENT_DB_NAME} (version, localId, originId, data, type, objectId) values(?,?,?,?,?,?)`, [VERSION, `${now()}:${deviceId}`, originId, JSON.stringify(data), type, objectId])
+    await db.exec(`insert into ${EVENT_DB_NAME} (version, localId, originId, data, type, objectId) values(?,?,?,?,?,?)`, props)
   })
 }
 
-export const watchEvents = () => eventDb.query<EventSchema[]>(`select *,rowid from ${EVENT_DB_NAME} order by rowid`)
+export const watchEvents = () => eventDb.query<EventSchema[]>(
+  `select *,rowid from ${EVENT_DB_NAME} order by rowid`
+)
 
 type EventData = object
-
 type EventSchema = {
   version: number
   /** Unique id on event reception */
