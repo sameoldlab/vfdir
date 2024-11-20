@@ -174,10 +174,39 @@ CREATE TABLE IF NOT EXISTS state(
 	view TEXT DEFAULT 'grid'
 );
 `
+export const EventSchema = object({
+	version: number(),
+	/** Unique id on event reception */
+	localId: string(),
+	/** Unique id from event source */
+	originId: string(),
+	data: object(),
+	/**
+	 * add|mod|delete-column|row
+	 * @example mod:title
+	 */
+	type: string(),
+	/** 
+	 * field to which the event is related 
+	 * @example block:0L239vsDajfdse...
+	 */
+	objectId: string()
+})
+const log = `
+CREATE TABLE IF NOT EXISTS log(
+	version INT NOT NULL,
+	localId TEXT NOT NULL,
+	originId TEXT NOT NULL,
+	data TEXT NOT NULL,
+	type TEXT NOT NULL,
+	objectId TEXT NOT NULL
+);
+`
 
 // schema
 export const schema = [
 	'pragma journal_mode = wal;',
+	log,
 	users,
 	blocks,
 	connections,
