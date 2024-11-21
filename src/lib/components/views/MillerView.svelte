@@ -69,7 +69,7 @@
 			<a
 				onmouseover={() => (col2Hover = id)}
 				onfocus={() => (col2Hover = id)}
-				href={type === 'channel' ? `/${b.author_id}/${b.slug}` : id}
+				href={type === 'channel' ? `/${b.author_slug}/${b.slug}` : id}
 				class="item"
 				use:key>{title || '-'}</a
 			>

@@ -13,35 +13,25 @@
 	let b = $derived(
 		pool.query<Block, Block>(
 			`
-			SELECT u.slug as username,b.title,b.type,b.description,b.image,b.created_at,b.updated_at,b.source
+			SELECT b.author_slug,b.title,b.type,b.description,b.image,b.created_at,b.updated_at,b.source
 			FROM blocks b
-			JOIN users u
-			ON b.author_id = u.id
 			WHERE b.id = ?
 		`,
 			[id],
 			first
 		)
 	)
-	const author_id = $derived(
-		pool.query<User, User['slug']>(
-			`select slug from Users where id = ?`,
-			[b.data?.author_id],
-			firstPick
-		)
-	)
 
 	// TODO: calculate channel length
 	let connections = $derived(
 		pool.query<
-			Pick<Block, 'title' | 'source' | 'id' | 'author_id'> & {
+			Pick<Block, 'title' | 'source' | 'id' | 'author_slug'> & {
 				slug: string
 			}
 		>(
 			`
-		select b.title, b.slug, b.id, b.author_id, b.source, u.slug as username
+		select b.title, b.slug, b.id, b.author_slug, b.source, b.author_slug
 		from blocks b
-		join users u on u.id = b.author_id
 		join connections c on c.parent_id = b.id
 		where c.child_id= ?
 		`,
@@ -87,7 +77,7 @@
 				</div>
 				<div class="data-item">
 					<p>By</p>
-					<a href={b.data.username}> {b.data.username} </a>
+					<a href={b.data.author_slug}> {b.data.author_slug} </a>
 				</div>
 
 				{#if b.data.source}
@@ -100,8 +90,8 @@
 					<p>Connections</p>
 					<div class="connections">
 						{#each connections.data as conn}
-							<a href={`/${conn.username}/${conn.slug}`} class="connection">
-								<span>{conn.title} by {conn.username}</span>
+							<a href={`/${conn.author_slug}/${conn.slug}`} class="connection">
+								<span>{conn.title} by {conn.author_slug}</span>
 								<!--<p>{conn.length} blocks</p>-->
 							</a>
 						{/each}
@@ -116,6 +106,8 @@
 <style>
 	article {
 		width: 100%;
+		container-name: article;
+		container-type: size;
 		& > div {
 			display: flex;
 			gap: 2em;
@@ -175,5 +167,7 @@
 		justify-content: space-between;
 		/* padding-block: 0.5rem; */
 		/* border-block: 1px solid var(--line); */
+	}
+	@container article(width > 400px) {
 	}
 </style>
