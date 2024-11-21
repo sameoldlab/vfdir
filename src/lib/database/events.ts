@@ -28,7 +28,7 @@ export const record = async (db: TXAsync | DB,
   }
 }
 export const ev_stmt_close = (tx?: TXAsync) => {
-  stmt.finalize(tx)
+  stmt && stmt.finalize(tx)
   stmt = null
 }
 

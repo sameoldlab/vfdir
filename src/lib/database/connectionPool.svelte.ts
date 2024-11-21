@@ -172,7 +172,7 @@ export class DbPool {
 		}
 	}
 	async #close(connection: DB) {
-		const res = await connection.close()
+		const res = connection && await connection.close()
 		this.#connections.delete(connection)
 		return res
 	}
