@@ -56,16 +56,21 @@
 			color: var(--b6);
 			font-weight: 500;
 			animation: pulse 5s infinite ease-in-out;
+			text-shadow: 0 0 16px var(--b5);
 		}
 	}
 
 	@keyframes pulse {
 		50% {
 			opacity: 0.75;
+			text-shadow: 0 0 16px var(--b5);
+			color: var(--b5);
 		}
 		0%,
 		100% {
 			opacity: 1;
+			text-shadow: 0 0 8px var(--b5);
+			color: var(--b6);
 		}
 	}
 </style>
