@@ -30,9 +30,9 @@
 	onMount(() => {
 		pool.exec(async (tx, db) => {
 			await createTables(tx)
-			watchEvents(db)
+			watchEvents()
 			await bootstrap(tx)
-			ready = false
+			ready = true
 		})
 	})
 </script>
