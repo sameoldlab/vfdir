@@ -19,7 +19,8 @@ export const record = async (db: TXAsync | DB,
   const localId = hlc.inc()
   originId = originId ?? localId
   const props = [VERSION, localId, originId, JSON.stringify(data), type, objectId]
-  console.info(props)
+  // if (type === 'add:user')
+  //   console.info(props)
   try {
     return await stmt.run(null, ...props)
   } catch (err) {
@@ -62,7 +63,7 @@ export const diffItem = (db: DB,
       objectId: EventSchema['objectId']
     }
 ) => {
-  const promises = []
+  const promises: Promise<void>[] = []
   if (data.title && current.title !== data.title)
     promises.push(record(db, {
       objectId, type: 'mod:title', originId: originId(), data: {
@@ -110,7 +111,6 @@ export const arena_item_sync = async (db: DB, data: ArenaChannel | ArenaBlock, c
       objectId, type: `add:${classType}`, originId: originId(),
       data: { ...data, id: ulid(new Date(data.created_at).valueOf()) }
     })
-    return
   }
 
   if (current.updated_at === updated_at) return
