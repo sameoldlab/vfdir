@@ -9,7 +9,7 @@ export function fromArenaChannel(c: ArenaChannel | ArenaChannelWithDetails): Cha
   if (c.published) flags.push('published')
 
   return {
-    id: JSON.stringify(['arena', c.id]),
+    id: `arena:${c.id}`,
     type: 'channel',
     title: c.title,
     slug: c.slug,
@@ -24,7 +24,7 @@ export function fromArenaChannel(c: ArenaChannel | ArenaChannelWithDetails): Cha
 
 export function fromArenaUser(user: ArenaUser): User {
   return {
-    id: JSON.stringify(['arena', user.id]),
+    id: `arena:${user.id}`,
     slug: user.slug,
     firstname: user.first_name,
     lastname: user.last_name,
@@ -34,7 +34,7 @@ export function fromArenaUser(user: ArenaUser): User {
 
 export function fromArenaBlock(block: ArenaBlock): Block {
   const data = {
-    id: JSON.stringify(['arena', block.id]),
+    id: `arena:${block.id}`,
     type: block.class.toLowerCase(),
     title: block.title ?? '',
     description: block.description ?? '',
