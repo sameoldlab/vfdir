@@ -14,25 +14,7 @@ export async function bootstrap(db: DB) {
 	ev_stmt_close(db)
 }
 
-const insertO = async <O extends object>(db: DB, rows: O[], table: string) => {
-	if (!rows || rows.length === 0) return
 
-	const keys = Object.keys(rows[0])
-	const sql = `INSERT INTO ${table}(${keys.join(',')}) VALUES (${Array(keys.length).fill('?').join(',')});`
-	const stmt = await db.prepare(sql)
-
-	try {
-		await db.tx(async (tx) => {
-			await Promise.all(rows.map((value) =>
-				stmt.run(tx, ...Object.values(value))
-			))
-		})
-		await stmt.finalize(null)
-	} catch (error) {
-		console.error({ error, sent_bind: stmt.bindings, sql })
-		throw error
-	}
-}
 
 export async function pullArena(db: DB, channels: ArenaChannelWithDetails[]) {
 	const dedupe = {
