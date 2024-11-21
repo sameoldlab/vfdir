@@ -14,7 +14,7 @@
 		let link = ''
 		switch (c.source) {
 			case 'arena':
-				link = `are.na/${c.author_id}/${c.slug}`
+				link = `are.na/${c.author_slug}/${c.slug}`
 				break
 		}
 		return 'https://' + link
@@ -27,7 +27,7 @@
 		<a
 			class={c.type}
 			href={c.type === 'channel'
-				? `/${c.author_id}/${c.slug}`
+				? `/${c.author_slug}/${c.slug}`
 				: `/block/${c.id}`}
 		>
 			{#if c.image}

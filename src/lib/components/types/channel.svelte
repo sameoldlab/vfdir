@@ -3,16 +3,11 @@
 	import { pool } from '$lib/database/connectionPool.svelte'
 	import type { User } from '$lib/database/schema'
 	import { firstPick } from '@vlcn.io/xplat-api'
-	const author_id = pool.query<User, User['slug']>(
-		`select slug from Users where id = ? limit 1`,
-		[c.author_id],
-		firstPick
-	)
 </script>
 
 <div class="channel">
 	<p class="title">{c.title}</p>
-	<p class="author">by {author_id.data}</p>
+	<p class="author">by {c.author_slug}</p>
 </div>
 
 <style>

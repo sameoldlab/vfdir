@@ -18,7 +18,7 @@ export function fromArenaChannel(c: ArenaChannel | ArenaChannelWithDetails): Cha
     flags: JSON.stringify(flags),
     status: c.status,
     source: 'arena',
-    author_id: JSON.stringify(['arena', c.user_id]),
+    author_slug: c.user?.slug ?? c.user_id,
   }
 }
 
@@ -45,7 +45,7 @@ export function fromArenaBlock(block: ArenaBlock): Block {
     provider_url: null,
     image: null,
     source: null,
-    author_id: JSON.stringify(['arena', block.user.id]),
+    author_slug: block.user.slug,
   }
 
   switch (block.class) {
@@ -80,6 +80,6 @@ export function fromArenaConnection(data): Connection {
     position: data.position,
     selected: data.selected ? 1 : 0,
     connected_at: new Date(data.connected_at).valueOf(),
-    user_id: data.child.user.id
+    user_slug: data.child.user.slug
   }
 } 

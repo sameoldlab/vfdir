@@ -91,7 +91,7 @@
 				type,
 				updated_at: v.created_at.valueOf(),
 				created_at: v.updated_at.valueOf(),
-				author_id: 'filesystem',
+				author_slug: 'filesystem',
 				external_ref: `fs:${v.id}`,
 				provider_url: type === 'link' ? content.hostname : null,
 				description: v.description,

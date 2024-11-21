@@ -29,7 +29,7 @@ export const BlockShared = type({
 	type: string(),
 	updated_at: date_int,
 	created_at: date_int,
-	author_id: string(),
+	author_slug: string(),
 	/** if imported from external service,
 	 * service identifier ':' imported id
 	 * @example `arena:2948201`
@@ -89,14 +89,14 @@ CREATE TABLE IF NOT EXISTS Blocks(
 	source TEXT,
 	filename TEXT,
 	provider_url TEXT,
-	author_id TEXT DEFAULT 'local',
 	external_ref text,
+	author_slug TEXT DEFAULT 'local',
 	--exists if type='channel'
 	slug text,
 	flags TEXT DEFAULT '[]',
 	status TEXT DEFAULT 'private',
 	--exists if type='channel',
-	foreign key (author_id) references Users(id),
+	foreign key (author_slug) references Users(slug),
 	foreign key (provider_url) references Providers(url)
 );
 `
@@ -112,7 +112,7 @@ export const Connection = object({
 	selected: enums([0, 1]),
 	connected_at: string(),
 	/** User who created the connection */
-	user_id: string()
+	user_slug: string()
 })
 const intToBool = coerce(boolean(), enums([0, 1]), (value) => value === 1)
 export const ConnectionParsed = object({
@@ -130,7 +130,7 @@ CREATE TABLE IF NOT EXISTS Connections(
 	position INTEGER,
 	selected INTEGER DEFAULT 0,
 	connected_at INTEGER DEFAULT (strftime('%s', 'now')),
-	user_id TEXT DEFAULT 'local'
+	user_slug TEXT DEFAULT 'local'
 );
 `
 
@@ -249,8 +249,8 @@ export const schema = [
 	providers,
 	state,
 	`INSERT INTO Users(id) VALUES ('${deviceId}');`,
-	'CREATE INDEX idx_blocks_type_author_id ON Blocks(type, author_id);',
-	'CREATE INDEX idx_blocks_author_id ON Blocks(author_id);',
+	'CREATE INDEX idx_blocks_type_author_slug ON Blocks(type, author_slug);',
+	'CREATE INDEX idx_blocks_author_slug ON Blocks(author_slug);',
 	'CREATE INDEX idx_blocks_created_at ON Blocks(created_at);',
 	'CREATE INDEX idx_connections_child_id ON Connections(child_id);',
 	'CREATE INDEX idx_connections_parent_child ON Connections(parent_id, child_id);',
