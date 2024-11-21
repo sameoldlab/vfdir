@@ -108,28 +108,6 @@ export const arena_item_sync = async (db: DB, data: ArenaChannel | ArenaBlock, c
   let c = -1
   const originId = (): EventSchema['originId'] => hlc.receive(`${updated_at}:${c++}:arena`)
 
-  const sql = `
-  SELECT * FROM ${EVENT_DB_NAME} 
-  WHERE originId LIKE ?
-  ORDER BY CAST(
-    SUBSTR(
-      originId, 
-      LENGTH(? || ':') + 1,
-      INSTR(SUBSTR(originId, LENGTH(? || ':') + 1), ':')
-    ) AS INTEGER
-  ) DESC 
-  LIMIT 1
-`;
-  const params = [
-    `${updated_at}:%:arena`,
-    updated_at,
-    updated_at
-  ];
-
-  const last = await db.execA(sql, params);
-  console.log({ last })
-  if (last) return
-
   if (!current) {
     return record(db, {
       objectId, type: `add:${classType}`, originId: originId(),
