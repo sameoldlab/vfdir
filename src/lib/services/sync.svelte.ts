@@ -2,13 +2,18 @@ import type { DB } from '@vlcn.io/crsqlite-wasm'
 import { arenaChannels } from '$lib/dummy/channels'
 import type { ArenaChannelContents, ArenaChannelWithDetails } from 'arena-ts'
 import { ulid } from 'ulidx'
-import { Block, Channel, type ChannelParsed, type User } from '$lib/database/schema'
+import { Block, Channel, Connection, type ChannelParsed, type User } from '$lib/database/schema'
 import { create } from 'superstruct'
+import { arena_item_sync, arena_connection_import, arena_user_import, watchEvents, ev_stmt_close } from '$lib/database/events'
 
 export async function bootstrap(db: DB) {
 	// const arenaChannels = await getChannels()
 	// const arenaBlocks = await getBlocks()
-	await parseArenaChannels(db, arenaChannels)
+	// await parseArenaChannels(db, arenaChannels)
+	// const logs = watchEvents()
+
+	await pullArena(db, arenaChannels)
+	ev_stmt_close(db)
 }
 
 const insertUser = (db: DB, user: User) =>
@@ -39,6 +44,70 @@ const insertO = async <O extends object>(db: DB, rows: O[], table: string) => {
 		console.error({ error, sent_bind: stmt.bindings, sql })
 		throw error
 	}
+}
+
+export async function pullArena(db: DB, channels: ArenaChannelWithDetails[]) {
+	const dedupe = {
+		blocks: new Map<Block['external_ref'], Block>(),
+		users: new Set<User['external_ref']>(),
+		conns: new Map<Connection['parent_id'], Set<Connection['child_id']>>()
+	}
+
+	const promises: Promise<void>[] = []
+	const add = (p: Promise<void>) => promises.push(p)
+	await db.tx(async (db) => {
+		(await db.execA<[Block['external_ref'], Block]>(`select * from Blocks`)).forEach((b) => {
+			dedupe.blocks.set(b[0], b[1])
+		});
+		(await db.execA<User['external_ref'][]>(`select external_ref from Users`)).forEach(u => {
+			dedupe.users.add(u[0])
+		});
+		(await db.execA<Connection['id'][]>(`select objectId from log where type = 'add:connection'`)).forEach(i => {
+			const [p, c] = JSON.parse(i[0].split(':')[1])
+			const set = dedupe.conns.get(p) ?? dedupe.conns.set(p, new Set()).get(p)
+			set.add(c)
+		})
+	})
+
+	for (const chan of channels) {
+		let currentChan = dedupe.blocks.get(`arena:${chan.id}`)
+		add(arena_item_sync(db, chan, currentChan))
+
+		if (!chan.contents) continue
+		for (const bl of chan.contents) {
+			const blockRef = `arena:${bl.id}`
+			const currentBlock = dedupe.blocks.get(blockRef)
+			if (!currentBlock) {
+				add(arena_item_sync(db, bl, currentBlock))
+				dedupe.blocks.set(blockRef, currentBlock)
+			}
+
+			const userExRef = `arena:${bl.class === 'Channel' ? bl.owner_id : bl.user.id}`
+			if (!dedupe.users.has(userExRef)) {
+				add(arena_user_import(db, bl.user))
+				dedupe.users.add(userExRef)
+			}
+			const connectedUserExRef = `arena:${bl.connected_by_user_id}`
+			if (!dedupe.users.has(connectedUserExRef)) {
+				const [first_name, last_name] = bl.connected_by_username.split(' ')
+				add(arena_user_import(db, {
+					id: bl.connected_by_user_id,
+					slug: bl.connected_by_user_slug,
+					first_name,
+					last_name,
+				}))
+				dedupe.users.add(connectedUserExRef)
+			}
+			const conn = dedupe.conns.get(`${chan.id}`)
+			if (conn) {
+				if (!conn.has(`${bl.id}`)) {
+					add(arena_connection_import(db, chan, bl))
+					conn.add(`${bl.id}`)
+				}
+			} else dedupe.conns.set(`${chan.id}`, new Set())
+		}
+	}
+	await Promise.all(promises)
 }
 
 export async function parseArenaChannels(db: DB, channels: ArenaChannelWithDetails[]) {
