@@ -30,9 +30,6 @@ export const ev_stmt_close = (tx?: TXAsync) => {
   stmt.finalize(tx)
   stmt = null
 }
-export const watchEvents = () => pool.query<EventSchema[]>(
-  `select *,rowid from ${EVENT_DB_NAME} order by rowid`
-)
 
 type EventData = object
 type EventSchema = {

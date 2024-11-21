@@ -1,6 +1,7 @@
 import { parseSql } from '$lib/utils/parseSql'
 import initWasm, { DB, SQLite3 } from '@vlcn.io/crsqlite-wasm'
 import wasmUrl from '@vlcn.io/crsqlite-wasm/crsqlite.wasm?url'
+import type { TXAsync } from '@vlcn.io/xplat-api'
 import { untrack } from 'svelte'
 import { SvelteMap, SvelteSet } from 'svelte/reactivity'
 
@@ -156,11 +157,11 @@ export class DbPool {
 		}
 	}
 
-	async exec<R>(fn: (d: DB) => R) {
+	async exec<R>(fn: (tx: TXAsync, db: DB) => R) {
 		try {
 			const db = await this.#connect()
 			await db.tx(async (tx) => {
-				await fn(tx)
+				await fn(tx, db)
 			})
 			this.#close(db)
 		} catch (err) {

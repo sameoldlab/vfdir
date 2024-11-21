@@ -8,6 +8,7 @@
 	import { beforeNavigate } from '$app/navigation'
 	import { getTree, setTree } from '$lib/stores.svelte'
 	import { fade } from 'svelte/transition'
+	import { watchEvents } from '$lib/database/watchEvents.svelte'
 
 	let { children } = $props()
 	setTree()
@@ -27,9 +28,10 @@
 
 	let ready = $state(false)
 	onMount(() => {
-		pool.exec(async (db) => {
-			await createTables(db)
-			await bootstrap(db)
+		pool.exec(async (tx, db) => {
+			await createTables(tx)
+			watchEvents(db)
+			await bootstrap(tx)
 			ready = false
 		})
 	})
