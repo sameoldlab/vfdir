@@ -70,3 +70,16 @@ export function fromArenaBlock(block: ArenaBlock): Block {
   }
   return data
 }
+
+export function fromArenaConnection(data): Connection {
+  return {
+    id: `${data.parent.id}:${data.child.id}`,
+    parent_id: data.parent.id,
+    child_id: data.child.id,
+    is_channel: data.is_channel ? 1 : 0,
+    position: data.position,
+    selected: data.selected ? 1 : 0,
+    connected_at: new Date(data.connected_at).valueOf(),
+    user_id: data.child.user.id
+  }
+} 
