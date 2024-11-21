@@ -58,7 +58,7 @@ class Hlc {
       rTime,
       this.#time
     );
-    return `${this.#time}:${this.#c}:${this.#deviceId}`
+    return recv
   }
 }
 
