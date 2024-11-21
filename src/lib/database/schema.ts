@@ -12,7 +12,10 @@ import {
 	union,
 	type,
 	type Infer,
-	optional
+	optional,
+	tuple,
+	unknown,
+	record
 } from 'superstruct'
 import { ulid } from 'ulidx'
 
@@ -186,7 +189,7 @@ export const EventSchema = object({
 	localId: string(),
 	/** Unique id from event source */
 	originId: string(),
-	data: object(),
+	data: string(),
 	/**
 	 * add|mod|delete-column|row
 	 * @example mod:title
@@ -198,6 +201,33 @@ export const EventSchema = object({
 	 */
 	objectId: string()
 })
+const hlc = coerce(tuple([number(), number(), string()]), string(), (hlc) => {
+	const p = hlc.split(':')
+	return [Number(p[0]), Number(p[1]), p[2]]
+})
+export const EventSchemaR = object({
+	version: number(),
+	/** Unique id on event reception */
+	localId: hlc,
+	/** Unique id from event source */
+	originId: hlc,
+	data: coerce(record(string(), unknown()), string(), (data) => JSON.parse(data)),
+	/**
+	 * add|mod|delete-column|row
+	 * @example mod:title
+	 */
+	type: coerce(tuple([enums(['add', 'mod', 'del']), string()]), string(), (data) => data.split(':')),
+	/** 
+	 * field to which the event is related 
+	 * @example block:0L239vsDajfdse...
+	 */
+	objectId: coerce(tuple([string(), union([string(), number()])]), string(), (data) => {
+		const p = data.split(':')
+		const id = Number(p[1])
+		return [p[0], isNaN(id) ? p[1] : id]
+	})
+})
+export type EventSchema = Infer<typeof EventSchema>
 const log = `
 CREATE TABLE IF NOT EXISTS ${EVENT_DB_NAME}(
 	version INT NOT NULL,
