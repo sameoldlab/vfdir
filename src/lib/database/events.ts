@@ -1,30 +1,36 @@
-import { DbPool } from "./connectionPool.svelte"
+import { pool } from "./connectionPool.svelte"
 import { ulid, type ULID } from "ulidx"
 import { Block, Channel, EVENT_DB_NAME } from "./schema"
 import type { ArenaBlock, ArenaChannel, ArenaChannelContents, ArenaChannelWithDetails, ArenaUser } from "arena-ts"
 import type { DB } from "@vlcn.io/crsqlite-wasm"
 import { hlc, type HLC } from "./hlc"
+import type { StmtAsync, TXAsync } from "@vlcn.io/xplat-api"
 
 const VERSION = 1
-let eventDb: DbPool
-if (!eventDb) {
-  console.warn('new event db')
-  eventDb = new DbPool({ maxConnections: 1, dbName: `${EVENT_DB_NAME}.db` })
-}
-
-export const record = async (
+let stmt: StmtAsync = null
+export const record = async (db: TXAsync | DB,
   { originId, data, objectId, type }:
     Pick<EventSchema, 'objectId' | 'data' | 'type'> & { originId?: EventSchema['originId'] }
 ) => {
+  stmt = stmt ?? await db.prepare(`
+      insert into log (version, localId, originId, data, type, objectId) values(?,?,?,?,?,?)
+    `)
+
   const localId = hlc.inc()
   originId = originId ?? localId
   const props = [VERSION, localId, originId, JSON.stringify(data), type, objectId]
-  await eventDb.exec(async (db) => {
-    await db.exec(`insert into ${EVENT_DB_NAME} (version, localId, originId, data, type, objectId) values(?,?,?,?,?,?)`, props)
-  })
+  console.info(props)
+  try {
+    return await stmt.run(null, ...props)
+  } catch (err) {
+    console.error(` Error recording log: ${err}`)
+  }
 }
-
-export const watchEvents = () => eventDb.query<EventSchema[]>(
+export const ev_stmt_close = (tx?: TXAsync) => {
+  stmt.finalize(tx)
+  stmt = null
+}
+export const watchEvents = () => pool.query<EventSchema[]>(
   `select *,rowid from ${EVENT_DB_NAME} order by rowid`
 )
 
@@ -50,7 +56,7 @@ type EventSchema = {
 
 
 
-export const diffItem = (
+export const diffItem = (db: DB,
   { data, current, objectId, originId }:
     {
       data: ArenaChannel | ArenaBlock,
@@ -59,39 +65,41 @@ export const diffItem = (
       objectId: EventSchema['objectId']
     }
 ) => {
+  const promises = []
   if (data.title && current.title !== data.title)
-    record({
+    promises.push(record(db, {
       objectId, type: 'mod:title', originId: originId(), data: {
         title: data.title
       }
-    })
+    }))
   if (data.class === 'Channel' && current.type === 'channel') {
     if (data.status && current.status !== data.status)
-      record({
+      promises.push(record(db, {
         objectId, type: 'mod:status', originId: originId(), data: {
           status: data.status
         }
-      })
+      }))
     if (data.metadata?.description && current.description !== data.metadata.description)
-      record({
+      promises.push(record(db, {
         objectId, type: 'mod:description', originId: originId(), data: {
           description: data.metadata.description
         }
-      })
+      }))
   } else if (data.class !== 'Channel' && current.type === 'block') {
     if (data.content && current.content !== data.content)
-      record({
+      promises.push(record(db, {
         objectId, type: 'mod:content', originId: originId(), data: {
           content: data.content
         }
-      })
+      }))
     if (data.description && current.description !== data.description)
-      record({
+      promises.push(record(db, {
         objectId, type: 'mod:description', originId: originId(), data: {
           description: data.description
         }
-      })
+      }))
   }
+  return Promise.all(promises)
 }
 export const arena_item_sync = async (db: DB, data: ArenaChannel | ArenaBlock, current?: Channel | Block) => {
   const classType = data.class === 'Channel' ? 'channel' : 'block'
@@ -123,7 +131,7 @@ export const arena_item_sync = async (db: DB, data: ArenaChannel | ArenaBlock, c
   if (last) return
 
   if (!current) {
-    record({
+    return record(db, {
       objectId, type: `add:${classType}`, originId: originId(),
       data: { ...data, id: ulid(new Date(data.created_at).valueOf()) }
     })
@@ -131,21 +139,22 @@ export const arena_item_sync = async (db: DB, data: ArenaChannel | ArenaBlock, c
   }
 
   if (current.updated_at === updated_at) return
-  diffItem({ data, current, objectId, originId })
+  return diffItem(db, { data, current, objectId, originId })
 }
 
 
 /** 
   * CHECK IF CONNECTION EXISTS BEFORE CALLING THIS 
   */
-export const arena_user_import = async (user: Partial<ArenaUser>) => {
+export const arena_user_import = async (db: DB, user: Partial<ArenaUser>) => {
   const objectId = `user:${user.id}`
   const originId: EventSchema['originId'] = hlc.receive(`${Date.now()}:0:arena`)
-  record({ objectId, type: `add:user`, originId, data: user })
+  return record(db, { objectId, type: `add:user`, originId, data: user })
 }
 
 /** CHECK IF CONNECTION EXISTS BEFORE CALLING THIS */
 export const arena_connection_import = (
+  db: DB,
   parent: ArenaChannelWithDetails,
   child: ArenaChannelContents,
 ) => {
@@ -154,7 +163,7 @@ export const arena_connection_import = (
   const originId: EventSchema['originId'] = hlc.receive(`${connected_at}:0:arena`)
 
   let { contents, ...parentData } = parent
-  record({
+  return record(db, {
     objectId, type: `add:connection`, originId, data: {
       parent: parentData,
       child,
