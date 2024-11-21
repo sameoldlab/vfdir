@@ -1,7 +1,7 @@
 import { DbPool } from "./connectionPool.svelte"
 import { ulid, type ULID } from "ulidx"
-import type { ArenaBlock, ArenaChannel, ArenaChannelContents, ArenaChannelWithDetails } from "arena-ts"
 import { Block, Channel, EVENT_DB_NAME } from "./schema"
+import type { ArenaBlock, ArenaChannel, ArenaChannelContents, ArenaChannelWithDetails, ArenaUser } from "arena-ts"
 import type { DB } from "@vlcn.io/crsqlite-wasm"
 import { hlc, type HLC } from "./hlc"
 
@@ -16,7 +16,6 @@ export const record = async (
   { originId, data, objectId, type }:
     Pick<EventSchema, 'objectId' | 'data' | 'type'> & { originId?: EventSchema['originId'] }
 ) => {
-
   const localId = hlc.inc()
   originId = originId ?? localId
   const props = [VERSION, localId, originId, JSON.stringify(data), type, objectId]
@@ -136,7 +135,57 @@ export const arena_item_sync = async (db: DB, data: ArenaChannel | ArenaBlock, c
 }
 
 
+/** 
+  * CHECK IF CONNECTION EXISTS BEFORE CALLING THIS 
+  */
+export const arena_user_import = async (user: Partial<ArenaUser>) => {
+  const objectId = `user:${user.id}`
+  const originId: EventSchema['originId'] = hlc.receive(`${Date.now()}:0:arena`)
+  record({ objectId, type: `add:user`, originId, data: user })
 }
+
+/** CHECK IF CONNECTION EXISTS BEFORE CALLING THIS */
+export const arena_connection_import = (
+  parent: ArenaChannelWithDetails,
+  child: ArenaChannelContents,
+) => {
+  const objectId = `connection:${JSON.stringify([parent.id, child.id])}`
+  const connected_at = new Date(child.connected_at).valueOf()
+  const originId: EventSchema['originId'] = hlc.receive(`${connected_at}:0:arena`)
+
+  let { contents, ...parentData } = parent
+  record({
+    objectId, type: `add:connection`, originId, data: {
+      parent: parentData,
+      child,
+      position: child.position,
+      connected_at,
+      is_channel: child.class === 'Channel',
+      selected: child.selected,
+    }
+  })
+}
+/* 
+  Need a different way to track the order of changes as the data from the api does not record updates
+  to the connection data (selected, position).
+  I think hybrid logical clocks or lambert clocks could work? 
+  Similar to the local-first event sourcing article.
+  But I'm not sure how to implement this in my current system
+*/
+
+/* 
+Arena's api also has an option to `GET /v2/channels/:id/contents`. 
+So I could ignore this pain and use `GET /v2/channels/:id/contents` to read position
+ and `PUT /v2/channels/:slug/sort` to update it 
+PUT /v2/channels/:slug/sort
+Resource URL:
+http://api.are.na/v2/channels/:slug/sort
+Parameters:
+:ids (required)
+Serialized array of IDs
+ 
+Accepts a serialized array of IDs. Updates the order of the channel to the order of the IDs.
+*/
 
 export const block_del = (data) => {
   const objectId = `block:${data.slug}`
@@ -163,19 +212,11 @@ export const connection_add = (data) => {
 
   const type = `add:connection`
 }
-export const arena_connection_sync = (
-  db: DB,
-  data: { parent: ArenaChannelWithDetails, child: ArenaChannelContents },
-  current: Connection
-) => {
-  const objectId = `connection:${data.slug}`
 
-  const type = `mod:${data.slug}`
-}
 export const connection_del = (data) => {
-  const objectId = `connection:${data.slug}`
+  const objectId = `connection:${data.slug} `
 
-  const type = `del:${data.slug}`
+  const type = `del:${data.slug} `
 }
 
 export const extern_user_sync = (data, userId: ULID | undefined = undefined) => {
@@ -188,12 +229,11 @@ export const extern_user_sync = (data, userId: ULID | undefined = undefined) => 
       avatar: data.avatar,
       external_ref: `arena:${data.class === 'Channel'
         ? data.owner_id
-        : data.user.id}`
+        : data.user.id
+        } `
     }
     return
   }
-
-
 }
 
 export const lcl_user_mod = (data) => { }
@@ -230,6 +270,4 @@ move block to new position
 publish channel
   set channel visibility public
 create collaborative channel
-  
-
 */
