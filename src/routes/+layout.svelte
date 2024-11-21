@@ -7,6 +7,7 @@
 	import { onMount } from 'svelte'
 	import { beforeNavigate } from '$app/navigation'
 	import { getTree, setTree } from '$lib/stores.svelte'
+	import { fade } from 'svelte/transition'
 
 	let { children } = $props()
 	setTree()
@@ -29,17 +30,42 @@
 		pool.exec(async (db) => {
 			await createTables(db)
 			await bootstrap(db)
-			ready = true
+			ready = false
 		})
 	})
 </script>
 
-<Header />
-
 {#if pool.status === 'error'}
 	<pre><code>{pool.error}</code></pre>
 {:else if pool.status === 'loading' || !ready}
-	setting up sqlite
+	<div transition:fade={{ duration: 300 }}>
+		<p>Creating visually fluid dispensaries...</p>
+	</div>
 {:else}
+	<Header />
 	{@render children()}
 {/if}
+
+<style>
+	div {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		height: 100svh;
+		p {
+			color: var(--b6);
+			font-weight: 500;
+			animation: pulse 5s infinite ease-in-out;
+		}
+	}
+
+	@keyframes pulse {
+		50% {
+			opacity: 0.75;
+		}
+		0%,
+		100% {
+			opacity: 1;
+		}
+	}
+</style>
