@@ -135,7 +135,6 @@ export class DbPool {
 					// console.log(value)
 				})
 				.catch((err) => {
-					console.log(err)
 					error = err
 					throw err
 				})
