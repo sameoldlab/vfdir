@@ -18,7 +18,7 @@ export async function bootstrap(db: DB) {
 
 export async function pullArena(db: DB, channels: ArenaChannelWithDetails[]) {
 	const dedupe = {
-		blocks: new Map<Block['external_ref'], Block>(),
+		blocks: new Map<number, Block>(),
 		users: new Set<number>(),
 		conns: new Map<number, Set<number>>()
 	}
@@ -26,40 +26,37 @@ export async function pullArena(db: DB, channels: ArenaChannelWithDetails[]) {
 	const promises: Promise<void>[] = []
 	const add = (p: Promise<void>) => promises.push(p)
 	await db.tx(async (db) => {
-		(await db.execA<[Block['external_ref'], Block]>(`select * from Blocks`)).forEach((b) => {
-			dedupe.blocks.set(b[0], b[1])
+		(await db.execO<Block>(`select * from Blocks`)).forEach((b) => {
+			dedupe.blocks.set(Number(b.id.split(':')[1]), b)
 		});
-		(await db.execA<User['external_ref'][]>(`select objectId from log where type = 'add:user'`))
+		(await db.execA<User['id'][]>(`select id from Users`))
 			.forEach(u => {
-				const id = u[0].split(':')[1]
-				dedupe.users.add(Number(id))
+				dedupe.users.add(Number(u[0].split(':')[1]))
 			});
-		(await db.execA<Connection['id'][]>(`select objectId from log where type = 'add:connection'`)).forEach(i => {
-			const [p, c] = JSON.parse(i[0].split(':')[1])
+		(await db.execA<Connection['id'][]>(`select id from Connections`)).forEach(i => {
+			const [_p, c] = i[0].split(':')
+			let p = Number(_p)
 			const set = dedupe.conns.get(p) ?? dedupe.conns.set(p, new Set()).get(p)
-			set.add(c)
+			set.add(Number(c))
 		})
 	})
 
 	for (const chan of channels) {
-		let currentChan = dedupe.blocks.get(chan.id.toString())
+		let currentChan = dedupe.blocks.get(chan.id)
+		if (!currentChan) dedupe.blocks.set(chan.id, chan)
 		add(arena_item_sync(db, chan, currentChan))
 
 		if (!chan.contents) continue
 		for (const bl of chan.contents) {
-			const blockRef = `arena:${bl.id}`
-			const currentBlock = dedupe.blocks.get(blockRef)
-			if (!currentBlock) {
-				add(arena_item_sync(db, bl, currentBlock))
-				dedupe.blocks.set(blockRef, currentBlock)
-			}
+			const currentBlock = dedupe.blocks.get(bl.id)
+			if (!currentBlock) dedupe.blocks.set(bl.id, bl)
+			add(arena_item_sync(db, bl, currentBlock))
 
 			if (!dedupe.users.has(bl.user.id)) {
 				add(arena_user_import(db, bl.user))
 				dedupe.users.add(bl.user.id)
 			}
-			const connectedUserExRef = bl.connected_by_user_id
-			if (!dedupe.users.has(connectedUserExRef)) {
+			if (!dedupe.users.has(bl.connected_by_user_id)) {
 				const [first_name, last_name] = bl.connected_by_username.split(' ')
 				add(arena_user_import(db, {
 					id: bl.connected_by_user_id,
@@ -67,8 +64,9 @@ export async function pullArena(db: DB, channels: ArenaChannelWithDetails[]) {
 					first_name,
 					last_name,
 				}))
-				dedupe.users.add(connectedUserExRef)
+				dedupe.users.add(bl.connected_by_user_id)
 			}
+
 			const conn = dedupe.conns.get(chan.id)
 			if (conn) {
 				if (!conn.has(bl.id)) {

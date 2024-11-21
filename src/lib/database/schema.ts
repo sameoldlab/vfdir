@@ -15,7 +15,8 @@ import {
 	optional,
 	tuple,
 	unknown,
-	record
+	record,
+	bigint
 } from 'superstruct'
 import { ulid } from 'ulidx'
 
@@ -34,10 +35,9 @@ export const BlockShared = type({
 	 * service identifier ':' imported id
 	 * @example `arena:2948201`
 	 */
-	external_ref: nullable(string()),
 })
 
-export const Block = assign(BlockShared, object({
+export const Block = assign(BlockShared, type({
 	description: optional(string()),
 	provider_url: nullable(string()),
 	content: nullable(string()),
@@ -53,7 +53,7 @@ const BlockParsed = assign(Block, object({
 }))
 
 const channelFlags = enums(['published', 'collaboration', 'default', 'profile'])
-export const Channel = assign(BlockShared, object({
+export const Channel = assign(BlockShared, type({
 	type: enums(['channel']),
 	slug: nullable(string()),
 	/** `JSON.stringified` array */
@@ -89,7 +89,6 @@ CREATE TABLE IF NOT EXISTS Blocks(
 	source TEXT,
 	filename TEXT,
 	provider_url TEXT,
-	external_ref text,
 	author_slug TEXT DEFAULT 'local',
 	--exists if type='channel'
 	slug text,
@@ -102,7 +101,7 @@ CREATE TABLE IF NOT EXISTS Blocks(
 `
 
 // Connections
-export const Connection = object({
+export const Connection = type({
 	id: string(),
 	child_id: string(),
 	parent_id: string(),
@@ -110,7 +109,7 @@ export const Connection = object({
 	is_channel: enums([0, 1]),
 	position: nullable(number()),
 	selected: enums([0, 1]),
-	connected_at: string(),
+	connected_at: number(),
 	/** User who created the connection */
 	user_slug: string()
 })
@@ -138,13 +137,12 @@ export type Connection = Infer<typeof Connection>
 export type ConnectionParsed = Infer<typeof ConnectionParsed>
 
 // Users
-export const User = object({
+export const User = type({
 	id: string(),
 	slug: nullable(string()),
 	firstname: nullable(string()),
 	lastname: nullable(string()),
 	avatar: nullable(string()),
-	external_ref: nullable(string())
 })
 
 const users = `
@@ -153,14 +151,13 @@ CREATE TABLE IF NOT EXISTS Users(
 	slug TEXT,
 	firstname TEXT,
 	lastname TEXT,
-	avatar TEXT,
-	external_ref TEXT
+	avatar TEXT
 );
 `
 export type User = Infer<typeof User>
 
 // Providers
-export const Provider = object({
+export const Provider = type({
 	url: nullable(string()),
 	name: nullable(string())
 })
@@ -201,6 +198,8 @@ export const EventSchema = object({
 	 */
 	objectId: string()
 })
+// const [action, field] = e.type.split(':')
+// const [ts, c, device] = e.originId.split(':')
 const hlc = coerce(tuple([number(), number(), string()]), string(), (hlc) => {
 	const p = hlc.split(':')
 	return [Number(p[0]), Number(p[1]), p[2]]
@@ -225,7 +224,8 @@ export const EventSchemaR = object({
 		const p = data.split(':')
 		const id = Number(p[1])
 		return [p[0], isNaN(id) ? p[1] : id]
-	})
+	}),
+	rowid: number()
 })
 export type EventSchema = Infer<typeof EventSchema>
 const log = `
