@@ -108,8 +108,10 @@ export const arena_item_sync = async (db: DB, data: ArenaChannel | ArenaBlock, c
 
   if (!current) {
     return record(db, {
-      objectId, type: `add:${classType}`, originId: originId(),
-      data: { ...data, id: ulid(new Date(data.created_at).valueOf()) }
+      objectId,
+      type: `add:${classType}`,
+      originId: originId(),
+      data
     })
   }
 
