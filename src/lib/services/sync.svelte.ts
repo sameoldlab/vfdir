@@ -49,8 +49,8 @@ const insertO = async <O extends object>(db: DB, rows: O[], table: string) => {
 export async function pullArena(db: DB, channels: ArenaChannelWithDetails[]) {
 	const dedupe = {
 		blocks: new Map<Block['external_ref'], Block>(),
-		users: new Set<User['external_ref']>(),
-		conns: new Map<Connection['parent_id'], Set<Connection['child_id']>>()
+		users: new Set<number>(),
+		conns: new Map<number, Set<number>>()
 	}
 
 	const promises: Promise<void>[] = []
@@ -59,9 +59,11 @@ export async function pullArena(db: DB, channels: ArenaChannelWithDetails[]) {
 		(await db.execA<[Block['external_ref'], Block]>(`select * from Blocks`)).forEach((b) => {
 			dedupe.blocks.set(b[0], b[1])
 		});
-		(await db.execA<User['external_ref'][]>(`select external_ref from Users`)).forEach(u => {
-			dedupe.users.add(u[0])
-		});
+		(await db.execA<User['external_ref'][]>(`select objectId from log where type = 'add:user'`))
+			.forEach(u => {
+				const id = u[0].split(':')[1]
+				dedupe.users.add(Number(id))
+			});
 		(await db.execA<Connection['id'][]>(`select objectId from log where type = 'add:connection'`)).forEach(i => {
 			const [p, c] = JSON.parse(i[0].split(':')[1])
 			const set = dedupe.conns.get(p) ?? dedupe.conns.set(p, new Set()).get(p)
@@ -70,7 +72,7 @@ export async function pullArena(db: DB, channels: ArenaChannelWithDetails[]) {
 	})
 
 	for (const chan of channels) {
-		let currentChan = dedupe.blocks.get(`arena:${chan.id}`)
+		let currentChan = dedupe.blocks.get(chan.id.toString())
 		add(arena_item_sync(db, chan, currentChan))
 
 		if (!chan.contents) continue
@@ -82,12 +84,11 @@ export async function pullArena(db: DB, channels: ArenaChannelWithDetails[]) {
 				dedupe.blocks.set(blockRef, currentBlock)
 			}
 
-			const userExRef = `arena:${bl.class === 'Channel' ? bl.owner_id : bl.user.id}`
-			if (!dedupe.users.has(userExRef)) {
+			if (!dedupe.users.has(bl.user.id)) {
 				add(arena_user_import(db, bl.user))
-				dedupe.users.add(userExRef)
+				dedupe.users.add(bl.user.id)
 			}
-			const connectedUserExRef = `arena:${bl.connected_by_user_id}`
+			const connectedUserExRef = bl.connected_by_user_id
 			if (!dedupe.users.has(connectedUserExRef)) {
 				const [first_name, last_name] = bl.connected_by_username.split(' ')
 				add(arena_user_import(db, {
@@ -98,13 +99,13 @@ export async function pullArena(db: DB, channels: ArenaChannelWithDetails[]) {
 				}))
 				dedupe.users.add(connectedUserExRef)
 			}
-			const conn = dedupe.conns.get(`${chan.id}`)
+			const conn = dedupe.conns.get(chan.id)
 			if (conn) {
-				if (!conn.has(`${bl.id}`)) {
+				if (!conn.has(bl.id)) {
 					add(arena_connection_import(db, chan, bl))
-					conn.add(`${bl.id}`)
+					conn.add(bl.id)
 				}
-			} else dedupe.conns.set(`${chan.id}`, new Set())
+			} else dedupe.conns.set(chan.id, new Set())
 		}
 	}
 	await Promise.all(promises)
