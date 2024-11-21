@@ -30,6 +30,7 @@ export class DbPool {
 	status = $state<'available' | 'loading' | 'error'>('loading')
 	error = $state()
 	#queries = $state(new SvelteMap<string, Query<object>[]>())
+	#channel = new BroadcastChannel('updates')
 	constructor(
 		args?: { maxConnections: number | undefined, dbName: string | undefined }
 	) {
@@ -72,6 +73,7 @@ export class DbPool {
 	}
 	#batchSubscribe() {
 		this.#timeout = null
+		this.#channel.postMessage(this.#updateBuffer.get(`log:18`))
 		for (const [key, rowids] of this.#updateBuffer.entries()) {
 			const [table, type] = key.split(':');
 			this.#subscribe(parseInt(type), table, Array.from(rowids));
