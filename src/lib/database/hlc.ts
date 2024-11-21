@@ -61,5 +61,9 @@ class Hlc {
     return `${this.#time}:${this.#c}:${this.#deviceId}`
   }
 }
-export const deviceId: string = localStorage.getItem('deviceId') ?? ulid()
+
+if (!localStorage.getItem('deviceId')) {
+  localStorage.setItem('deviceId', ulid())
+}
+export const deviceId: string = localStorage.getItem('deviceId')
 export const hlc = new Hlc(deviceId)
