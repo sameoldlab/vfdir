@@ -4,7 +4,7 @@ import type { ArenaChannelContents, ArenaChannelWithDetails } from 'arena-ts'
 import { ulid } from 'ulidx'
 import { Block, Channel, Connection, type ChannelParsed, type User } from '$lib/database/schema'
 import { create } from 'superstruct'
-import { arena_item_sync, arena_connection_import, arena_user_import, watchEvents, ev_stmt_close } from '$lib/database/events'
+import { arena_item_sync, arena_connection_import, arena_user_import, ev_stmt_close } from '$lib/database/events'
 
 export async function bootstrap(db: DB) {
 	// const arenaChannels = await getChannels()
