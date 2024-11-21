@@ -14,6 +14,7 @@ import {
 	type Infer,
 	optional
 } from 'superstruct'
+import { ulid } from 'ulidx'
 
 const int_date = coerce(date(), number(), (value) => new Date(value))
 const date_int = coerce(number(), union([string(), date()]), (value) => typeof value === 'string' ? new Date(value).valueOf() : value.valueOf())
@@ -64,7 +65,7 @@ const ChannelParsed = assign(Channel, object({
 	flags: coerce(array(channelFlags), string(), value => JSON.parse(value))
 }))
 
-const BlocksRow = union([Block, Channel])
+export const BlocksRow = union([Block, Channel])
 export type BlocksRow = Infer<typeof BlocksRow>
 export type Block = Infer<typeof Block>
 export type BlockParsed = Infer<typeof BlockParsed>
@@ -174,6 +175,11 @@ CREATE TABLE IF NOT EXISTS state(
 	view TEXT DEFAULT 'grid'
 );
 `
+if (!localStorage.getItem('deviceId')) {
+	localStorage.setItem('deviceId', ulid())
+}
+export const deviceId: string = localStorage.getItem('deviceId')
+export const EVENT_DB_NAME = 'log'
 export const EventSchema = object({
 	version: number(),
 	/** Unique id on event reception */
@@ -193,7 +199,7 @@ export const EventSchema = object({
 	objectId: string()
 })
 const log = `
-CREATE TABLE IF NOT EXISTS log(
+CREATE TABLE IF NOT EXISTS ${EVENT_DB_NAME}(
 	version INT NOT NULL,
 	localId TEXT NOT NULL,
 	originId TEXT NOT NULL,
@@ -212,7 +218,7 @@ export const schema = [
 	connections,
 	providers,
 	state,
-	"INSERT INTO Users(id) VALUES ('local');",
+	`INSERT INTO Users(id) VALUES ('${deviceId}');`,
 	'CREATE INDEX idx_blocks_type_author_id ON Blocks(type, author_id);',
 	'CREATE INDEX idx_blocks_author_id ON Blocks(author_id);',
 	'CREATE INDEX idx_blocks_created_at ON Blocks(created_at);',
