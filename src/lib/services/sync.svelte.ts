@@ -1,7 +1,6 @@
 import type { DB } from '@vlcn.io/crsqlite-wasm'
 import { arenaChannels } from '$lib/dummy/channels'
-import type { ArenaChannelContents, ArenaChannelWithDetails } from 'arena-ts'
-import { ulid } from 'ulidx'
+import type { ArenaBlock, ArenaChannel, ArenaChannelWithDetails, ArenaUser } from 'arena-ts'
 import { Block, Channel, Connection, type ChannelParsed, type User } from '$lib/database/schema'
 import { create } from 'superstruct'
 import { arena_item_sync, arena_connection_import, arena_user_import, ev_stmt_close } from '$lib/database/events'
@@ -15,16 +14,6 @@ export async function bootstrap(db: DB) {
 	await pullArena(db, arenaChannels)
 	ev_stmt_close(db)
 }
-
-const insertUser = (db: DB, user: User) =>
-	db.exec('insert into Users values (?,?,?,?,?,?);', [
-		user.id,
-		user.slug,
-		user.firstname,
-		user.lastname,
-		user.avatar,
-		user.external_ref,
-	])
 
 const insertO = async <O extends object>(db: DB, rows: O[], table: string) => {
 	if (!rows || rows.length === 0) return
@@ -111,178 +100,70 @@ export async function pullArena(db: DB, channels: ArenaChannelWithDetails[]) {
 	await Promise.all(promises)
 }
 
-export async function parseArenaChannels(db: DB, channels: ArenaChannelWithDetails[]) {
-	let blockRefs: [Block['external_ref'], Block['id']][] = []
-	let userRefs: [User['external_ref'], User['id']][] = []
+export function fromArenaChannel(c: ArenaChannel | ArenaChannelWithDetails): Channel {
+	const flags = [c.kind] as ChannelParsed['flags']
+	if (c.collaboration) flags.push('collaboration')
+	if (c.published) flags.push('published')
 
-	await db.tx(async (db) => {
-		blockRefs.push(...(await db.execA<[Block['external_ref'], Block['id']]>(`select external_ref,id from Blocks`)))
-		userRefs.push(...(await db.execA<[User['external_ref'], User['id']]>(`select external_ref,id from Users`)))
-	})
-	const dedupe = {
-		blocks: new Map<Block['external_ref'], Block['id']>(blockRefs),
-		user: new Map<User['external_ref'], User['id']>(userRefs),
+	return {
+		id: JSON.stringify(['arena', c.id]),
+		type: 'channel',
+		title: c.title,
+		slug: c.slug,
+		created_at: new Date(c.created_at).valueOf(),
+		updated_at: new Date(c.updated_at).valueOf(),
+		flags: JSON.stringify(flags),
+		status: c.status,
+		source: 'arena',
+		author_id: JSON.stringify(['arena', c.user_id]),
 	}
-	const blocks = []
-	const chans = []
-
-	channels.map((chan) => {
-		const external_ref = `arena:${chan.id}`
-		let chanId = dedupe.blocks.get(external_ref)
-		// console.log(chanId)
-
-		// add channel if it is not already in database
-		if (!chanId) {
-			const flags: ChannelParsed['flags'] = [chan.kind]
-			if (chan.collaboration) flags.push('collaboration')
-			if (chan.published) flags.push('published')
-
-			chanId = ulid()
-			dedupe.blocks.set(external_ref, chanId)
-
-			chans.push(create({
-				id: chanId,
-				type: 'channel',
-				title: chan.title,
-				slug: chan.slug,
-				created_at: chan.created_at,
-				updated_at: chan.updated_at,
-				flags: flags,
-				status: chan.status,
-				source: 'arena',
-				author_id: chan.owner_slug,
-				external_ref
-			}, Channel))
-		}
-
-		// Parse and insert Blocks
-		chan.contents && chan.contents.map((bl) => {
-			const blockRef = `arena:${bl.id}`
-			let blockId = dedupe.blocks.get(blockRef)
-			// if block is already in db, insert connections and return
-			if (blockId) {
-
-				return
-			}
-
-			blockId = ulid()
-			dedupe.blocks.set(blockRef, blockId)
-
-			const userExRef = `arena:${bl.class === 'Channel' ? bl.owner_id : bl.user.id}`
-			let userId = dedupe.user.get(userExRef)
-			if (!userId) {
-				userId = ulid()
-				insertUser(db, {
-					id: userId,
-					slug: bl.user.slug,
-					firstname: bl.user.first_name,
-					lastname: bl.user.last_name,
-					avatar: bl.user.avatar,
-					external_ref: userExRef
-				})
-				dedupe.user.set(userExRef, userId)
-			}
-
-			const connectedUserExRef = `arena:${bl.connected_by_user_id}`
-			let connectedBy = dedupe.user.get(connectedUserExRef)
-			if (!connectedBy) {
-				connectedBy = ulid()
-				insertUser(db, {
-					id: connectedBy,
-					slug: bl.connected_by_user_slug,
-					firstname: null,
-					lastname: null,
-					avatar: null,
-					external_ref: connectedUserExRef
-				})
-				dedupe.user.set(connectedUserExRef, connectedBy)
-			}
-
-			db.exec(`insert into Connections(id,parent_id, child_id, is_channel, position, selected, connected_at, user_id) values (?,?,?,?,?,?,?,?);`, [
-				chanId + '+' + blockId,
-				chanId,
-				blockId,
-				bl.class === 'Channel' ? 1 : 0,
-				bl.position,
-				bl.selected ? 1 : 0,
-				bl.connected_at,
-				connectedBy
-			])
-
-			if (bl.class === 'Channel') {
-				const flags: ChannelParsed['flags'] = [bl.kind]
-				if (bl.collaboration) flags.push('collaboration')
-				if (bl.published) flags.push('published')
-				chans.push(create({
-					id: blockId,
-					type: bl.class.toLowerCase(),
-					title: bl.title,
-					slug: bl.slug,
-					created_at: bl.created_at,
-					updated_at: bl.updated_at,
-					flags,
-					status: bl.status,
-					source: 'arena',
-					author_id: userId,
-					external_ref: blockRef,
-				}, Channel))
-
-			} else {
-				const block = {
-					id: blockId,
-					type: bl.class.toLowerCase(),
-					title: bl.title ?? '',
-					description: bl.description ?? '',
-					created_at: bl.created_at,
-					updated_at: bl.updated_at,
-					content: null,
-					filename: null,
-					provider_url: null,
-					image: null,
-					source: null,
-					author_id: userId,
-					external_ref: `arena:${bl.id}`,
-				}
-
-				switch (bl.class) {
-					case 'Text':
-						block.content = bl.content
-						block.source = bl.source ? bl.source?.url : block.source
-						break
-					case 'Attachment':
-						block.filename = bl.attachment.content_type
-					case 'Link':
-					case 'Image':
-					case 'Media':
-						block.image = bl.image.original.url
-						if (bl.source) {
-							db.exec(`insert or ignore into Providers values (?,?);`, [
-								bl.source.provider.url,
-								bl.source.provider.name
-							])
-							block.source = bl.source.url
-							block.provider_url = bl.source.provider.url
-						}
-						break
-				}
-				blocks.push(create(block, Block))
-			}
-		})
-	})
-	// console.log(chans)
-	// console.log(blocks)
-
-	await Promise.all([
-		insertO(db, blocks, 'Blocks'),
-		insertO(db, chans, 'Blocks')
-	])
-
-	/*
-		get user's channels and blocks
-		save to database
-		create poll to check if there are new blocks
-	*/
 }
 
+export function fromArenaUser(user: ArenaUser): User {
+	return {
+		id: JSON.stringify(['arena', user.id]),
+		slug: user.slug,
+		firstname: user.first_name,
+		lastname: user.last_name,
+		avatar: user.avatar,
+	}
+}
 
-function parseBlock(block: ArenaChannelContents) { }
+export function fromArenBlock(block: ArenaBlock): Block {
+	const data = {
+		id: JSON.stringify(['arena', block.id]),
+		type: block.class.toLowerCase(),
+		title: block.title ?? '',
+		description: block.description ?? '',
+		created_at: new Date(block.created_at).valueOf(),
+		updated_at: new Date(block.updated_at).valueOf(),
+		content: null,
+		filename: null,
+		provider_url: null,
+		image: null,
+		source: null,
+		author_id: JSON.stringify(['arena', block.user.id]),
+	}
+
+	switch (block.class) {
+		case 'Text':
+			data.content = block.content
+			data.source = block.source ? block.source?.url : block.source
+			break
+		case 'Attachment':
+			data.filename = block.attachment.content_type
+		case 'Link':
+		case 'Image':
+		case 'Media':
+			data.image = block.image.original.url
+			if (block.source) {
+				// db.exec(`insert or ignore into Providers values (?,?);`, [
+				// 	data.source.provider.url,
+				// 	data.source.provider.name
+				// ])
+				data.source = block.source.url
+				data.provider_url = block.source.provider.url
+			}
+	}
+	return data
+}
