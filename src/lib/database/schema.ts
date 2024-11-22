@@ -172,7 +172,7 @@ export type Provider = Infer<typeof Provider>
 const state = `
 CREATE TABLE IF NOT EXISTS state(
 	route TEXT PRIMARY KEY,
-	view TEXT DEFAULT 'grid'
+	pageview TEXT DEFAULT 'grid'
 );
 `
 if (!localStorage.getItem('deviceId')) {
