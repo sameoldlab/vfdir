@@ -1,5 +1,4 @@
 import type { DB } from '@vlcn.io/crsqlite-wasm'
-import { arenaChannels } from '$lib/dummy/channels'
 import type { ArenaChannelWithDetails } from 'arena-ts'
 import { Block, Connection, type User } from '$lib/database/schema'
 import { arena_item_sync, arena_connection_import, arena_user_import, ev_stmt_close } from '$lib/database/events'
@@ -11,7 +10,7 @@ export async function bootstrap(db: DB) {
 	// await parseArenaChannels(db, arenaChannels)
 	// const logs = watchEvents()
 
-	await pullArena(db, ...arenaChannels)
+	// await pullArena(db, ...arenaChannels)
 }
 
 

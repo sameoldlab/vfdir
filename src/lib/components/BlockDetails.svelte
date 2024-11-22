@@ -6,7 +6,6 @@
 	import { handleFile } from '$lib/utils/getFile'
 	import { fade } from 'svelte/transition'
 
-	// import block from '$lib/dummy/block.js'
 	// console.log(block);
 	let { id }: { id: string } = $props()
 
