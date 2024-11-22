@@ -11,7 +11,6 @@ export async function bootstrap(db: DB) {
 	// const logs = watchEvents()
 
 	await pullArena(db, arenaChannels)
-	ev_stmt_close(db)
 }
 
 
@@ -76,5 +75,7 @@ export async function pullArena(db: DB, channels: ArenaChannelWithDetails[]) {
 			} else dedupe.conns.set(chan.id, new Set())
 		}
 	}
-	await Promise.all(promises)
+	await Promise.all(promises).then(() => {
+		ev_stmt_close(db)
+	})
 }

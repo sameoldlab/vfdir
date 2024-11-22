@@ -24,12 +24,13 @@ export const record = async (db: TXAsync | DB,
   try {
     return await stmt.run(null, ...props)
   } catch (err) {
-    console.error(` Error recording log: ${err}`)
+    console.error(`Error recording log: ${err}`)
   }
 }
-export const ev_stmt_close = (tx?: TXAsync) => {
-  stmt && stmt.finalize(tx)
+export const ev_stmt_close = async (tx?: TXAsync) => {
+  stmt && await stmt.finalize(tx)
   stmt = null
+  return
 }
 
 type EventData = object
