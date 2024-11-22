@@ -30,7 +30,7 @@
 			}
 		>(
 			`
-		select b.title, b.slug, b.id, b.author_slug, b.source, b.author_slug
+		select b.title, b.slug, b.id, b.author_slug, b.source 
 		from blocks b
 		join connections c on c.parent_id = b.id
 		where c.child_id= ?
