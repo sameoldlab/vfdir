@@ -101,7 +101,7 @@ export const diffItem = (db: DB,
   return Promise.all(promises)
 }
 export const arena_item_sync = async (db: DB, data: ArenaChannel | ArenaBlock, current?: Channel | Block) => {
-  const classType = data.class === 'Channel' ? 'channel' : 'block'
+  const classType = data.base_class.toLowerCase()
   const objectId = `${classType}:${data.id}`
   const updated_at = new Date(data.updated_at).valueOf()
   let c = -1
