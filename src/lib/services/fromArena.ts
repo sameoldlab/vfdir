@@ -74,8 +74,8 @@ export function fromArenaBlock(block: ArenaBlock): Block {
 export function fromArenaConnection(data): Connection {
   return {
     id: `${data.parent.id}:${data.child.id}`,
-    parent_id: data.parent.id,
-    child_id: data.child.id,
+    parent_id: 'arena:' + data.parent.id,
+    child_id: 'arena:' + data.child.id,
     is_channel: data.is_channel ? 1 : 0,
     position: data.position,
     selected: data.selected ? 1 : 0,
