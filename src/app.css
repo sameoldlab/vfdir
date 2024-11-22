@@ -43,6 +43,10 @@
   box-sizing: border-box;
 }
 
+.error {
+  padding: 2rem;
+  color: oklch(from var(--b6) l .09 40);
+}
 a {
   color: inherit;
   font-weight: 500;

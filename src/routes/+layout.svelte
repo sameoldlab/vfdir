@@ -38,7 +38,7 @@
 </script>
 
 {#if pool.status === 'error'}
-	<pre><code>{pool.error}</code></pre>
+	<div class="error">{pool.error}</div>
 {:else if pool.status === 'loading' || !ready}
 	<div transition:fade={{ duration: 300 }}>
 		<p>Creating visually fluid dispensaries...</p>
