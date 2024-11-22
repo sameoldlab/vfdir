@@ -40,34 +40,22 @@ export function fromArenaBlock(block: ArenaBlock): Block {
     description: block.description ?? '',
     created_at: new Date(block.created_at).valueOf(),
     updated_at: new Date(block.updated_at).valueOf(),
-    content: null,
-    filename: null,
-    provider_url: null,
-    image: null,
+    content: block.content && block.content,
+    filename: block.attachment && block.attachment.content_type,
+    provider_url: block.source && block.source.provider.url,
+    image: block.image && block.image.original.url,
     source: null,
     author_slug: block.user.slug,
   }
 
-  switch (block.class) {
-    case 'Text':
-      data.content = block.content
-      data.source = block.source ? block.source?.url : block.source
-      break
-    case 'Attachment':
-      data.filename = block.attachment.content_type
-    case 'Link':
-    case 'Image':
-    case 'Media':
-      data.image = block.image.original.url
-      if (block.source) {
-        // db.exec(`insert or ignore into Providers values (?,?);`, [
-        // 	data.source.provider.url,
-        // 	data.source.provider.name
-        // ])
-        data.source = block.source.url
-        data.provider_url = block.source.provider.url
-      }
-  }
+  if (block.class === 'Text')
+    data.source = block.source ? block.source.url : block.source
+  else
+    data.source = block.source && block.source.url
+  // db.exec(`insert or ignore into Providers values (?,?);`, [
+  // 	data.source.provider.url,
+  // 	data.source.provider.name
+  // ])
   return data
 }
 
