@@ -15,6 +15,10 @@ type Query<V> = {
 	sql: string
 	setData: Data<V>
 }
+const log = (...args: unknown[]) => {
+	if (import.meta.env.DEV)
+		console.debug(...args)
+}
 
 export type QueryData<T> = {
 	readonly loading: boolean;
@@ -82,20 +86,20 @@ export class DbPool {
 		this.#updateBuffer.clear();
 	}
 	#subscribe(type: UpdateType, table: string, rowid: bigint[]) {
-		// console.log(type, rowid, table)
+		// log(type, rowid, table)
 		let queries = this.#queries.get(table)
 		if (!queries) return
 		switch (type) {
 			case 18: {
-				console.log(`Row ${rowid} inserted in ${table}`)
+				log(`Row ${rowid} inserted in ${table}`)
 				break
 			}
 			case 9: {
-				console.log(`Row ${rowid} deleted in ${table}`)
+				log(`Row ${rowid} deleted in ${table}`)
 				break
 			}
 			case 23: {
-				console.log(`Row ${rowid} updated in ${table}`)
+				log(`Row ${rowid} updated in ${table}`)
 				break
 			}
 		}
@@ -135,7 +139,7 @@ export class DbPool {
 						q.push({ sql, bind, setData })
 					})
 					value = await db.execO<R>(sql, bind)
-					// console.log(value)
+					// log(value)
 				})
 				.catch((err) => {
 					error = err
@@ -147,7 +151,7 @@ export class DbPool {
 				})
 		})
 		function setData(v) {
-			console.log(v)
+			// log(v)
 			value = v
 		}
 		return {
