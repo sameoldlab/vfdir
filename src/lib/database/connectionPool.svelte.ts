@@ -1,9 +1,9 @@
 import { parseSql } from '$lib/utils/parseSql'
 import initWasm, { DB, SQLite3 } from '@vlcn.io/crsqlite-wasm'
 import wasmUrl from '@vlcn.io/crsqlite-wasm/crsqlite.wasm?url'
-import type { TXAsync } from '@vlcn.io/xplat-api'
-import { untrack } from 'svelte'
-import { SvelteMap, SvelteSet } from 'svelte/reactivity'
+import type { StmtAsync, TXAsync } from '@vlcn.io/xplat-api'
+// import { untrack } from 'svelte'
+// import { SvelteMap, SvelteSet } from 'svelte/reactivity'
 
 type DELETE = 9
 type INSERT = 18
@@ -12,7 +12,8 @@ type UpdateType = DELETE | INSERT | UPDATE
 type UpdateEvent = [type: UpdateType, db: string, table: string, rowid: bigint]
 type Data<V> = V[]
 type Query<V> = {
-	sql: string
+	stmt: StmtAsync
+	bind: any[]
 	setData: Data<V>
 }
 const log = (...args: unknown[]) => {
@@ -28,12 +29,13 @@ export type QueryData<T> = {
 
 export class DbPool {
 	#maxConnections: number
-	#connections = new SvelteSet<DB>()
+	#connections = new Set<DB>()
 	#sqlite: SQLite3
 	dbName: string
 	status = $state<'available' | 'loading' | 'error'>('loading')
 	error = $state()
-	#queries = $state(new SvelteMap<string, Query<object>[]>())
+	#queries = new Map<string, Map<number, Query<object>[]>>()
+	#stmts = new Map<number, StmtAsync>()
 	#channel = new BroadcastChannel('updates')
 	constructor(
 		args?: { maxConnections: number | undefined, dbName: string | undefined }
@@ -80,38 +82,31 @@ export class DbPool {
 		this.#channel.postMessage(this.#updateBuffer.get(`log:18`))
 		for (const [key, rowids] of this.#updateBuffer.entries()) {
 			const [table, type] = key.split(':');
-			this.#subscribe(parseInt(type), table, Array.from(rowids));
+			this.#subscribe(Number(type), table, Array.from(rowids));
 		}
 
 		this.#updateBuffer.clear();
 	}
 	#subscribe(type: UpdateType, table: string, rowid: bigint[]) {
-		// log(type, rowid, table)
 		let queries = this.#queries.get(table)
 		if (!queries) return
-		switch (type) {
-			case 18: {
-				log(`Row ${rowid} inserted in ${table}`)
-				break
+
+		this.exec(async (tx) => {
+			for (const sub of queries.values()) {
+				try {
+					// const data = stmt.get(tx, sub.bind)
+					const data = await tx.execO(sub.sql, sub.bind)
+					sub.setData(data)
+				} catch (err) {
+					console.error({ err, bind: sub.bind })
+				}
 			}
-			case 9: {
-				log(`Row ${rowid} deleted in ${table}`)
-				break
-			}
-			case 23: {
-				log(`Row ${rowid} updated in ${table}`)
-				break
-			}
-		}
-		this.exec(async (db) => {
-			queries.forEach(async (sub) => {
-				// let ast = parseSql(sub.sql)
-				sub.setData((await db.execO(sub.sql, sub.bind)))
-			})
+			/* queries.forEach(async (sub) => {
+				const data = await sub.stmt.get(tx, sub.bind)//db.execO(sub.sql, sub.bind)
+				sub.setData(data)
+			}) */
 		})
 	}
-
-
 
 	query<R extends object, M = R[]>(
 		sql: string,
@@ -124,40 +119,40 @@ export class DbPool {
 		let error = $state<Error>(null)
 
 		let db: DB
-		untrack(() => {
-			this.#connect()
-				.then(async (_db) => {
-					loading = true
-					db = _db
-					try {
-						const used = await db.tablesUsedStmt.all(null, sql)
-						const tables = used[0]
-						tables.forEach((t) => {
-							let q = this.#queries.get(t)
-							if (q === undefined) {
-								this.#queries.set(t, [])
-								q = this.#queries.get(t)
-							}
-							q.push({ sql, bind, setData })
-						})
-						value = await db.execO<R>(sql, bind)
-					} catch (err) {
-						error = new Error(`Error parsing used tables: ${err} for statement ${sql} with binds ${bind}`)
-						console.trace(error.message)
-						// throw Error(`Error parsing used tables: ${err} for statement ${sql}`)
+		this.#connect().then(async (_db) => {
+			loading = true
+			db = _db
+			try {
+				let [stmt, tables] = await prepareAndGetUsedTables(db, sql)
+				const query = { sql, bind, setData }
+				tables.forEach((t) => {
+					let q = this.#queries.get(t)
+					if (q === undefined) {
+						this.#queries.set(t, new Map())
+						q = this.#queries.get(t)
 					}
-					// log(value)
+					q.set(query.sql + JSON.stringify(query.bind), query)
+					log({ t, q })
 				})
-				.catch((err) => {
-					error = err
-				})
-				.finally(() => {
-					loading = false
-					// this.#close(db)
-				})
+				stmt.finalize(null)
+				stmt = null
+				// })
+				value = await db.execO<R>(sql, bind)
+			} catch (err) {
+				error = new Error(`Error parsing used tables: ${err} for query ${sql} with binds ${bind}`)
+				console.trace(error.message)
+				// throw Error(`Error parsing used tables: ${err} for statement ${sql}`)
+			}
 		})
+			.catch((err) => {
+				error = err
+			})
+			.finally(() => {
+				loading = false
+				this.#close(db)
+			})
 		function setData(v) {
-			// log(v)
+			log(v)
 			value = v
 		}
 		return {
@@ -172,13 +167,16 @@ export class DbPool {
 	async exec<R>(fn: (tx: TXAsync, db: DB) => R) {
 		try {
 			const db = await this.#connect()
-			await db.tx(async (tx) => {
-				await fn(tx, db)
-			})
+			try {
+				await db.tx(async (tx) => {
+					await fn(tx, db)
+				})
+			} catch (err) {
+				console.error(`Error while transaction: ${err}`)
+			}
 			this.#close(db)
 		} catch (err) {
 			console.error(err)
-			throw err
 		}
 	}
 	async #close(connection: DB) {
@@ -209,4 +207,15 @@ export class DbPool {
 }
 
 export const pool = new DbPool()
-// const res = dp.exec((x) => x.execO<{ id: string }>(''))
+
+function prepareAndGetUsedTables(db: DB, query: string): Promise<[StmtAsync, string[]]> {
+	return Promise.all([
+		db.prepare(query),
+		usedTables(db, query),
+	]);
+}
+function usedTables(db: DB, query: string): Promise<string[]> {
+	return db.tablesUsedStmt.all(null, query).then((rows) => {
+		return rows.map((r) => r[0]);
+	});
+}
