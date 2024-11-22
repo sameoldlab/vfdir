@@ -2,6 +2,7 @@
 	import { page } from '$app/stores'
 	import View from '$lib/components/view.svelte'
 	import { pool } from '$lib/database/connectionPool.svelte'
+	import { getBlocks } from '$lib/services/api/arenav2'
 	import { first } from '$lib/utils/queryProcess'
 
 	const channel = $derived(
@@ -22,17 +23,22 @@
 			first
 		)
 	)
+	$effect(() => {
+		getBlocks($page.params.channel)
+	})
 	const contents = $derived(
-		pool.query(
-			`
+		!channel.loading &&
+			channel.data.id &&
+			pool.query(
+				`
 		SELECT b.*
 		FROM Connections conn
 		JOIN Blocks b ON conn.child_id = b.id
 		WHERE conn.parent_id = ?
 		ORDER BY conn.position asc;
 	`,
-			[channel.data?.id]
-		)
+				[channel.data.id]
+			)
 	)
 </script>
 
