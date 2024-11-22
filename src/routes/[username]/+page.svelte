@@ -1,15 +1,15 @@
 <script lang="ts">
 	import { page } from '$app/stores'
-	import GridView from '$lib/components/views/GridView.svelte'
-	// import { getContents as getArenaContents } from '$lib/store/arena-apiv2.svelte.js'
+	import View from '$lib/components/view.svelte'
+	import { pool } from '$lib/database/connectionPool.svelte'
 
-	const { username } = $page.params
-	console.log(username)
-
-	// getArenaContents(channel).then(data => {		console.log(data)	})
+	const { username } = $derived($page.params)
+	const channels = $derived(
+		pool.query(`select * from blocks where author_slug = ?`, [username])
+	)
+	$inspect(channels.data)
 </script>
 
-<h1>vfdir / {username}</h1>
-<br />
-
-<h2>Channels</h2>
+{#if !channels.loading}
+	<View {...channels.data} />
+{/if}
