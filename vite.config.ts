@@ -7,8 +7,8 @@ export default defineConfig({
 	server: {
 		port: 5461,
 		https: {
-			key: readFileSync('./certs/key.pem'),
-			cert: readFileSync('./certs/cert.pem')
+			key: readFileSync(`${__dirname}/certs/key.pem`),
+			cert: readFileSync(`${__dirname}/certs/cert.pem`)
 		},
 		proxy: {}
 	},
