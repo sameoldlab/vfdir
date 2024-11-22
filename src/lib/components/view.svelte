@@ -7,10 +7,10 @@
 	import type { Block, Channel } from '$lib/database/schema'
 
 	let { ...data }: (Block | Channel)[] = $props()
-	const view = pool.query<{ view: VIEWS }, VIEWS>(
-		`select view from state where route=?`,
-		[$page.url.href],
-		(data) => (!data ? undefined : data[0]?.view || VIEWS[0])
+	const view = pool.query<{ pageview: VIEWS }, VIEWS>(
+		`select pageview from state where route = ?`,
+		[$page.url.pathname],
+		(data) => (!data ? undefined : data[0]?.pageview || VIEWS[0])
 	)
 </script>
 

@@ -25,10 +25,10 @@
 	})
 
 	const view = $derived(
-		pool.query<{ view: VIEWS }, VIEWS>(
-			`select view from state where route=?`,
-			[$page.url.href],
-			(data) => (!data ? undefined : data[0]?.view || VIEWS[0])
+		pool.query<{ pageview: VIEWS }, VIEWS>(
+			`select pageview from state where route=?`,
+			[$page.url.pathname],
+			(data) => (!data ? undefined : data[0]?.pageview || VIEWS[0])
 		)
 	)
 
@@ -37,13 +37,12 @@
 	const setView = (newView: string) => {
 		pool.exec(async (db) => {
 			await db.exec(
-				`INSERT INTO state(route,view) VALUES(?,?)
-				ON CONFLICT DO UPDATE SET view = ? WHERE route = ?`,
-				[$page.url.href, newView, newView, $page.url.href]
+				`INSERT INTO state(route,pageview) VALUES(?,?)
+				ON CONFLICT DO UPDATE SET pageview = ? WHERE route = ?`,
+				[$page.url.pathname, newView, newView, $page.url.pathname]
 			)
 		})
 	}
-	$inspect($page)
 	let addChannelId: string = $state('addChannel')
 </script>
 
