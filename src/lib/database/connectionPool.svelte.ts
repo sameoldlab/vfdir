@@ -129,21 +129,27 @@ export class DbPool {
 				.then(async (_db) => {
 					loading = true
 					db = _db
-					let tables = (await db.tablesUsedStmt.all(null, sql))[0]
-					tables.forEach((t) => {
-						let q = this.#queries.get(t)
-						if (q === undefined) {
-							this.#queries.set(t, [])
-							q = this.#queries.get(t)
-						}
-						q.push({ sql, bind, setData })
-					})
-					value = await db.execO<R>(sql, bind)
+					try {
+						const used = await db.tablesUsedStmt.all(null, sql)
+						const tables = used[0]
+						tables.forEach((t) => {
+							let q = this.#queries.get(t)
+							if (q === undefined) {
+								this.#queries.set(t, [])
+								q = this.#queries.get(t)
+							}
+							q.push({ sql, bind, setData })
+						})
+						value = await db.execO<R>(sql, bind)
+					} catch (err) {
+						error = new Error(`Error parsing used tables: ${err} for statement ${sql} with binds ${bind}`)
+						console.trace(error.message)
+						// throw Error(`Error parsing used tables: ${err} for statement ${sql}`)
+					}
 					// log(value)
 				})
 				.catch((err) => {
 					error = err
-					throw err
 				})
 				.finally(() => {
 					loading = false
@@ -176,9 +182,13 @@ export class DbPool {
 		}
 	}
 	async #close(connection: DB) {
-		const res = connection && await connection.close()
-		this.#connections.delete(connection)
-		return res
+		try {
+			const res = connection && await connection.close()
+			this.#connections.delete(connection)
+			return res
+		} catch (err) {
+			if (!err.message === 'Error: not a database') console.warn(err)
+		}
 	}
 	async closeAll() {
 		for (const connection of this.#connections) {
