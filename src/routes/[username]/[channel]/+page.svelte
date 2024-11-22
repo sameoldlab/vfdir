@@ -37,7 +37,7 @@
 </script>
 
 <div>
-	{#if contents.loading === false}
+	{#if !contents.loading}
 		<View {...contents.data} />
 	{/if}
 </div>
