@@ -1,27 +1,24 @@
 import { type GetBlockApiResponse, type GetChannelsApiResponse, type GetUserChannelsApiResponse } from 'arena-ts'
-// const client = new ArenaClient({
-// 	fetch: 'https://api.are.na/v2/',
-// 	token: 'A86xyp6p1qm_ADrW40doxkitwLwDJ4T7HWmQSmZAhyc',
-// })
-// let Channels = client.channels()
-// .then((val)=>{
-//  Channels = val
-// console.log(val)
-// })
+import { pullArena } from '../sync.svelte'
+import { pool } from '$lib/database/connectionPool.svelte'
 
-export async function getChannels(): Promise<GetUserChannelsApiResponse>{
-	let res = await fetch('https://api.are.na/v2/users/408713/channels?per=50', {
+export async function getChannels(id: number | string): Promise<GetUserChannelsApiResponse> {
+	let res = await fetch(`https://api.are.na/v2/users/${id}/channels?per=50`, {
 		headers: {
 			'Content-Type': 'application/json',
 			'Authorization': `Bearer ${import.meta.env.VITE_ARENA_KEY}`,
 		},
 		method: 'GET',
 	})
-
-	return res.json()
+	const data = await res.json()
+	pool.exec(async (tx) => {
+		await pullArena(tx, ...data.channels)
+	})
+	return data
 }
 
 export async function getBlocks(channel: string): Promise<GetBlockApiResponse> {
+	console.log('get blocks: ', channel)
 	const res = await fetch(
 		`https://api.are.na/v2/channels/${channel}?per=100&sort=position&direction=asc`,
 		{
@@ -32,5 +29,9 @@ export async function getBlocks(channel: string): Promise<GetBlockApiResponse> {
 			method: 'GET',
 		}
 	)
-	return res.json()
+	const data = await res.json()
+	pool.exec(async (tx) => {
+		await pullArena(tx, data)
+	})
+	return data
 }
