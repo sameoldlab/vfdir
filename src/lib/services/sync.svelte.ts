@@ -3,6 +3,7 @@ import { arenaChannels } from '$lib/dummy/channels'
 import type { ArenaChannelWithDetails } from 'arena-ts'
 import { Block, Connection, type User } from '$lib/database/schema'
 import { arena_item_sync, arena_connection_import, arena_user_import, ev_stmt_close } from '$lib/database/events'
+import type { TXAsync } from '@vlcn.io/xplat-api'
 
 export async function bootstrap(db: DB) {
 	// const arenaChannels = await getChannels()
@@ -10,12 +11,12 @@ export async function bootstrap(db: DB) {
 	// await parseArenaChannels(db, arenaChannels)
 	// const logs = watchEvents()
 
-	await pullArena(db, arenaChannels)
+	await pullArena(db, ...arenaChannels)
 }
 
 
 
-export async function pullArena(db: DB, channels: ArenaChannelWithDetails[]) {
+export async function pullArena(db: DB | TXAsync, ...channels: ArenaChannelWithDetails[]) {
 	const dedupe = {
 		blocks: new Map<number, Block>(),
 		users: new Set<number>(),
