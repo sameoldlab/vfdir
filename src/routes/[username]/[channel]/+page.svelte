@@ -26,24 +26,38 @@
 	$effect(() => {
 		getBlocks($page.params.channel)
 	})
-	const contents = $derived(
-		!channel.loading &&
-			channel.data.id &&
-			pool.query(
+	const contents = $derived.by(() => {
+		if (!channel.loading && channel.data?.id) {
+			return pool.query(
 				`
-		SELECT b.*
-		FROM Connections conn
-		JOIN Blocks b ON conn.child_id = b.id
-		WHERE conn.parent_id = ?
-		ORDER BY conn.position asc;
-	`,
+				SELECT b.*
+				FROM Connections conn
+				JOIN Blocks b ON conn.child_id = b.id
+				WHERE conn.parent_id = ?
+				ORDER BY conn.position asc;
+			`,
 				[channel.data.id]
 			)
-	)
+		} else {
+			return {
+				loading: true
+			}
+		}
+	})
 </script>
 
 <div>
-	{#if !contents.loading}
+	{#if !channel.loading && channel.data === undefined}
+		<div class="error">
+			There doesn't seem to be anything here. Searching arena for a matching
+			channel.
+			<p>
+				or... make one of your own? <span class="text-4"
+					>sorry! haven't built this part yet</span
+				>
+			</p>
+		</div>
+	{:else if !contents.loading}
 		<View {...contents.data} />
 	{/if}
 </div>
