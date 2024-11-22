@@ -10,7 +10,7 @@
 	const view = pool.query<{ pageview: VIEWS }, VIEWS>(
 		`select pageview from state where route = ?`,
 		[$page.url.pathname],
-		(data) => (!data ? undefined : data[0]?.pageview || VIEWS[0])
+		(data) => (!data ? undefined : data[0]?.pageview || VIEWS[1])
 	)
 </script>
 
