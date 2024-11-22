@@ -23,7 +23,7 @@ export async function getChannels(): Promise<GetUserChannelsApiResponse>{
 
 export async function getBlocks(channel: string): Promise<GetBlockApiResponse> {
 	const res = await fetch(
-		`https://api.are.na/v2/channels/${channel}?per=100&sort=position&direction=desc`,
+		`https://api.are.na/v2/channels/${channel}?per=100&sort=position&direction=asc`,
 		{
 			headers: {
 				'Content-Type': 'application/json',

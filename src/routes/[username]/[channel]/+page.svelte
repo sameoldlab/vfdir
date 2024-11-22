@@ -29,7 +29,7 @@
 		FROM Connections conn
 		JOIN Blocks b ON conn.child_id = b.id
 		WHERE conn.parent_id = ?
-		ORDER BY conn.position desc;
+		ORDER BY conn.position asc;
 	`,
 			[channel.data?.id]
 		)
