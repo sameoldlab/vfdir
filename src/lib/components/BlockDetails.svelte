@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { pool } from '$lib/database/connectionPool.svelte'
-	import { Block, User } from '$lib/database/schema'
-	import { firstPick, first } from '@vlcn.io/xplat-api'
+	import { Block } from '$lib/database/schema'
+	import { first } from '@vlcn.io/xplat-api'
 	import { naturalDate } from '$lib/utils/naturalDate'
 	import { handleFile } from '$lib/utils/getFile'
 	import { fade } from 'svelte/transition'
@@ -12,9 +12,8 @@
 	let b = $derived(
 		pool.query<Block, Block>(
 			`
-			SELECT b.author_slug,b.title,b.type,b.description,b.image,b.created_at,b.updated_at,b.source
-			FROM blocks b
-			WHERE b.id = ?
+			SELECT author_slug,title,type,description,image,created_at,updated_at,source
+			FROM blocks WHERE id = ?
 		`,
 			[id],
 			first
