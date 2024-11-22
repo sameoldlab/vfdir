@@ -9,7 +9,6 @@
 	import { first } from '$lib/utils/queryProcess'
 
 	let { ...data }: BlocksRow[] = $props()
-	$inspect(data)
 	const tree = getTree()
 
 	const addItem = (e: MouseEvent) => {
@@ -40,7 +39,6 @@
 
 		return
 	})
-	// $inspect(previous)
 
 	/**
 	 * id of currently hovered item
