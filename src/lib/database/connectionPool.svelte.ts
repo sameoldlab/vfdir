@@ -114,8 +114,8 @@ export class DbPool {
 		process: (rows: R[]) => M = (r) => r
 	): QueryData<M> {
 
-		let value = $state.raw<R[]>([])
-		let loading = $state<boolean>(true)
+		let value = $state<R[]>([])
+		let loading = $state.raw<boolean>(true)
 		let error = $state<Error>(null)
 
 		let db: DB
@@ -132,12 +132,11 @@ export class DbPool {
 						q = this.#queries.get(t)
 					}
 					q.set(query.sql + JSON.stringify(query.bind), query)
-					log({ t, q })
 				})
 				stmt.finalize(null)
 				stmt = null
 				// })
-				value = await db.execO<R>(sql, bind)
+				setData(await db.execO<R>(sql, bind))
 			} catch (err) {
 				error = new Error(`Error parsing used tables: ${err} for query ${sql} with binds ${bind}`)
 				console.trace(error.message)
@@ -151,9 +150,16 @@ export class DbPool {
 				loading = false
 				this.#close(db)
 			})
-		function setData(v) {
-			log(v)
-			value = v
+		function setData(v: R[]) {
+			switch (mergeArr(value, v)) {
+				case false:
+					console.error('merge failed')
+					break
+				case true:
+					log('merge succesful')
+					log($state.snapshot(value))
+					break
+			}
 		}
 		return {
 			get data() {
@@ -214,8 +220,80 @@ function prepareAndGetUsedTables(db: DB, query: string): Promise<[StmtAsync, str
 		usedTables(db, query),
 	]);
 }
-function usedTables(db: DB, query: string): Promise<string[]> {
-	return db.tablesUsedStmt.all(null, query).then((rows) => {
-		return rows.map((r) => r[0]);
-	});
+async function usedTables(db: DB, query: string): Promise<string[]> {
+	const rows = await db.tablesUsedStmt.all(null, query)
+	return rows.map((r) => r[0])
+}
+
+const set1 = new Set()
+const map = new Map()
+/** return false if a fine grained merge is not possible; else merge */
+function mergeArr<T extends object>(one: T[], two: T[], key?: string): boolean | 'empty' {
+	if (one.length === 0) {
+		one = two
+		log('filled empty')
+		log({ two })
+		return true
+	}
+	// Handle arrays of rows
+	if (!Array.isArray(one) || !Array.isArray(two)) {
+		log('not an array')
+		return false
+	}
+	key = key ?? one[0].id ?? one[0].name ?? one[0].slug ?? one[0].route ?? Object.keys(one[0])[0]
+	log({ key })
+
+	// set1.clear()
+	// one.forEach(t => set1.add(Object.values(t)[0]))
+	// set2.clear()
+	// two.forEach(t => set2.add(Object.values(t)[0]))
+	// log({ set1, set2 })
+
+	if (one.length !== two.length) {
+		log('length mismatch')
+		map.clear()
+		one.forEach(o => map.set(o[key], o))
+
+		for (const t of two) {
+			const o = map.get(two[key])
+			if (o === undefined) {
+				o.push(t)
+			} else {
+				if (mergeObj(o, t)) continue
+				log('object mismatch in len fn')
+				return false
+			}
+		}
+
+		return false
+	}
+
+	for (const [i, obj] of one.entries()) {
+		if (mergeObj(obj, two[i])) continue
+		log('object mismatch')
+		return false
+	}
+
+	return true;
+}
+
+function mergeObj<T extends object>(one: T, two: T): boolean {
+	if (
+		typeof one !== "object" ||
+		one === null ||
+		typeof two !== "object" ||
+		two === null
+	) {
+		log('improper type')
+		return false;
+	}
+
+	for (const [key, value] of Object.entries(one)) {
+		if (!(key in two)) {
+			log('mismath key: ', key)
+			return false
+		}
+		if (value !== two[key]) one[key] = two[key]
+	}
+	return true
 }
