@@ -1,105 +1,86 @@
 <script lang="ts">
-	import { pool } from '$lib/database/connectionPool.svelte'
-	import { Block } from '$lib/database/schema'
-	import { first } from '@vlcn.io/xplat-api'
 	import { naturalDate } from '$lib/utils/naturalDate'
 	import { handleFile } from '$lib/utils/getFile'
 	import { fade } from 'svelte/transition'
+	import { blocks } from '$lib/pools/block.svelte'
+	import { micromark } from 'micromark'
 
-	// console.log(block);
 	let { id }: { id: string } = $props()
-
-	let b = $derived(
-		pool.query<Block, Block>(
-			`
-			SELECT author_slug,title,type,description,image,created_at,updated_at,source
-			FROM blocks WHERE id = ?
-		`,
-			[id],
-			first
-		)
-	)
-
-	// TODO: calculate channel length
-	let connections = $derived(
-		pool.query<
-			Pick<Block, 'title' | 'source' | 'id' | 'author_slug'> & {
-				slug: string
-			}
-		>(
-			`
-		select b.title, b.slug, b.id, b.author_slug, b.source 
-		from blocks b
-		join connections c on c.parent_id = b.id
-		where c.child_id= ?
-		`,
-			[id]
-		)
-	)
+	const b = blocks.get(id)
+	console.log(b)
+	const content = b.type === 'text' ? micromark(b.content) : null
 </script>
 
-{#if !b.loading}
-	<article>
-		<div class="block">
-			{#if b.data.image}
-				<img
-					use:handleFile={{ src: b.data.image }}
-					src={b.data.image}
-					transition:fade
-					crossorigin="anonymous"
-					alt={b.data.image}
-				/>
-			{/if}
-		</div>
-		<div>
-			<header>
-				<h1>{b.data.title}</h1>
-				<p class="description text-6">{b.data.description}</p>
-			</header>
-			<div class="metadata">
-				<div class="data-item">
-					<p>Type</p>
-					<p>{b.data.type}</p>
-				</div>
-				<div class="data-item">
-					<p>Modified</p>
-					<time datetime={new Date(b.data.updated_at).toLocaleString()}
-						>{naturalDate(b.data.updated_at)}</time
-					>
-				</div>
-				<div class="data-item">
-					<p>Added</p>
-					<time datetime={new Date(b.data.created_at).toLocaleString()}
-						>{naturalDate(b.data.created_at)}</time
-					>
-				</div>
-				<div class="data-item">
-					<p>By</p>
-					<a href={b.data.author_slug}> {b.data.author_slug} </a>
-				</div>
+<article>
+	<div class="block">
+		{#if b.image}
+			<img
+				use:handleFile={{ src: b.image }}
+				src={b.image}
+				transition:fade
+				crossorigin="anonymous"
+				alt={b.image}
+			/>
+		{:else if b.type === 'channel'}
+			<div class="channel">
+				<p class="title">{b.title}</p>
+				<p class="author">by {b.author.slug}</p>
+			</div>
+		{:else if content}
+			<div class="text"><p>{@html content}</p></div>
+		{/if}
+	</div>
+	<div>
+		<header>
+			<h1>{b.title}</h1>
+			<p class="description text-6">{b.description}</p>
+		</header>
+		<div class="metadata">
+			<div class="data-item">
+				<p>Type</p>
+				<p>{b.type}</p>
+			</div>
+			<div class="data-item">
+				<p>Modified</p>
+				<time datetime={new Date(b.updated_at).toLocaleString()}
+					>{naturalDate(b.updated_at)}</time
+				>
+			</div>
+			<div class="data-item">
+				<p>Added</p>
+				<time datetime={new Date(b.created_at).toLocaleString()}
+					>{naturalDate(b.created_at)}</time
+				>
+			</div>
+			<div class="data-item">
+				<p>By</p>
+				<a href={'/' + b.author.slug}> {b.author.slug} </a>
+			</div>
 
-				{#if b.data.source}
-					<div class="data-item">
-						<p>Source</p>
-						<a href={b.data.source}> {b.data.title} </a>
-					</div>
-				{/if}
+			{#if b.source}
 				<div class="data-item">
-					<p>Connections</p>
-					<div class="connections">
-						{#each connections.data as conn}
-							<a href={`/${conn.author_slug}/${conn.slug}`} class="connection">
-								<span>{conn.title} by {conn.author_slug}</span>
-								<!--<p>{conn.length} blocks</p>-->
-							</a>
-						{/each}
-					</div>
+					<p>Source</p>
+					<a href={b.source}> {b.title} </a>
+				</div>
+			{/if}
+			<div class="data-item">
+				<p>Connections</p>
+				<div class="connections">
+					{#each b.connections as channel}
+						<a
+							href={`/${channel.author.slug}/${channel.slug}`}
+							class="connection"
+						>
+							<span>{channel.title} by {channel.author_slug}</span>
+							<p>{channel.length} blocks</p>
+						</a>
+					{/each}
 				</div>
 			</div>
-			<!--<pre>{JSON.stringify(block).replaceAll(/\{/g, '\n    ')}</pre>-->
 		</div>
-	</article>
-{/if}
+		<!--<pre>{JSON.stringify(block).replaceAll(/\{/g, '\n    ')}</pre>-->
+	</div>
+</article>
 
 <style>
 	article {
