@@ -97,15 +97,16 @@ export class Channel {
   content
   filename
   provider_url
-  image
+  image: string = $state('')
   source
   author_slug
   #author_id
-  #blocks: Connection[]
+  #blocks: Connection[] = $state([])
   constructor(obj: Channel) {
     this.id = obj.id
     this.type = obj.type
     this.title = obj.title
+    this.slug = obj.slug
     this.description = obj.description
     this.created_at = obj.created_at
     this.updated_at = obj.updated_at
@@ -118,14 +119,16 @@ export class Channel {
     channels.set(this.id, this)
   }
   get author() {
-    return
-    return users.get(this.#author_id)
+    return users.get(this.author_slug)
   }
   addBlock(conn: Connection) {
     this.#blocks.push(conn)
   }
   get blocks() {
     return this.#blocks.map(id => blocks.get(id))
+  }
+  get length() {
+    return this.#blocks.length
   }
 }
 export class Block {
@@ -156,18 +159,22 @@ export class Block {
     this.id = b.id
     this.title = b.title
     this.description = b.description
-    this.#connections = b.connections
     this.media = b.media
     this.content = b.content
     this.#user = b.author_slug
     blocks.set(this.id, this)
     // console.log(blocks.size)
   }
+  addConnection(id: string) {
+    this.#connections.push(id)
+  }
   get author() {
     console.log('getting user ', this.#user)
     return users.get(this.#user)
   }
   get connections() {
-    return this.#connections.map(c => channels.get(c))
+    const conns = this.#connections.map(c => channels.get(c))
+    console.log(conns)
+    return conns
   }
 }
