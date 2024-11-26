@@ -4,7 +4,7 @@ import { fromArenaBlock, fromArenaChannel, fromArenaUser, fromArenaConnection } 
 import type { StmtAsync, TXAsync } from "@vlcn.io/xplat-api"
 import { pool } from "./connectionPool.svelte"
 const channel = new BroadcastChannel('updates')
-import { Block, Channel, Connection, User } from "$lib/pools/block.svelte"
+import { Block, blocks, Channel, channels, Connection, User } from "$lib/pools/block.svelte"
 
 export const watchEvents = () => {
   let lastRow = 0n
@@ -47,7 +47,8 @@ async function parseEvent(events: EventSchema[]) {
         }
         case 'connection': {
           const obj = from_arena ? fromArenaConnection(data) : data
-          new Connection(obj)
+          blocks.get(obj.child_id)?.addConnection(obj.parent_id)
+          channels.get(obj.parent_id)?.addBlock(obj)
           break
         }
       }
