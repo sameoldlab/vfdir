@@ -42,7 +42,7 @@ export class User {
   #blocks: string[] = $state([])
 
   constructor(obj: User) {
-    this.id = obj.id
+    this.id = `${obj.id}`
     this.slug = obj.slug
     this.firstname = obj.firstname
     this.lastname = obj.lastname
@@ -50,16 +50,16 @@ export class User {
     users.set(this.slug, this)
   }
   addBlock(id: string) {
-    this.#blocks.push(id)
+    this.#blocks.push(`${id}`)
   }
-  addChannel(id: string) {
-    this.#channels.push(id)
+  addChannel(slug: string) {
+    this.#channels.push(`${slug}`)
   }
   get blocks() {
     return this.#blocks.map(id => blocks.get(id))
   }
   get channels() {
-    return this.#channels.map(id => channels.get(id))
+    return this.#channels.map(slug => channels.get(slug))
   }
 }
 export class Connection {
@@ -72,10 +72,10 @@ export class Connection {
   connected_at
   user_slug
   constructor(obj: Connection) {
-    this.id = obj.id
-    this.parent_id = obj.parent_id
-    this.child_id = obj.child_id
     this.is_channel = obj.is_channel
+    this.id = `${obj.id}`
+    this.parent_id = `${obj.parent_id}`
+    this.child_id = `${obj.child_id}`
     this.position = obj.position
     this.selected = obj.selected
     this.connected_at = obj.connected_at
@@ -91,6 +91,7 @@ export class Channel {
   id
   type
   title
+  slug
   description
   created_at
   updated_at
@@ -103,7 +104,7 @@ export class Channel {
   #author_id
   #blocks: Connection[] = $state([])
   constructor(obj: Channel) {
-    this.id = obj.id
+    this.id = `${obj.id}`
     this.type = obj.type
     this.title = obj.title
     this.slug = obj.slug
@@ -156,7 +157,7 @@ export class Block {
     this.image = b.image
     this.source = b.source
 
-    this.id = b.id
+    this.id = `${b.id}`
     this.title = b.title
     this.description = b.description
     this.media = b.media
@@ -165,8 +166,8 @@ export class Block {
     blocks.set(this.id, this)
     // console.log(blocks.size)
   }
-  addConnection(id: string) {
-    this.#connections.push(id)
+  addConnection(slug: string) {
+    this.#connections.push(slug)
   }
   get author() {
     console.log('getting user ', this.#user)
