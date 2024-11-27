@@ -48,9 +48,15 @@ async function parseEvent(events: EventSchema[]) {
           break
         }
         case 'connection': {
-          const obj = from_arena ? fromArenaConnection(data) : data
-          blocks.get(obj.child_id)?.addConnection(obj.parent_id)
-          channels.get(obj.parent_id)?.addBlock(obj)
+          if (data.is_channel) {
+            if (channels.get(data.child.slug) === undefined) new Channel(fromArenaChannel(data.child))
+          } else {
+            const bl = blocks.get(data.child.id) ?? new Block(fromArenaBlock(data.child))
+            bl.addConnection(data.parent.slug)
+          }
+
+          const chan = from_arena ? fromArenaChannel(data.parent) : data.parent;
+          (channels.get(data.parent.slug) ?? new Channel(chan)).addBlock(fromArenaConnection(data))
           break
         }
       }
