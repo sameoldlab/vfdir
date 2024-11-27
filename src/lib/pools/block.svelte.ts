@@ -71,20 +71,22 @@ export class Connection {
   selected
   connected_at
   user_slug
+  connected_by
   constructor(obj: Connection) {
-    this.is_channel = obj.is_channel
     this.id = `${obj.id}`
     this.parent_id = `${obj.parent_id}`
     this.child_id = `${obj.child_id}`
+    this.is_channel = obj.is_channel === 1
     this.position = obj.position
     this.selected = obj.selected
     this.connected_at = obj.connected_at
-    this.user_slug = obj.user_slug
+    this.connected_by = obj.user_slug
+
+    if (this.is_channel) console.log(this)
   }
   get() {
     const child = this.is_channel ? channels.get(this.child_id) : blocks.get(this.child_id)
-    // need to test what this does
-    return Object.assign(child, this)
+    return child ? Object.assign(child, this) : this
   }
 }
 export class Channel {
@@ -95,11 +97,9 @@ export class Channel {
   description
   created_at
   updated_at
-  content
-  filename
-  provider_url
-  image: string = $state('')
   source
+  status
+  image
   author_slug
   #author_id
   #blocks: Connection[] = $state([])
@@ -108,25 +108,23 @@ export class Channel {
     this.type = obj.type
     this.title = obj.title
     this.slug = obj.slug
+    this.status = obj.status
     this.description = obj.description
     this.created_at = obj.created_at
     this.updated_at = obj.updated_at
-    this.content = obj.content
-    this.filename = obj.filename
-    this.provider_url = obj.provider_url
     this.image = obj.image
     this.source = obj.source
     this.author_slug = obj.author_slug
-    channels.set(this.id, this)
+    channels.set(this.slug, this)
   }
   get author() {
     return users.get(this.author_slug)
   }
   addBlock(conn: Connection) {
-    this.#blocks.push(conn)
+    this.#blocks.push(new Connection(conn))
   }
   get blocks() {
-    return this.#blocks.map(id => blocks.get(id))
+    return this.#blocks.map(id => id.get())
   }
   get length() {
     return this.#blocks.length
@@ -164,18 +162,15 @@ export class Block {
     this.content = b.content
     this.#user = b.author_slug
     blocks.set(this.id, this)
-    // console.log(blocks.size)
   }
   addConnection(slug: string) {
     this.#connections.push(slug)
   }
   get author() {
-    console.log('getting user ', this.#user)
     return users.get(this.#user)
   }
   get connections() {
     const conns = this.#connections.map(c => channels.get(c))
-    console.log(conns)
     return conns
   }
 }
