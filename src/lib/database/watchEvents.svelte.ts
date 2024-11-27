@@ -13,7 +13,9 @@ export const watchEvents = () => {
     if (ev.data) {
       const ub = [...ev.data.values()]
       pool.exec(async (tx) => {
-        await tx.execO<EventSchema>('select *,rowid from log where rowid between ? and ?', [ub[0], ub.at(-1)]).then(events => parseEvent(events))
+        const events = await tx.execO<EventSchema>('select *,rowid from log where rowid between ? and ?', [ub[0], ub.at(-1)])
+        try { parseEvent(events) }
+        catch (err) { console.error(err) }
       })
     }
   })
