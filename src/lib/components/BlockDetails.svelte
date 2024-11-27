@@ -7,7 +7,6 @@
 
 	let { id }: { id: string } = $props()
 	const b = blocks.get(id)
-	console.log(b)
 	const content = b.type === 'text' ? micromark(b.content) : null
 </script>
 
