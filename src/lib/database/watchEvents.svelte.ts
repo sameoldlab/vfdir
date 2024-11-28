@@ -60,9 +60,10 @@ async function parseEvent(events: EventSchema[]) {
           break
         }
       }
-    } else if (action === 'mod') {
+    } else if (action === 'save') {
       switch (field) {
-        case 'image': {
+        case 'blob': {
+          media.set(data.original, data.url)
           break;
         }
       }
