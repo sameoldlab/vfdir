@@ -16,7 +16,7 @@
 			<img
 				use:handleFile={{ src: b.image }}
 				src={b.image}
-				transition:fade
+				in:fade
 				crossorigin="anonymous"
 				alt={b.image}
 			/>
@@ -70,7 +70,7 @@
 							href={`/${channel.author.slug}/${channel.slug}`}
 							class="connection"
 						>
-							<span>{channel.title} by {channel.author_slug}</span>
+							<span>{channel.title} by {channel.author.slug}</span>
 							<p>{channel.length} blocks</p>
 						</a>
 					{/each}
