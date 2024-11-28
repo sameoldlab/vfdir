@@ -2,6 +2,8 @@ import { sha256 } from 'multiformats/hashes/sha2'
 import { CID } from 'multiformats/cid'
 import { pool } from '$lib/database/connectionPool.svelte'
 import type { Action } from 'svelte/action'
+import { record } from '$lib/database/events'
+import { media } from '$lib/pools/block.svelte'
 
 let cacheDir: FileSystemDirectoryHandle = null
 if (!cacheDir) {
@@ -42,23 +44,31 @@ const cacheFile = async (filename: string) => {
   handle.move(cid.toString())
   pool.exec(async (db) => {
     console.log(cid.toString(), filename)
-    await db.exec(`update blocks set image = ? where image = ?`, [cid.toString(), filename])
+    await record(db, { type: 'save:blob', data: { url: cid.toString(), original: filename }, objectId: 'block:image' })
   })
+  return cid.toString()
 }
 
-const getFileFromCid = async (filename: string, cDir = cacheDir) =>
+const getFileFromCid = (filename: string, cDir = cacheDir) =>
   cDir.getFileHandle(filename)
     .then((handle) => handle.getFile()
       .then((file) => URL.createObjectURL(file)))
 
 
-export const handleFile: Action<HTMLImageElement, { src: string }> = (el, data) => {
+export const handleFile: Action<HTMLImageElement, { src: string }> = (el, { src }) => {
   let url: string | null = null
   const load = async () => {
-    if (!data.src.startsWith('baf')) return cacheFile(data.src)
-
-    const url = await getFileFromCid(data.src)
-    el.src = url
+    const cache = media.get(src)
+    if (!cache) {
+      console.log('cache miss')
+      const cached = await cacheFile(src)
+      media.set(src, cached)
+      el.src = src
+    } else {
+      console.log('cache hit')
+      url = await getFileFromCid(media.get(src))
+      el.src = url
+    }
   }
   load()
 
