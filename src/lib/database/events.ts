@@ -12,9 +12,9 @@ export const record = async (db: TXAsync | DB,
   { originId, data, objectId, type }:
     Pick<EventSchema, 'objectId' | 'data' | 'type'> & { originId?: EventSchema['originId'] }
 ) => {
-  stmt = stmt ?? await db.prepare(`
+  stmt = (stmt === null || stmt.finalized === true) ? await db.prepare(`
       insert into log (version, localId, originId, data, type, objectId) values(?,?,?,?,?,?)
-    `)
+    `) : stmt
 
   const localId = hlc.inc()
   originId = originId ?? localId
@@ -24,12 +24,14 @@ export const record = async (db: TXAsync | DB,
   try {
     return await stmt.run(null, ...props)
   } catch (err) {
+    console.log(stmt)
     console.error(`Error recording log: ${err}`)
   }
 }
 export const ev_stmt_close = async (tx?: TXAsync) => {
   stmt && await stmt.finalize(tx)
   stmt = null
+  console.log('finalized stmt', stmt)
   return
 }
 
