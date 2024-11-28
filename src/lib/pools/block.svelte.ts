@@ -31,6 +31,7 @@ export type UserT = {
   channels: Channel[]
   blocks: Block[]
 }
+export const media = new Map<string, string>()
 
 export class User {
   id: string = $state()
