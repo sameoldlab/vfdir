@@ -3,13 +3,11 @@
 	import Header from '$lib/components/header.svelte'
 	import { createTables } from '$lib/database/createTables'
 	import { pool } from '$lib/database/connectionPool.svelte'
-	import { bootstrap } from '$lib/services/sync.svelte'
 	import { onMount } from 'svelte'
 	import { beforeNavigate } from '$app/navigation'
 	import { getTree, setTree } from '$lib/stores.svelte'
 	import { fade } from 'svelte/transition'
-	import { watchEvents } from '$lib/database/watchEvents.svelte'
-
+	import { watchEvents, bootstrap } from '$lib/database/watchEvents.svelte'
 	let { children } = $props()
 	setTree()
 	const tree = getTree()

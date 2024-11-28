@@ -1,10 +1,17 @@
 import { EventSchema, EventSchemaR } from "./schema"
 import { create } from "superstruct"
 import { fromArenaBlock, fromArenaChannel, fromArenaUser, fromArenaConnection } from "$lib/services/fromArena"
-import type { StmtAsync, TXAsync } from "@vlcn.io/xplat-api"
+import type { DB, StmtAsync, TXAsync } from "@vlcn.io/xplat-api"
 import { pool } from "./connectionPool.svelte"
 const channel = new BroadcastChannel('updates')
-import { Block, blocks, Channel, channels, Connection, User } from "$lib/pools/block.svelte"
+import { Block, blocks, Channel, channels, Connection, media, User } from "$lib/pools/block.svelte"
+
+export async function bootstrap(db: TXAsync | DB) {
+  const events = await db.execO<EventSchema>('select rowid,* from log')
+  console.log({ events })
+  try { parseEvent(events) }
+  catch (err) { console.error(err) }
+}
 
 export const watchEvents = () => {
   let lastRow = 0n
@@ -22,6 +29,7 @@ export const watchEvents = () => {
 }
 
 async function parseEvent(events: EventSchema[]) {
+  console.log({ events })
   for (const e of events) {
     let {
       type: [action, field],
@@ -83,3 +91,40 @@ async function insertO<O extends object>(tx: TXAsync, row: O, table: string, stm
     console.error({ error, sql, row })
   }
 }
+
+// class Decorator
+function Entity(opts) {
+  return function(target: Function) { }
+}
+
+// Function Decorator
+/** 
+ * @example 
+ * ```
+ *   @Func
+ *   hello(name: string) { ... }
+ * ```
+ */
+function hydrate(prop: string) {
+  return function Func<
+    This,
+    Args extends any[],
+    Return,
+    Fn extends (this: This, ...args: Args) => Return
+  >(
+    target: This,
+    ctx: ClassMethodDecoratorContext<This, Fn>
+  ) {
+    return function(this: This, ...args: Args) {
+      const result = target.call(this, ...args)
+      console.log(prop)
+      return result
+    }
+  }
+}
+
+// Propery Decorator
+function Prop(opts: Object, propertyKey: string) {
+  return function(target: Function) { }
+}
+
