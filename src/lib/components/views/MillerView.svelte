@@ -11,7 +11,6 @@
 	} from '$lib/pools/block.svelte'
 
 	let { data }: { data: (Connection & (Block | Channel))[] } = $props()
-	console.log(data)
 	const tree = getTree()
 
 	let previous = $derived.by(() => {
@@ -26,16 +25,17 @@
 
 	/** key of currently hovered item */
 	let focused: Block['id'] | Channel['slug'] | undefined = $state()
+	const detail = $derived(blocks.get(focused) ?? channels.get(focused))
 	let focused_is_channel = $state(false)
 </script>
 
 <main>
 	<div class="pane left">
 		{#if previous && previous.length > 1}
-			{#each previous as { id, author, title, ...p }, i (id)}
+			{#each previous as { author, title, ...p }, i (p.key)}
 				<a
 					tabindex="-1"
-					href={p.is_channel ? `/${author.id}/${p.child_id}` : `/block/${id}`}
+					href={p.is_channel ? `/${author.slug}/${p.key}` : `/block/${p.key}`}
 					class="item"
 				>
 					{title}
@@ -49,21 +49,15 @@
 	<div class="handle" draggable use:resizer><div></div></div>
 
 	<div class="pane right">
-		{#each data as b, i (b.child_id)}
+		{#each data as b, i (b.key)}
 			<a
 				onmouseover={() => {
-					focused_is_channel = b.is_channel
-					console.log(b)
-					focused = b.child_id
+					focused = b.key
 				}}
 				onfocus={() => {
-					focused_is_channel = b.is_channel
-					console.log(focused_is_channel)
-					focused = b.child_id
+					focused = b.key
 				}}
-				href={b.is_channel
-					? `/${b.author.slug}/${b.child_id}`
-					: `/block/${b.child_id}`}
+				href={b.is_channel ? `/${b.author.slug}/${b.key}` : `/block/${b.key}`}
 				class="item"
 				use:key>{b.title || '-'}</a
 			>
@@ -73,15 +67,12 @@
 	<div class="handle" draggable use:resizer><div></div></div>
 
 	<div class="pane detail">
-		{focused}
-		{#if focused && !focused_is_channel}
-			<BlockDetail block={blocks.get(focused)} />
-		{:else if focused}
+		{#if detail && !('slug' in detail)}
+			<BlockDetail block={detail} />
+		{:else if detail}
 			{#each channels.get(focused)?.blocks as b, i}
 				<a
-					href={b.is_channel
-						? `/${b.author.slug}/${b.child_id}`
-						: `block/${b.id}`}
+					href={b.is_channel ? `/${b.author.slug}/${b.key}` : `block/${b.key}`}
 					class="item"
 					use:key>{b.title || '-'}</a
 				>
