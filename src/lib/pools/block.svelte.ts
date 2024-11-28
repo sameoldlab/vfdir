@@ -1,36 +1,6 @@
 export const blocks = new Map<string, Block>()
 export const channels = new Map<string, Channel>()
 export const users = new Map<string, User>()
-
-export type BlockT = {
-  id: string
-  title: string
-  description: string
-  connections: string[]
-  media: string
-  content?: string
-  user: string
-}
-export type ChannelT = {
-  id: string
-  title: string
-  description: string
-  blocks: Connection[]
-  media: string
-  content?: string
-  user: User
-}
-export type ConnectionT = {
-  id: string
-  postion: number
-  selected: boolean
-}
-export type UserT = {
-  slug: string
-  avatar: string
-  channels: Channel[]
-  blocks: Block[]
-}
 export const media = new Map<string, string>()
 
 export class User {
