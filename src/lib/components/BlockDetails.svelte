@@ -2,11 +2,11 @@
 	import { naturalDate } from '$lib/utils/naturalDate'
 	import { handleFile } from '$lib/utils/getFile'
 	import { fade } from 'svelte/transition'
-	import { blocks } from '$lib/pools/block.svelte'
+	import { Block, blocks } from '$lib/pools/block.svelte'
 	import { micromark } from 'micromark'
 
-	let { id }: { id: string } = $props()
-	const b = blocks.get(id)
+	let { block: b }: { block: Block } = $props()
+
 	const content = b.type === 'text' ? micromark(b.content) : null
 </script>
 
