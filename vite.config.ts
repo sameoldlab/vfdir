@@ -3,6 +3,7 @@ import { sveltekit } from '@sveltejs/kit/vite'
 import { readFileSync } from 'fs'
 import { loadEnv } from 'vite'
 
+const target = 'es2022'
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
 	server: {
@@ -13,9 +14,12 @@ export default defineConfig(({ mode }) => ({
 		} : null,
 		proxy: {}
 	},
-
+	esbuild: { target },
+	optimizeDeps: {
+		esbuildOptions: { target }
+	},
+	build: { target },
 	plugins: [sveltekit()],
-
 	test: {
 		environment: 'happy-dom',
 		include: ['src/**/*.{test,test.svelte,spec}.{js,ts}'],
