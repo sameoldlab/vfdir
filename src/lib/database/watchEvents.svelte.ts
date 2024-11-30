@@ -64,7 +64,7 @@ async function parseEvent(events: EventSchema[]) {
           }
 
           const chan = from_arena ? fromArenaChannel(data.parent) : data.parent;
-          (channels.get(data.parent.slug) ?? new Channel(chan)).addBlock(fromArenaConnection(data))
+          (channels.get(data.parent.slug) ?? new Channel(chan)).addEntry(fromArenaConnection(data))
           break
         }
       }

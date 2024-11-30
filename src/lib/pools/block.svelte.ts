@@ -1,7 +1,8 @@
-export const blocks = new Map<string, Block>()
+export const blocks = new Map<string, Entry>()
 export const channels = new Map<string, Channel>()
 export const users = new Map<string, User>()
 export const media = new Map<string, string>()
+type Entry = Channel | Block
 
 export class User {
   key: string
@@ -36,8 +37,8 @@ export class User {
   get channels() {
     return this.#channels.map(slug => channels.get(slug))
   }
-  get all(): (Channel | Block)[] {
-    const c = this.#channels.map(slug => channels.get(slug))
+  get all() {
+    const c: Entry[] = this.#channels.map(slug => channels.get(slug))
     const b = this.#blocks.map(id => blocks.get(id))
     return c.concat(b).sort((a, b) => a.updated_at - b.updated_at)
   }
@@ -79,6 +80,7 @@ export class Channel {
   slug: string
   id: string
   title: string
+  type: 'channel' = 'channel'
   description: string
   created_at: number
   updated_at: number
@@ -105,9 +107,10 @@ export class Channel {
     this.image = obj.image
     this.#author = obj.author_slug
     channels.set(this.key, this)
+    blocks.set(this.key, this)
     populateUser(this.key, this.#author, 'channels')
   }
-  addBlock(conn: Connection) {
+  addEntry(conn: Connection) {
     if (this.#keys.has(conn.child_id)) return
     this.#keys.add(conn.child_id)
     this.#blocks.push(new Connection(conn))
@@ -127,7 +130,7 @@ export class Block {
   description: string = $state('')
   media?: string = $state('')
   content?: string = $state('')
-  type
+  type: 'text' | 'media' | 'link'
   created_at: number
   updated_at: number
   filename
