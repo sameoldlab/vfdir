@@ -57,9 +57,9 @@ export class Connection {
 
   constructor(obj: Connection) {
     this.id = `${obj.id}`
-    this.key = this.id
     this.parent_id = `${obj.parent_id}`
     this.child_id = `${obj.child_id}`
+    this.key = this.child_id
     this.is_channel = obj.is_channel === 1
     this.position = obj.position
     this.selected = obj.selected
@@ -91,7 +91,7 @@ export class Channel {
   }
   #blocks: Connection[] = []
   get blocks(): ((Block | Channel) & Connection)[] {
-    return this.#blocks.map(id => id.get())
+    return this.#blocks.map(conn => conn.get()).sort((a, b) => a.position - b.position)
   }
   constructor(obj: Channel) {
     this.id = `${obj.id}`
