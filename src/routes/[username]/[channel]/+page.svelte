@@ -2,14 +2,9 @@
 	import { page } from '$app/stores'
 	import View from '$lib/components/view.svelte'
 	import { channels } from '$lib/pools/block.svelte'
-	import { getBlocks } from '$lib/services/api/arenav2'
 
 	const channel = channels.get($page.params.channel)
 	const data = channel?.blocks
-
-	// $effect(() => {
-	// 	getBlocks($page.params.channel)
-	// })
 </script>
 
 <div>
