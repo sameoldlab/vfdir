@@ -1,11 +1,13 @@
 <script lang="ts">
 	import { page } from '$app/stores'
 	import BlockDetails from '$lib/components/BlockDetails.svelte'
+	import { blocks } from '$lib/pools/block.svelte'
 	const { id } = $page.params
+	const block = blocks.get(id)
 </script>
 
 <div>
-	<BlockDetails {id} />
+	<BlockDetails {block} />
 </div>
 
 <style>
