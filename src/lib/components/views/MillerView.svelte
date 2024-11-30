@@ -10,6 +10,7 @@
 		Connection,
 		type Entry
 	} from '$lib/pools/block.svelte'
+	import { goto } from '$app/navigation'
 
 	let { data }: { data: (Connection & Entry)[] } = $props()
 	const tree = getTree()
@@ -56,8 +57,12 @@
 	<div class="pane right">
 		{#each data as b, i (b.key)}
 			<a
-				onmouseover={() => {
+				onclick={(e) => {
+					e.preventDefault()
 					focused = b.key
+				}}
+				ondblclick={(e) => {
+					goto(e.target.href)
 				}}
 				onfocus={() => {
 					focused = b.key
