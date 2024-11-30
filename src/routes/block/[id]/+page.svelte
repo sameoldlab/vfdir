@@ -11,8 +11,7 @@
 
 <style>
 	div {
-		max-width: 80ch;
-		margin-inline: auto;
-		padding: 2em;
+		overflow-y: scroll;
+		height: 100%;
 	}
 </style>

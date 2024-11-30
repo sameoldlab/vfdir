@@ -11,7 +11,7 @@ export const resizer: Action<HTMLDivElement> = el => {
 	const doc_mouseUp = () => {
 		document.body.style.removeProperty('cursor')
 		document.body.style.removeProperty('user-select')
-		// document.body.style.removeProperty('pointer-events')
+		document.body.style.removeProperty('pointer-events')
 
 		document.removeEventListener('mousemove', doc_mouseMove)
 		document.removeEventListener('mouseup', doc_mouseUp)
@@ -20,7 +20,7 @@ export const resizer: Action<HTMLDivElement> = el => {
 	const el_mouseDown = () => {
 		document.body.style.cursor = 'col-resize'
 		document.body.style.userSelect = 'none'
-		// document.body.style.pointerEvents = 'none'
+		document.body.style.pointerEvents = 'none'
 		document.addEventListener('mousemove', doc_mouseMove)
 		document.addEventListener('mouseup', doc_mouseUp)
 	}

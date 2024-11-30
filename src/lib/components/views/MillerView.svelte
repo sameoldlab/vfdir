@@ -71,9 +71,11 @@
 
 	<div class="handle" draggable use:resizer><div></div></div>
 
-	<div class="pane detail">
+	<div class="pane extra">
 		{#if detail && !(detail.type === 'channel')}
-			<BlockDetail block={detail} />
+			<div class="detail">
+				<BlockDetail block={detail} />
+			</div>
 		{:else if detail}
 			{#each channels.get(focused)?.blocks as b (b.key)}
 				{@render entry(b)}
@@ -84,11 +86,10 @@
 
 <style>
 	main {
-		min-height: 100dvh;
-		max-width: 100svw;
-		overflow-y: auto;
+		height: 100dvh;
+		overflow-y: hidden;
 		display: grid;
-		grid-template-rows: repeat(auto-fill, 2.5rem);
+		grid-template-rows: repeat(auto-fill, minmax(1.75rem, 1fr));
 		grid-template-columns: [full-start] minmax(15ch, min-content) [chan-end] 0.5rem auto 0.5rem 4fr [full-end];
 	}
 	.handle {
@@ -125,13 +126,17 @@
 	}
 	.pane {
 		display: grid;
-		grid-template-rows: subgrid;
+		/* grid-template-rows: subgrid; */
+		grid-auto-rows: 1.75rem;
 		grid-row: 1 / -1;
+		gap: 1px;
+		overflow-y: scroll;
 		align-items: center;
+		height: 100%;
 		/* border-inline-end: 1px solid hsl(0 0% 24%); */
 		/* padding: .5em; */
 		/* width: 1fr; */
-		padding: 0.75rem 0.15rem;
+		padding: 0.5rem 0.15rem;
 		.item {
 			/* border-block: 1px solid ; */
 			background: none;
@@ -165,18 +170,24 @@
 		/* width: 40ch; */
 		/* background: brown; */
 		width: 2fr;
-		height: 100%;
-		overflow-x: scroll;
 	}
-	.pane.detail {
+	.pane.extra {
 		/* grid-column: 5 / full-end; */
 		/* background: red; */
 		min-width: 30ch;
 		/* width: 40ch; */
-		overflow-y: auto;
+		overflow-y: scroll;
+		height: 100%;
 		/* flex-direction: column; */
 	}
-	.pane.detail:has(article) {
+	.pane:has(div.detail) {
 		display: block;
+	}
+	.detail {
+		display: flex;
+		flex-direction: column;
+		justify-content: start;
+		align-items: start;
+		height: 100%;
 	}
 </style>

@@ -84,11 +84,15 @@
 <style>
 	article {
 		width: 100%;
+		height: 100%;
+		flex-direction: column;
+		overflow-y: scroll;
 		container-name: article;
-		container-type: size;
+		margin-inline: auto;
+		padding: 1em 1em 4em;
 		& > div {
 			display: flex;
-			gap: 2em;
+			gap: 1em;
 			flex-wrap: wrap;
 			width: 100%;
 			justify-content: space-evenly;
