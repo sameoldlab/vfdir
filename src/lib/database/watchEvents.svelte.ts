@@ -10,6 +10,7 @@ export async function bootstrap(db: TXAsync | DB) {
   const events = await db.execO<EventSchema>('select rowid,* from log')
   try { parseEvent(events) }
   catch (err) { console.error(err) }
+  return
 }
 
 export const watchEvents = () => {
@@ -27,7 +28,7 @@ export const watchEvents = () => {
   })
 }
 
-async function parseEvent(events: EventSchema[]) {
+function parseEvent(events: EventSchema[]) {
   for (const e of events) {
     let {
       type: [action, field],
@@ -49,7 +50,7 @@ async function parseEvent(events: EventSchema[]) {
           break
         }
         case 'user': {
-          const obj = from_arena ? fromArenaUser(data) : data
+          const obj = fromArenaUser(data)
           new User(obj)
           break
         }
