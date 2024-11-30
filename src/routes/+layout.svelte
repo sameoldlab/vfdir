@@ -3,15 +3,15 @@
 	import Header from '$lib/components/header.svelte'
 	import { createTables } from '$lib/database/createTables'
 	import { pool } from '$lib/database/connectionPool.svelte'
-	import { onDestroy, onMount } from 'svelte'
+	import { onMount } from 'svelte'
 	import { beforeNavigate } from '$app/navigation'
 	import { getTree, setTree } from '$lib/stores.svelte'
 	import { fade } from 'svelte/transition'
 	import { watchEvents, bootstrap } from '$lib/database/watchEvents.svelte'
 	let { children } = $props()
+
 	setTree()
 	const tree = getTree()
-	// let channels = {list: []}
 	beforeNavigate((nav) => {
 		switch (nav.type) {
 			case 'link':
@@ -30,23 +30,18 @@
 			await createTables(tx)
 			watchEvents()
 			await bootstrap(tx)
-			setTimeout(() => {
-				ready = true
-				console.log('ready')
-			}, 1000)
+			console.log('ready')
+			ready = true
 		})
 	})
-	const cleanup = () => {
-		pool.closeAll()
-	}
 </script>
 
-<svelte:window onbeforeunload={cleanup} />
+<svelte:window onbeforeunload={() => pool.closeAll()} />
 
 {#if pool.status === 'error'}
 	<div class="error">{pool.error}</div>
 {:else if pool.status === 'loading' || !ready}
-	<div transition:fade={{ duration: 300 }}>
+	<div transition:fade={{ duration: 200 }}>
 		<p>Creating visually fluid dispensaries...</p>
 	</div>
 {:else}
