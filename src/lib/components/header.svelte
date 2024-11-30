@@ -5,25 +5,10 @@
 	import miller from './svg/miller.svelte'
 	import table from './svg/table.svelte'
 	import canvas from './svg/canvas.svelte'
-	import { pool } from '$lib/database/connectionPool.svelte'
 	import AddChannel from './addChannel.svelte'
 	import Omnibar from './omnibar.svelte'
 	import { pageview } from '$lib/utils/pageView.svelte'
 
-	type Props = {
-		title: string
-		status: 'public'
-		size: number
-		created_at: Date
-	}
-
-	const inChannel = $page.params?.channel
-	const data = $derived({
-		title: $page.params.id ? '' : ($page.params?.channel ?? 'All'),
-		created_at: 0,
-		status: 'public',
-		size: 99
-	})
 	const viewIcons = [block, miller, table, canvas]
 	let addChannelId: string = $state('addChannel')
 </script>
