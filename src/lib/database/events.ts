@@ -1,16 +1,16 @@
-import { pool } from "./connectionPool.svelte"
-import { ulid, type ULID } from "ulidx"
-import { Block, Channel, EVENT_DB_NAME } from "./schema"
+import type { ULID } from "ulidx"
 import type { ArenaBlock, ArenaChannel, ArenaChannelContents, ArenaChannelWithDetails, ArenaUser } from "arena-ts"
 import type { DB } from "@vlcn.io/crsqlite-wasm"
-import { hlc, type HLC } from "./hlc"
+import { Hlc, type HLC } from "./hlc"
 import type { StmtAsync, TXAsync } from "@vlcn.io/xplat-api"
+import type { Entry } from "$lib/pools/block.svelte"
 
 const VERSION = 1
 let stmt: StmtAsync = null
-export const record = async (db: TXAsync | DB,
+const hlc = new Hlc(localStorage.getItem('deviceId'))
+export const record = async <D extends object>(db: TXAsync | DB,
   { originId, data, objectId, type }:
-    Pick<EventSchema, 'objectId' | 'data' | 'type'> & { originId?: EventSchema['originId'] }
+    Pick<EventSchema<D>, 'objectId' | 'data' | 'type'> & { originId?: HLC }
 ) => {
   stmt = (stmt === null || stmt.finalized === true) ? await db.prepare(`
       insert into log (version, localId, originId, data, type, objectId) values(?,?,?,?,?,?)
@@ -20,7 +20,7 @@ export const record = async (db: TXAsync | DB,
   originId = originId ?? localId
   const props = [VERSION, localId, originId, JSON.stringify(data), type, objectId]
   // if (type === 'add:user')
-  //   console.info(props)
+  // console.info(props)
   try {
     return await stmt.run(null, ...props)
   } catch (err) {
@@ -35,14 +35,13 @@ export const ev_stmt_close = async (tx?: TXAsync) => {
   return
 }
 
-type EventData = object
-type EventSchema = {
+export type EventSchema<O extends object> = {
   version: number
   /** Unique id on event reception */
   localId: HLC
   /** Unique id from event source */
   originId: HLC
-  data: EventData
+  data: O
   /**
    * add|mod|delete-column|row
    * @example mod:title
@@ -55,15 +54,13 @@ type EventSchema = {
   objectId: string
 }
 
-
-
-export const diffItem = (db: DB,
+export const diffEntry = <D extends ArenaChannelContents>(db: DB | TXAsync,
   { data, current, objectId, originId }:
     {
-      data: ArenaChannel | ArenaBlock,
-      current?: Channel | Block,
-      originId: () => EventSchema['originId'],
-      objectId: EventSchema['objectId']
+      data: D,
+      current?: Entry,
+      originId: () => HLC,
+      objectId: HLC
     }
 ) => {
   const promises: Promise<void>[] = []
@@ -102,12 +99,12 @@ export const diffItem = (db: DB,
   }
   return Promise.all(promises)
 }
-export const arena_item_sync = async (db: DB, data: ArenaChannel | ArenaBlock, current?: Channel | Block) => {
+export const arena_entry_sync = async <D extends ArenaChannelContents>(db: DB | TXAsync, data: D, current?: Entry) => {
   const classType = data.base_class.toLowerCase()
   const objectId = `${classType}:${data.id}`
   const updated_at = new Date(data.updated_at).valueOf()
   let c = -1
-  const originId = (): EventSchema['originId'] => hlc.receive(`${updated_at}:${c++}:arena`)
+  const originId = (): HLC => hlc.receive(`${updated_at}:${c++}:arena`)
 
   if (!current) {
     return record(db, {
@@ -119,28 +116,28 @@ export const arena_item_sync = async (db: DB, data: ArenaChannel | ArenaBlock, c
   }
 
   if (current.updated_at === updated_at) return
-  return diffItem(db, { data, current, objectId, originId })
+  return diffEntry(db, { data, current, objectId, originId })
 }
 
 
 /** 
   * CHECK IF CONNECTION EXISTS BEFORE CALLING THIS 
   */
-export const arena_user_import = async (db: DB, user: Partial<ArenaUser>) => {
+export const arena_user_import = async (db: DB | TXAsync, user: Partial<ArenaUser>) => {
   const objectId = `user:${user.id}`
-  const originId: EventSchema['originId'] = hlc.receive(`${Date.now()}:0:arena`)
+  const originId: HLC = hlc.receive(`${Date.now()}:0:arena`)
   return record(db, { objectId, type: `add:user`, originId, data: user })
 }
 
 /** CHECK IF CONNECTION EXISTS BEFORE CALLING THIS */
 export const arena_connection_import = (
-  db: DB,
+  db: DB | TXAsync,
   parent: ArenaChannelWithDetails,
   child: ArenaChannelContents,
 ) => {
   const objectId = `connection:${JSON.stringify([parent.id, child.id])}`
   const connected_at = new Date(child.connected_at).valueOf()
-  const originId: EventSchema['originId'] = hlc.receive(`${connected_at}:0:arena`)
+  const originId: HLC = hlc.receive(`${connected_at}:0:arena`)
 
   let { contents, ...parentData } = parent
   return record(db, {

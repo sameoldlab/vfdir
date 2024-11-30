@@ -12,7 +12,6 @@ import {
 	unknown,
 	record,
 } from 'superstruct'
-import { ulid } from 'ulidx'
 
 // Users
 export const User = type({
@@ -34,10 +33,8 @@ CREATE TABLE IF NOT EXISTS Users(
 `
 export type User = Infer<typeof User>
 
-if (!localStorage.getItem('deviceId')) {
-	localStorage.setItem('deviceId', ulid())
-}
 export const deviceId: string = localStorage.getItem('deviceId')
+if (deviceId === null) throw Error('invalid id')
 export const EVENT_DB_NAME = 'log'
 export const EventSchema = object({
 	version: number(),
