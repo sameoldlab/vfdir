@@ -1,6 +1,6 @@
 import { EventSchema, EventSchemaR } from "./schema"
 import { create } from "superstruct"
-import { fromArenaBlock, fromArenaChannel, fromArenaUser, fromArenaConnection } from "$lib/services/fromArena"
+import { fromArenaBlock, fromArenaChannel, fromArenaUser, fromArenaConnection } from "$lib/services/arena/fromArena"
 import type { DB, StmtAsync, TXAsync } from "@vlcn.io/xplat-api"
 import { pool } from "./connectionPool.svelte"
 const channel = new BroadcastChannel('updates')
@@ -29,6 +29,7 @@ export const watchEvents = () => {
 }
 
 function parseEvent(events: EventSchema[]) {
+  console.debug(events.map(e => create(e, EventSchemaR)))
   for (const e of events) {
     let {
       type: [action, field],

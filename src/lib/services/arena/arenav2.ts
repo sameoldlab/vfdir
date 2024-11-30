@@ -1,5 +1,5 @@
 import { type GetBlockApiResponse, type GetChannelsApiResponse, type GetUserChannelsApiResponse } from 'arena-ts'
-import { pullArena } from '../sync.svelte'
+import { pullArena } from './sync'
 import { pool } from '$lib/database/connectionPool.svelte'
 interface FetchError extends Error {
 	status: number

@@ -1,7 +1,5 @@
+import type { Block, Channel, Connection, User } from '$lib/pools/block.svelte'
 import type { ArenaBlock, ArenaChannel, ArenaChannelWithDetails, ArenaUser } from 'arena-ts'
-import { Block, Channel, Connection, type ChannelParsed, type User } from '$lib/database/schema'
-import { create } from 'superstruct'
-import { arena_item_sync, arena_connection_import, arena_user_import, ev_stmt_close } from '$lib/database/events'
 
 export function fromArenaChannel(c: ArenaChannel | ArenaChannelWithDetails): Channel {
   const flags = [c.kind] as ChannelParsed['flags']
@@ -24,7 +22,7 @@ export function fromArenaChannel(c: ArenaChannel | ArenaChannelWithDetails): Cha
 
 export function fromArenaUser(user: ArenaUser): User {
   return {
-    id: user.id,
+    id: user.id.toString(),
     slug: user.slug,
     firstname: user.first_name,
     lastname: user.last_name,
@@ -64,9 +62,9 @@ export function fromArenaConnection(data): Connection {
     id: `${data.parent.id}:${data.child.id}`,
     parent_id: data.parent.slug,
     child_id: data.child.id,
-    is_channel: data.is_channel ? 1 : 0,
+    is_channel: data.is_channel ? true : false,
     position: data.position,
-    selected: data.selected ? 1 : 0,
+    selected: data.selected ? true : false,
     connected_at: new Date(data.connected_at).valueOf(),
     user_slug: data.child.user.slug
   }
