@@ -1,8 +1,9 @@
-export const blocks = new Map<string, Entry>()
-export const channels = new Map<string, Channel>()
-export const users = new Map<string, User>()
-export const media = new Map<string, string>()
-type Entry = Channel | Block
+import { SvelteMap } from "svelte/reactivity"
+export type Entry = Channel | Block
+export const blocks = $state(new SvelteMap<string, Entry>())
+export const channels = $state(new SvelteMap<string, Channel>())
+export const users = $state(new SvelteMap<string, User>())
+export const media = $state(new SvelteMap<string, string>())
 
 export class User {
   key: string
@@ -61,16 +62,17 @@ export class Connection {
     this.parent_id = `${obj.parent_id}`
     this.child_id = `${obj.child_id}`
     this.key = this.child_id
-    this.is_channel = obj.is_channel === 1
+    this.is_channel = obj.is_channel
     this.position = obj.position
     this.selected = obj.selected
     this.connected_at = obj.connected_at
     this.connected_by = obj.user_slug
   }
-  get(): Child {
-    const child = this.is_channel ? channels.get(this.child_id) : blocks.get(this.child_id)
+  get() {
+    const child = blocks.get(this.child_id)
     if (!child) {
-      throw new Error(`Child not found for ${this.key} `);
+      return this
+      console.error(`Child not found for ${this.key} `);
     }
     return Object.assign(child, this) as Child
   }
