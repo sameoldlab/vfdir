@@ -1,7 +1,7 @@
 <script lang="ts">
 	import '../app.css'
 	import Header from '$lib/components/header.svelte'
-	import { createTables } from '$lib/database/createTables'
+	import { initStore } from '$lib/database/createTables'
 	import { pool } from '$lib/database/connectionPool.svelte'
 	import { onMount } from 'svelte'
 	import { beforeNavigate } from '$app/navigation'
@@ -26,8 +26,8 @@
 
 	let ready = $state(false)
 	onMount(() => {
-		pool.exec(async (tx, db) => {
-			await createTables(tx)
+		pool.exec(async (tx) => {
+			await initStore(tx)
 			watchEvents()
 			await bootstrap(tx)
 			console.log('ready')
