@@ -3,7 +3,7 @@
 	import Header from '$lib/components/header.svelte'
 	import { createTables } from '$lib/database/createTables'
 	import { pool } from '$lib/database/connectionPool.svelte'
-	import { onMount } from 'svelte'
+	import { onDestroy, onMount } from 'svelte'
 	import { beforeNavigate } from '$app/navigation'
 	import { getTree, setTree } from '$lib/stores.svelte'
 	import { fade } from 'svelte/transition'
@@ -30,10 +30,18 @@
 			await createTables(tx)
 			watchEvents()
 			await bootstrap(tx)
-			ready = true
+			setTimeout(() => {
+				ready = true
+				console.log('ready')
+			}, 1000)
 		})
 	})
+	const cleanup = () => {
+		pool.closeAll()
+	}
 </script>
+
+<svelte:window onbeforeunload={cleanup} />
 
 {#if pool.status === 'error'}
 	<div class="error">{pool.error}</div>

@@ -40,7 +40,7 @@ export class DbPool {
 	constructor(
 		args?: { maxConnections: number | undefined, dbName: string | undefined }
 	) {
-		this.#maxConnections = args?.maxConnections || 5
+		this.#maxConnections = args?.maxConnections || 1
 		this.dbName = args?.dbName || 'vfdir.db'
 		this.#initSql().then(sqlite => {
 			this.#sqlite = sqlite
@@ -178,9 +178,9 @@ export class DbPool {
 					await fn(tx, db)
 				})
 			} catch (err) {
-				console.error(`Error while transaction: ${err}`)
+				console.error(`Error while running transaction: ${err}`)
 			}
-			this.#close(db)
+			return () => this.#close(db)
 		} catch (err) {
 			console.error(err)
 		}
@@ -191,7 +191,7 @@ export class DbPool {
 			this.#connections.delete(connection)
 			return res
 		} catch (err) {
-			if (!err.message === 'Error: not a database') console.warn(err)
+			if (!(err.message === 'Error: not a database')) console.warn(err)
 		}
 	}
 	async closeAll() {
@@ -228,7 +228,7 @@ async function usedTables(db: DB, query: string): Promise<string[]> {
 const set1 = new Set()
 const map = new Map()
 /** return false if a fine grained merge is not possible; else merge */
-function mergeArr<T extends object>(one: T[], two: T[], key?: string): boolean | 'empty' {
+function mergeArr<T extends object>(one: T[], two: T[], key?: string) {
 	if (one.length === 0) {
 		one = two
 		log('filled empty')
