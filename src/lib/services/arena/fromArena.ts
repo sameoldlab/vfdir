@@ -61,7 +61,7 @@ export function fromArenaConnection(data): Connection {
   return {
     id: `${data.parent.id}:${data.child.id}`,
     parent_id: data.parent.slug,
-    child_id: data.child.id,
+    child_id: data.is_channel ? data.child.slug : data.child.id,
     is_channel: data.is_channel ? true : false,
     position: data.position,
     selected: data.selected ? true : false,
