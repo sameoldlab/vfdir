@@ -8,7 +8,6 @@ import { Block, blocks, Channel, channels, Connection, media, User } from "$lib/
 
 export async function bootstrap(db: TXAsync | DB) {
   const events = await db.execO<EventSchema>('select rowid,* from log')
-  console.log({ events })
   try { parseEvent(events) }
   catch (err) { console.error(err) }
 }
@@ -29,7 +28,6 @@ export const watchEvents = () => {
 }
 
 async function parseEvent(events: EventSchema[]) {
-  console.log({ events })
   for (const e of events) {
     let {
       type: [action, field],
