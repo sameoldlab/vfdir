@@ -2,13 +2,17 @@ import { sha256 } from 'multiformats/hashes/sha2'
 import { CID } from 'multiformats/cid'
 import { pool } from '$lib/database/connectionPool.svelte'
 import type { Action } from 'svelte/action'
-import { record } from '$lib/database/events'
 import { media } from '$lib/pools/block.svelte'
 
 let cacheDir: FileSystemDirectoryHandle = null
+let opfs_available = false
 if (!cacheDir) {
   navigator.storage.getDirectory().then(async (fsdh: FileSystemDirectoryHandle) => {
     cacheDir = await fsdh.getDirectoryHandle('cache', { create: true })
+    opfs_available = true
+  }).catch(err => {
+    if (err instanceof DOMException) opfs_available = false
+    else throw err
   })
 }
 
@@ -42,6 +46,7 @@ const cacheFile = async (filename: string) => {
 
   // move file to final location. update reference in database
   handle.move(cid.toString())
+  const { record } = await import('$lib/database/events')
   pool.exec(async (db) => {
     console.log(cid.toString(), filename)
     await record(db, { type: 'save:blob', data: { url: cid.toString(), original: filename }, objectId: 'block:image' })
@@ -58,6 +63,10 @@ const getFileFromCid = (filename: string, cDir = cacheDir) =>
 export const handleFile: Action<HTMLImageElement, { src: string }> = (el, { src }) => {
   let url: string | null = null
   const load = async () => {
+    if (!opfs_available) {
+      el.src = src
+      return
+    }
     const cache = media.get(src)
     if (!cache) {
       console.log('cache miss')
