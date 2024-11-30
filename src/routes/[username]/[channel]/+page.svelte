@@ -4,7 +4,8 @@
 	import { channels } from '$lib/pools/block.svelte'
 	import { getBlocks } from '$lib/services/api/arenav2'
 
-	const data = channels.get($page.params.channel).blocks
+	const channel = channels.get($page.params.channel)
+	const data = channel?.blocks
 
 	// $effect(() => {
 	// 	getBlocks($page.params.channel)
@@ -12,7 +13,9 @@
 </script>
 
 <div>
-	{#if data.length === 0}
+	{#if !channel}
+		<div class="error">Channel not saved. Fetching...</div>
+	{:else if data.length === 0}
 		<div class="error">
 			There doesn't seem to be anything here. Searching arena for a matching
 			channel.
