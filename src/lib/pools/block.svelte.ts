@@ -85,6 +85,7 @@ export class Channel {
   status: string
   image: string
   #author: string
+  #keys = new Set<string>()
   get author() {
     return users.get(this.#author)
   }
@@ -107,6 +108,8 @@ export class Channel {
     populateUser(this.key, this.#author, 'channels')
   }
   addBlock(conn: Connection) {
+    if (this.#keys.has(conn.child_id)) return
+    this.#keys.add(conn.child_id)
     this.#blocks.push(new Connection(conn))
   }
   get length() {
