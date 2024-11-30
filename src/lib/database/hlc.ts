@@ -4,12 +4,13 @@ type Timestamp = number
 type SOURCE_ID = 'are.na' | 'filesystem' | ULID
 export type HLC = `${Timestamp}:${number}:${SOURCE_ID}`
 
-class Hlc {
+export class Hlc {
   #c = 0
   #time = 0
   #deviceId: string
 
   constructor(deviceId: string) {
+    if (deviceId === null) console.trace('invalid id')
     this.#deviceId = deviceId
   }
 
@@ -62,8 +63,3 @@ class Hlc {
   }
 }
 
-if (!localStorage.getItem('deviceId')) {
-  localStorage.setItem('deviceId', ulid())
-}
-export const deviceId: string = localStorage.getItem('deviceId')
-export const hlc = new Hlc(deviceId)

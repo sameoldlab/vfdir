@@ -7,7 +7,6 @@
 	import { beforeNavigate } from '$app/navigation'
 	import { getTree, setTree } from '$lib/stores.svelte'
 	import { fade } from 'svelte/transition'
-	import { watchEvents, bootstrap } from '$lib/database/watchEvents.svelte'
 	let { children } = $props()
 
 	setTree()
@@ -28,6 +27,9 @@
 	onMount(() => {
 		pool.exec(async (tx) => {
 			await initStore(tx)
+			const { watchEvents, bootstrap } = await import(
+				'$lib/database/watchEvents.svelte'
+			)
 			watchEvents()
 			await bootstrap(tx)
 			console.log('ready')
