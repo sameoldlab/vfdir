@@ -93,7 +93,7 @@ export class Channel {
   get author() {
     return users.get(this.#author)
   }
-  #blocks: Connection[] = []
+  #blocks: Connection[] = $state([])
   get blocks(): ((Block | Channel) & Connection)[] {
     return this.#blocks.map(conn => conn.get()).sort((a, b) => a.position - b.position)
   }

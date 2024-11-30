@@ -26,15 +26,14 @@
 
 	/** key of currently hovered item */
 	let focused: Block['id'] | Channel['slug'] | undefined = $state()
-	const detail = $derived(blocks.get(focused) ?? channels.get(focused))
-	let focused_is_channel = $state(false)
+	const detail = $derived(blocks.get(focused))
 </script>
 
 {#snippet entry(e)}
 	<a
 		tabindex="-1"
 		href={e.type === 'channel'
-			? `/${e.author.slug}/${e.key}`
+			? `/${e.author?.slug}/${e.key}`
 			: `/block/${e.key}`}
 		class="item"
 	>

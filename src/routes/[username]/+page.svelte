@@ -3,8 +3,8 @@
 	import View from '$lib/components/view.svelte'
 	import { users } from '$lib/pools/block.svelte'
 
-	const user = users.get($page.params.username)
-	const data = user?.all
+	const user = $derived(users.get($page.params.username))
+	const data = $derived(user?.all)
 </script>
 
 {#if !user}
