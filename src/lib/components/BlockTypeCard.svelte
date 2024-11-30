@@ -27,15 +27,15 @@
 		<a
 			class={c.type}
 			href={c.type === 'channel'
-				? `/${c.author_slug}/${c.slug}`
-				: `/block/${c.id}`}
+				? `/${c.author.slug}/${c.key}`
+				: `/block/${c.key}`}
 		>
 			{#if c.image}
 				<img use:handleFile={{ src: c.image }} alt={c.image} />
 			{:else if c.type === 'channel'}
 				<div class="channel">
 					<p class="title">{c.title}</p>
-					<p class="author">by {c.author_slug}</p>
+					<p class="author">by {c.author.slug}</p>
 				</div>
 			{:else if content}
 				<div class="text"><p>{@html content}</p></div>
@@ -54,7 +54,7 @@
 			</div>
 		</div>
 	</div>
-	<p class="title">{c.title || ''}</p>
+	<p class="title">{c.title || '-'}</p>
 </div>
 
 <style>
