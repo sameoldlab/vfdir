@@ -8,6 +8,7 @@
 	import { pool } from '$lib/database/connectionPool.svelte'
 	import AddChannel from './addChannel.svelte'
 	import Omnibar from './omnibar.svelte'
+	import { pageview } from '$lib/utils/pageView.svelte'
 
 	type Props = {
 		title: string
@@ -23,26 +24,7 @@
 		status: 'public',
 		size: 99
 	})
-
-	const view = $derived(
-		pool.query<{ pageview: VIEWS }, VIEWS>(
-			`select pageview from state where route=?`,
-			[$page.url.pathname],
-			(data) => (!data ? undefined : data[0]?.pageview || VIEWS[1])
-		)
-	)
-
-	let activeView = $derived(view.data)
 	const viewIcons = [block, miller, table, canvas]
-	const setView = (newView: string) => {
-		pool.exec(async (db) => {
-			await db.exec(
-				`INSERT INTO state(route,pageview) VALUES(?,?)
-				ON CONFLICT DO UPDATE SET pageview = ? WHERE route = ?`,
-				[$page.url.pathname, newView, newView, $page.url.pathname]
-			)
-		})
-	}
 	let addChannelId: string = $state('addChannel')
 </script>
 
@@ -54,8 +36,8 @@
 			{@const Icon = viewIcons[i]}
 			<button
 				class="label"
-				class:selected={activeView === view}
-				onclick={() => setView(view)}
+				class:selected={pageview.v === view}
+				onclick={() => (pageview.v = view)}
 				aria-label={view}
 			>
 				<Icon />
