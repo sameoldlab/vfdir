@@ -5,20 +5,16 @@
 	import { pool } from '$lib/database/connectionPool.svelte'
 	import { VIEWS } from '$lib/stores.svelte'
 	import type { Block, Channel } from '$lib/pools/block.svelte'
+	import { pageview } from '$lib/utils/pageView.svelte'
 
 	let { data }: { data: (Block | Channel)[] } = $props()
-	const view = pool.query<{ pageview: VIEWS }, VIEWS>(
-		`select pageview from state where route = ?`,
-		[$page.url.pathname],
-		(data) => (!data ? undefined : data[0]?.pageview || VIEWS[0])
-	)
 </script>
 
-{#if view.data === 'table'}
+{#if pageview.v === 'table'}
 	todo
-{:else if view.data === 'canvas'}
+{:else if pageview.v === 'canvas'}
 	todo
-{:else if view.data === 'miller'}
+{:else if pageview.v === 'miller'}
 	<MillerView {data} />
 {:else}
 	<GridView {...data} />
