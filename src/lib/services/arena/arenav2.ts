@@ -54,6 +54,7 @@ export async function getBlocks(channel: string): Promise<GetBlockApiResponse> {
 			throw error
 		}
 		const data = await res.json()
+		console.debug(data)
 		pool.exec(async (tx) => {
 			await pullArena(tx, data)
 		})
