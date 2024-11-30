@@ -1,7 +1,7 @@
 import initWasm from '@vlcn.io/crsqlite-wasm'
 import wasmUrl from '@vlcn.io/crsqlite-wasm/crsqlite.wasm?url'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
-import { createTables } from '$lib/database/createTables'
+import { initStore } from '$lib/database/createTables'
 import { bootstrap, parseArenaChannels } from './sync.svelte'
 import { arenaChannels as mockChannels } from '$lib/dummy/channels'
 import duplicateChans from '$lib/dummy/duplicateChans'
@@ -17,7 +17,7 @@ describe('Bootstrap database', async () => {
 			delete from connections;
 			delete from providers;
 		`) */
-		await createTables(db)
+		await initStore(db)
 
 	})
 	afterAll(async () => {
@@ -57,7 +57,7 @@ describe('Deduplication and sync', async () => {
 	beforeAll(async () => {
 		const sqlite = await initWasm(() => wasmUrl)
 		db = await sqlite.open()
-		await createTables(db)
+		await initStore(db)
 
 	})
 	afterAll(async () => {

@@ -2,7 +2,7 @@ import initWasm from '@vlcn.io/crsqlite-wasm'
 import wasmUrl from '@vlcn.io/crsqlite-wasm/crsqlite.wasm?url'
 import { assert } from 'superstruct'
 import { afterAll, describe, expect, it } from 'vitest'
-import { createTables } from './createTables'
+import { initStore } from './createTables'
 import { Block, Channel, Connection, Provider, User } from './schema'
 import { bootstrap } from '$lib/services/sync.svelte'
 
@@ -10,7 +10,7 @@ import { bootstrap } from '$lib/services/sync.svelte'
 describe('Validate types', async () => {
 	const sqlite = await initWasm(() => wasmUrl)
 	const db = await sqlite.open(':memory:')
-	await createTables(db)
+	await initStore(db)
 	await bootstrap(db)
 
 	afterAll(async () => {
