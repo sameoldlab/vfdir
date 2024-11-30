@@ -7,10 +7,11 @@
 		blocks,
 		Channel,
 		channels,
-		Connection
+		Connection,
+		type Entry
 	} from '$lib/pools/block.svelte'
 
-	let { data }: { data: (Connection & (Block | Channel))[] } = $props()
+	let { data }: { data: (Connection & Entry)[] } = $props()
 	const tree = getTree()
 
 	let previous = $derived.by(() => {
@@ -29,17 +30,22 @@
 	let focused_is_channel = $state(false)
 </script>
 
+{#snippet entry(e)}
+	<a
+		tabindex="-1"
+		href={e.type === 'channel'
+			? `/${e.author.slug}/${e.key}`
+			: `/block/${e.key}`}
+		class="item"
+	>
+		{e.title || '-'}
+	</a>
+{/snippet}
 <main>
 	<div class="pane left">
 		{#if previous && previous.length > 1}
 			{#each previous as { author, title, ...p }, i (p.key)}
-				<a
-					tabindex="-1"
-					href={p.is_channel ? `/${author.slug}/${p.key}` : `/block/${p.key}`}
-					class="item"
-				>
-					{title}
-				</a>
+				{@render entry(p)}
 			{/each}
 		{:else}
 			<div class="item">//</div>
@@ -57,7 +63,7 @@
 				onfocus={() => {
 					focused = b.key
 				}}
-				href={b.is_channel ? `/${b.author.slug}/${b.key}` : `/block/${b.key}`}
+				href="/{b.type === 'channel' ? b.author.slug : 'block'}/{b.key}"
 				class="item"
 				use:key>{b.title || '-'}</a
 			>
@@ -67,15 +73,11 @@
 	<div class="handle" draggable use:resizer><div></div></div>
 
 	<div class="pane detail">
-		{#if detail && !('slug' in detail)}
+		{#if detail && !(detail.type === 'channel')}
 			<BlockDetail block={detail} />
 		{:else if detail}
-			{#each channels.get(focused)?.blocks as b, i}
-				<a
-					href={b.is_channel ? `/${b.author.slug}/${b.key}` : `block/${b.key}`}
-					class="item"
-					use:key>{b.title || '-'}</a
-				>
+			{#each channels.get(focused)?.blocks as b (b.key)}
+				{@render entry(b)}
 			{/each}
 		{/if}
 	</div>
@@ -85,7 +87,7 @@
 	main {
 		min-height: 100dvh;
 		max-width: 100svw;
-		overflow-x: auto;
+		overflow-y: auto;
 		display: grid;
 		grid-template-rows: repeat(auto-fill, 2.5rem);
 		grid-template-columns: [full-start] minmax(15ch, min-content) [chan-end] 0.5rem auto 0.5rem 4fr [full-end];
@@ -172,8 +174,10 @@
 		/* background: red; */
 		min-width: 30ch;
 		/* width: 40ch; */
-		display: block;
 		overflow-y: auto;
 		/* flex-direction: column; */
+	}
+	.pane.detail:has(article) {
+		display: block;
 	}
 </style>
