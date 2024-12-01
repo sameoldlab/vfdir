@@ -47,7 +47,7 @@
 <main>
 	<div class="pane left">
 		{#if previous && previous.length > 1}
-			{#each previous as { author, title, ...p }, i (p.key)}
+			{#each previous as p, i (p.key)}
 				{@render entry(p)}
 			{/each}
 		{:else}
