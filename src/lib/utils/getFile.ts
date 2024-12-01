@@ -59,30 +59,43 @@ const getFileFromCid = (filename: string, cDir = cacheDir) =>
     .then((handle) => handle.getFile()
       .then((file) => URL.createObjectURL(file)))
 
+const load = async (el: HTMLImageElement, src: string) => {
+  console.log('cache miss')
+  const cached = await cacheFile(src)
+  media.set(src, cached)
+  el.src = src
+}
+const observer = new IntersectionObserver((entries, observer) => {
+  for (const entry of entries) {
+    if (!entry.isIntersecting) continue
+    let el = entry.target as HTMLImageElement
+    load(el, el.alt)
+    observer.unobserve(el)
+  }
+}, {
+  rootMargin: '0% 0% 100% 0%',
+  threshold: 0
+})
 
 export const handleFile: Action<HTMLImageElement, { src: string }> = (el, { src }) => {
   let url: string | null = null
-  const load = async () => {
-    if (!opfs_available) {
-      el.src = src
-      return
-    }
-    const cache = media.get(src)
-    if (!cache) {
-      console.log('cache miss')
-      const cached = await cacheFile(src)
-      media.set(src, cached)
-      el.src = src
-    } else {
-      console.log('cache hit')
-      url = await getFileFromCid(media.get(src))
-      el.src = url
-    }
+
+  if (!opfs_available) {
+    el.loading = 'lazy'
+    el.src = src
+    return
   }
-  load()
+  if (media.get(src)) getFileFromCid(media.get(src))
+    .then(_url => {
+      url = _url
+      el.src = url
+    })
+  else observer.observe(el)
+
 
   return {
     destroy() {
+      observer.unobserve(el)
       url && URL.revokeObjectURL(url)
     }
   }
