@@ -19,7 +19,7 @@
   --line: var(--b4);
   --border: 1px solid var(--b4);
   background-color: var(--b1);
-  color: var(--b7);
+  color: var(--b6);
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -47,6 +47,7 @@
   padding: 2rem;
   color: oklch(from var(--b6) l .09 40);
 }
+
 a {
   color: inherit;
   font-weight: 500;
