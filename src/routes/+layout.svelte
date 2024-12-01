@@ -48,10 +48,14 @@
 	</div>
 {:else}
 	<Header />
+	<div id="padheader" />
 	{@render children()}
 {/if}
 
 <style>
+	#padheader {
+		height: 2rem;
+	}
 	div {
 		display: flex;
 		align-items: center;

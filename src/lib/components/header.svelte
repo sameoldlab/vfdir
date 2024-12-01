@@ -84,7 +84,7 @@
 		display: grid;
 		grid-template-columns: auto 1fr auto;
 		gap: 2ch;
-		position: sticky;
+		position: fixed;
 		top: 0;
 		left: 0;
 		right: 0;
