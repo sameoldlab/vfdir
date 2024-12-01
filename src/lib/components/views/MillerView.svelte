@@ -11,6 +11,7 @@
 		type Entry
 	} from '$lib/pools/block.svelte'
 	import { goto } from '$app/navigation'
+	import { page } from '$app/stores'
 
 	let { data }: { data: (Connection & Entry)[] } = $props()
 	const tree = getTree()
@@ -26,7 +27,9 @@
 	})
 
 	/** key of currently hovered item */
-	let focused: Block['id'] | Channel['slug'] | undefined = $state()
+	let focused: Block['id'] | Channel['slug'] | undefined = $state(
+		$page.url.hash?.slice(1) ?? data[0]?.key
+	)
 	const detail = $derived(blocks.get(focused))
 </script>
 
@@ -69,6 +72,8 @@
 				}}
 				href="/{b.type === 'channel' ? b.author.slug : 'block'}/{b.key}"
 				class="item"
+				class:focused={focused === b.key}
+				id={b.key}
 				use:key>{b.title || '-'}</a
 			>
 		{/each}
@@ -142,24 +147,24 @@
 		/* padding: .5em; */
 		/* width: 1fr; */
 		padding: 0.5rem 0.15rem;
-		.item {
-			/* border-block: 1px solid ; */
-			background: none;
-			text-align: inherit;
-			width: 100%;
-			font-size: 0.85rem;
-			padding: 0.5em 0.5em;
-			overflow: hidden;
-			/* height: 1.1rem; */
-			white-space: nowrap;
-			text-overflow: ellipsis;
-			/* margin: 0.25em 0.75em; */
-			&:hover,
-			&:focus {
-				background: oklch(0.24 0 89.88);
-			}
+	}
+	.item {
+		/* border-block: 1px solid ; */
+		text-align: inherit;
+		width: 100%;
+		font-size: 0.85rem;
+		padding: 0.5em 0.5em;
+		overflow: hidden;
+		/* height: 1.1rem; */
+		white-space: nowrap;
+		text-overflow: ellipsis;
+		/* margin: 0.25em 0.75em; */
+		&:hover,
+		&:focus {
+			background: oklch(0.24 0 89.88);
 		}
 	}
+
 	.pane.left {
 		grid-column: full-start / chan-end;
 		padding-inline-start: 0.5rem;

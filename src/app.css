@@ -52,12 +52,14 @@ a {
   font-weight: 500;
   text-decoration: inherit;
 }
-a:focus, button:focus {
-	outline: none;
-	background: var(--b3);
-	border-radius: 0.25rem;
-	color: var(--b7);
-  
+
+a:focus,
+.focused,
+button:focus {
+  outline: none;
+  background: var(--b2);
+  border-radius: 0.25rem;
+  color: var(--b7);
 }
 
 body {

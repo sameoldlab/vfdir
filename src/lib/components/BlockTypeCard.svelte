@@ -1,22 +1,23 @@
 <script lang="ts">
 	import './blockType.css'
-	import type { BlocksRow } from '$lib/database/schema'
 	import { handleFile } from '$lib/utils/getFile'
 	import { micromark } from 'micromark'
+	import { fade, blur } from 'svelte/transition'
+	import type { Entry } from '$lib/pools/block.svelte'
 
-	let { ...c }: BlocksRow = $props()
+	let { ...c }: Entry = $props()
 	const connect = (e: MouseEvent) => {
 		e.preventDefault()
 		console.log(c)
 	}
 	const makeLink = () => {
-		let link = ''
+		let link = 'https://'
 		switch (c.source) {
 			case 'arena':
-				link = `are.na/${c.author_slug}/${c.slug}`
+				link += `are.na/${c.author.slug}/${c.key}`
 				break
 		}
-		return 'https://' + link
+		return link
 	}
 	const source = !c.source ? null : c.type !== 'channel' ? c.source : makeLink()
 	const content = c.type === 'text' ? micromark(c.content) : null
@@ -26,7 +27,7 @@
 	}
 </script>
 
-<div class="block-item {status}">
+<div class="block-item {status}" id={c.key}>
 	<div class="box">
 		<a
 			class={c.type}

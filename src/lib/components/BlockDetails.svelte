@@ -77,7 +77,7 @@
 				<div class="connections">
 					{#each b.connections as channel}
 						<a
-							href={`/${channel.author.slug}/${channel.slug}`}
+							href={`/${channel.author.slug}/${channel.slug}#${b.key}`}
 							class="connection"
 						>
 							<span>{channel.title} by {channel.author.slug}</span>
