@@ -132,13 +132,15 @@ export class Block {
   description: string = $state('')
   media?: string = $state('')
   content?: string = $state('')
-  type: 'text' | 'media' | 'link'
+  type: 'text' | 'media' | 'link' | 'attachment'
   created_at: number
-  updated_at: number
-  filename
-  provider_url
-  image
-  source
+  updated_at: number = $state()
+  filename: string
+  provider_url: string
+  image: string
+  source: string
+  attachment: string
+
   #author: string = ''
   get author() {
     const a = users.get(this.#author)
@@ -158,6 +160,7 @@ export class Block {
     this.provider_url = b.provider_url
     this.image = b.image
     this.source = b.source
+    this.attachment = b.attachment
 
     this.id = `${b.id}`
     this.key = this.id

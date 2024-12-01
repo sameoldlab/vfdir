@@ -59,7 +59,7 @@ const getFileFromCid = (filename: string, cDir = cacheDir) =>
     .then((handle) => handle.getFile()
       .then((file) => URL.createObjectURL(file)))
 
-const load = async (el: HTMLImageElement, src: string) => {
+const load = async (el: HTMLImageElement | HTMLVideoElement, src: string) => {
   console.log('cache miss')
   const cached = await cacheFile(src)
   media.set(src, cached)
@@ -68,8 +68,8 @@ const load = async (el: HTMLImageElement, src: string) => {
 const observer = new IntersectionObserver((entries, observer) => {
   for (const entry of entries) {
     if (!entry.isIntersecting) continue
-    let el = entry.target as HTMLImageElement
-    load(el, el.alt)
+    let el = entry.target as HTMLImageElement | HTMLVideoElement
+    load(el, el.dataset.src)
     observer.unobserve(el)
   }
 }, {
@@ -77,7 +77,7 @@ const observer = new IntersectionObserver((entries, observer) => {
   threshold: 0
 })
 
-export const handleFile: Action<HTMLImageElement, { src: string }> = (el, { src }) => {
+export const handleFile: Action<HTMLImageElement | HTMLVideoElement, { src: string }> = (el, { src }) => {
   let url: string | null = null
 
   if (!opfs_available) {

@@ -20,6 +20,10 @@
 	}
 	const source = !c.source ? null : c.type !== 'channel' ? c.source : makeLink()
 	const content = c.type === 'text' ? micromark(c.content) : null
+	const imgLoad = (e: Event) => {
+		const el = e.target as HTMLImageElement
+		el.classList.add('loaded')
+	}
 </script>
 
 <div class="block-item {status}">
@@ -31,7 +35,22 @@
 				: `/block/${c.key}`}
 		>
 			{#if c.image}
-				<img use:handleFile={{ src: c.image }} alt={c.image} />
+				<img
+					in:blur
+					onload={imgLoad}
+					use:handleFile={{ src: c.image }}
+					data-src={c.image}
+					alt={c.image}
+					class="waiting"
+				/>
+			{:else if c.type === 'attachment'}
+				<video
+					use:handleFile={{ src: c.attachment }}
+					data-src={c.attachment}
+					autoplay
+					loop
+					muted
+				></video>
 			{:else if c.type === 'channel'}
 				<div class="channel">
 					<p class="title">{c.title}</p>
@@ -58,6 +77,20 @@
 </div>
 
 <style>
+	:global(img) {
+		transition-property: opacity, filter;
+		transition-duration: 120ms;
+		transition-timing-function: ease-out;
+
+		&.waiting {
+			opacity: 0;
+			filter: blur(16px);
+		}
+		&.loaded {
+			opacity: 1;
+			filter: none;
+		}
+	}
 	.text > p {
 		height: 100%;
 		padding: 1ch;
@@ -67,6 +100,7 @@
 		overflow-wrap: anywhere;
 		text-overflow: clip;
 	}
+
 	.channel {
 		.title {
 			font-size: 1.5rem;

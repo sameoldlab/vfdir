@@ -16,10 +16,20 @@
 			<img
 				use:handleFile={{ src: b.image }}
 				src={b.image}
+				data-src={b.image}
 				in:fade
 				crossorigin="anonymous"
 				alt={b.image}
 			/>
+		{:else if b.type === 'attachment'}
+			<video
+				use:handleFile={{ src: b.attachment }}
+				data-src={b.attachment}
+				muted
+				autoplay
+				loop
+				controls
+			></video>
 		{:else if b.type === 'channel'}
 			<div class="channel">
 				<p class="title">{b.title}</p>
@@ -105,7 +115,8 @@
 		justify-content: center;
 		padding-block: 1rem;
 	}
-	img {
+	img,
+	video {
 		width: min(100%, 700px);
 	}
 	h1 {

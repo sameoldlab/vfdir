@@ -44,6 +44,7 @@ export function fromArenaBlock(block: ArenaBlock): Block {
     image: block.image && block.image.original.url,
     source: null,
     author_slug: block.user.slug,
+    attachment: block.attachment?.url
   }
 
   if (block.class === 'Text')
