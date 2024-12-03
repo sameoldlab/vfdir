@@ -30,7 +30,6 @@ export async function getChannels(id: number | string): Promise<GetUserChannelsA
 	} catch (err) {
 		if (err instanceof TypeError) {
 			throw new Error('Type error: Fetch failed')
-			throw err
 		}
 	}
 }
@@ -63,7 +62,6 @@ export async function getBlocks(channel: string): Promise<GetBlockApiResponse> {
 	} catch (err) {
 		if (err instanceof TypeError) {
 			throw new Error('Type error: Fetch failed')
-			throw err
 		}
 	}
 }
