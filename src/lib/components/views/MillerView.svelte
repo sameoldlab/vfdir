@@ -10,7 +10,7 @@
 		Connection,
 		type Entry
 	} from '$lib/pools/block.svelte'
-	import { goto } from '$app/navigation'
+	import { goto, replaceState } from '$app/navigation'
 	import { page } from '$app/stores'
 
 	let { data }: { data: (Connection & Entry)[] } = $props()
@@ -44,7 +44,7 @@
 		{e.title || '-'}
 	</a>
 {/snippet}
-<main>
+<main id="miller">
 	<div class="pane left">
 		{#if previous && previous.length > 1}
 			{#each previous as p, i (p.key)}
@@ -62,6 +62,7 @@
 			<a
 				onclick={(e) => {
 					e.preventDefault()
+					replaceState('#' + b.key, {})
 					focused = b.key
 				}}
 				ondblclick={(e) => {
@@ -95,8 +96,11 @@
 </main>
 
 <style>
-	main {
-		height: 100dvh;
+	:global(div:has(#miller)) {
+		overflow: hidden;
+	}
+	main#miller {
+		height: 100%;
 		overflow-y: hidden;
 		display: grid;
 		grid-template-rows: repeat(auto-fill, minmax(1.75rem, 1fr));

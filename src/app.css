@@ -62,10 +62,11 @@ button:focus {
   border-radius: 0.25rem;
   color: var(--b7);
 }
-
+html {
+  height: 100dvh;
+}
 body {
-  min-height: 100dvh;
-  /* overflow: clip; */
+  height: 100dvh;
   width: 100svw;
   overscroll-behavior-y: none;
 }

@@ -3,10 +3,12 @@
 	import Header from '$lib/components/header.svelte'
 	import { initStore } from '$lib/database/createTables'
 	import { pool } from '$lib/database/connectionPool.svelte'
-	import { onMount } from 'svelte'
+	import { onMount, tick } from 'svelte'
 	import { beforeNavigate } from '$app/navigation'
 	import { getTree, setTree } from '$lib/stores.svelte'
 	import { fade } from 'svelte/transition'
+	import type { Snapshot } from '@sveltejs/kit'
+	import { blocks } from '$lib/pools/block.svelte'
 	let { children } = $props()
 
 	setTree()
@@ -34,6 +36,9 @@
 			await bootstrap(tx)
 			console.log('ready')
 			ready = true
+			let str = JSON.stringify(blocks.entries())
+			console.log([...blocks.entries()])
+			console.log(blocks.size)
 		})
 	})
 </script>
@@ -48,13 +53,22 @@
 	</div>
 {:else}
 	<Header />
-	<div id="padheader" />
+	<div id="padheader"></div>
 	{@render children()}
 {/if}
 
 <style>
+	:global(div#contents) {
+		display: flex;
+		flex-direction: column;
+		position: relative;
+		overflow: hidden;
+		height: 100vh;
+	}
 	#padheader {
-		height: 2rem;
+		height: 2.125rem;
+		height: 0px;
+		position: relative;
 	}
 	div {
 		display: flex;
