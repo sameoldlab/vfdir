@@ -1,5 +1,5 @@
 import { SvelteMap } from "svelte/reactivity"
-export type Entry = Channel | Block
+export type Entry = ({ type: 'channel' } & Channel) | Block
 export const blocks = $state(new SvelteMap<string, Entry>())
 export const channels = $state(new SvelteMap<string, Channel>())
 export const users = $state(new SvelteMap<string, User>())
